@@ -1,0 +1,27 @@
+:root {
+  --primaire: #1b5e8a;
+  --fond: #f4f6f8;
+  --surface: #fff;
+  --texte: #1c2329;
+  --texte-discret: #5b6772;
+  --bordure: #dde2e7;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--fond);
+  color: var(--texte);
+  line-height: 1.4;
+}
+
+h1 { font-size: 1.5rem; margin: 0 0 1rem; }
+
+/* Cibles tactiles ≥ 44 px */
+button, .bouton {
+  min-height: 44px; min-width: 44px; padding: 0 1rem; border: 0; border-radius: 8px;
+  background: var(--primaire); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+}
