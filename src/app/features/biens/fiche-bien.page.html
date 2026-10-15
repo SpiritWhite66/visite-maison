@@ -1,0 +1,98 @@
+@if (bien(); as b) {
+  @if (budget(); as bu) {
+    <a class="retour" routerLink="/biens">‹ Biens</a>
+    <h1>{{ b.titre }}</h1>
+    <p class="discret">{{ b.commune }}{{ b.typeBien === 'RURAL' ? ' · rural' : ' · ville' }}</p>
+
+    <div class="onglets" role="tablist">
+      <button role="tab" [attr.aria-selected]="onglet() === 'synthese'" (click)="onglet.set('synthese')">Synthèse</button>
+      <button role="tab" [attr.aria-selected]="onglet() === 'travaux'" (click)="onglet.set('travaux')">Travaux</button>
+    </div>
+
+    @if (onglet() === 'synthese') {
+      <section class="carte">
+        <h2>Budget total</h2>
+        <p class="total">{{ fourchette(bu.total) }}</p>
+        <table>
+          <tr><td>Prix affiché</td><td>{{ euro(b.prixAffiche) }}</td></tr>
+          <tr><td>Prix négocié (−{{ nombre(b.margeNegociationPct) }} %)</td><td>{{ euro(bu.prixNegocie) }}</td></tr>
+          <tr><td>Frais de notaire</td><td>{{ euro(bu.fraisNotaire) }}</td></tr>
+          <tr><td>Travaux</td><td>{{ fourchette(bu.travaux) }}</td></tr>
+        </table>
+      </section>
+
+      @if (postes().length > 0) {
+        <section class="carte">
+          <h2>Travaux par catégorie</h2>
+          <table>
+            @for (c of bu.parCategorie; track c.categorie) {
+              <tr><td>{{ c.categorie }}</td><td>{{ fourchette(c.montant) }}</td></tr>
+            }
+          </table>
+          <h2>Par priorité</h2>
+          <table>
+            @for (p of bu.parPriorite; track p.priorite) {
+              <tr><td>{{ libellePriorite[p.priorite] }}</td><td>{{ fourchette(p.montant) }}</td></tr>
+            }
+          </table>
+          <h2>Artisan / à faire soi-même</h2>
+          <table>
+            <tr><td>Artisan</td><td>{{ fourchette(bu.parRealisation.ARTISAN) }}</td></tr>
+            <tr><td>DIY</td><td>{{ fourchette(bu.parRealisation.DIY) }}</td></tr>
+          </table>
+        </section>
+      }
+
+      <section class="carte">
+        <h2>Infos clés</h2>
+        <table>
+          @if (b.surfaceHabitable) { <tr><td>Surface habitable</td><td>{{ nombre(b.surfaceHabitable) }} m²</td></tr> }
+          @if (b.surfaceTerrain) { <tr><td>Terrain</td><td>{{ nombre(b.surfaceTerrain) }} m²</td></tr> }
+          @if (b.anneeConstruction) { <tr><td>Construction</td><td>{{ b.anneeConstruction }}</td></tr> }
+          @if (b.dpe) { <tr><td>DPE / GES</td><td>{{ b.dpe }} / {{ b.ges ?? '—' }}</td></tr> }
+          @if (b.impressionGlobale) { <tr><td>Impression</td><td>{{ b.impressionGlobale }} / 5</td></tr> }
+          @if (b.contact.nom) { <tr><td>Contact</td><td>{{ b.contact.nom }}{{ b.contact.agence ? ' (' + b.contact.agence + ')' : '' }}</td></tr> }
+          @if (b.contact.telephone) { <tr><td>Téléphone</td><td><a [href]="'tel:' + b.contact.telephone">{{ b.contact.telephone }}</a></td></tr> }
+          @if (b.urlAnnonce) { <tr><td>Annonce</td><td><a [href]="b.urlAnnonce" target="_blank" rel="noopener">Ouvrir</a></td></tr> }
+        </table>
+        @if (b.notes) { <p class="notes">{{ b.notes }}</p> }
+      </section>
+
+      <div class="actions">
+        <a class="bouton" [routerLink]="['modifier']">Modifier</a>
+        <button class="bouton-secondaire danger" (click)="supprimerBien()">Supprimer le bien</button>
+      </div>
+    } @else {
+      <div class="actions"><a class="bouton" [routerLink]="['travaux', 'nouveau']">+ Poste de travaux</a></div>
+      @if (postes().length === 0) {
+        <p class="discret">Aucun poste de travaux. Ajoutez-en un, à la main ou depuis le barème.</p>
+      }
+      @for (g of groupes(); track g.categorie) {
+        <section class="carte">
+          <h2>{{ g.categorie }}</h2>
+          @for (l of g.lignes; track l.poste.id) {
+            <div class="poste">
+              <a [routerLink]="['travaux', l.poste.id]" class="poste-info">
+                <strong>{{ l.poste.libelle }}</strong>
+                <span class="discret">{{ libellePriorite[l.poste.priorite] }}@if (l.poste.quantite) { · quantité {{ nombre(l.poste.quantite) }} }</span>
+                <span>{{ fourchette(l.montant) }}</span>
+              </a>
+              <button
+                class="bouton-secondaire"
+                [attr.aria-pressed]="l.poste.realisation === 'DIY'"
+                (click)="basculerRealisation(l.poste)"
+                title="Basculer artisan / à faire soi-même"
+              >{{ l.poste.realisation === 'DIY' ? 'DIY' : 'Artisan' }}</button>
+              <button class="bouton-secondaire danger" aria-label="Supprimer le poste" (click)="supprimerPoste(l.poste)">✕</button>
+            </div>
+          }
+        </section>
+      }
+      @if (postes().length > 0) {
+        <section class="carte">
+          <strong>Total travaux : {{ fourchette(bu.travaux) }}</strong>
+        </section>
+      }
+    }
+  }
+}

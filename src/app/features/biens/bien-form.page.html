@@ -1,0 +1,105 @@
+@if (bien(); as b) {
+  <h1>{{ id() ? 'Modifier le bien' : 'Nouveau bien' }}</h1>
+  <form (ngSubmit)="enregistrer()">
+    <fieldset>
+      <legend>Le bien</legend>
+      <label class="champ">Titre
+        <input name="titre" [(ngModel)]="b.titre" placeholder="Longère Lombez 4 ch." required />
+      </label>
+      <label class="champ">Type
+        <select name="typeBien" [(ngModel)]="b.typeBien">
+          <option value="VILLE">Maison en ville / lotissement</option>
+          <option value="RURAL">Maison rurale avec terrain</option>
+        </select>
+      </label>
+      <label class="champ">Lien de l'annonce
+        <input name="url" type="url" inputmode="url" [(ngModel)]="b.urlAnnonce" />
+      </label>
+      <label class="champ">Adresse
+        <input name="adresse" [(ngModel)]="b.adresse" />
+      </label>
+      <label class="champ">Commune
+        <input name="commune" [(ngModel)]="b.commune" />
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Prix</legend>
+      <div class="grille-2">
+        <label class="champ">Prix affiché (€)
+          <input name="prix" type="number" inputmode="decimal" min="0" [(ngModel)]="b.prixAffiche" />
+        </label>
+        <label class="champ">Marge visée (%)
+          <input name="marge" type="number" inputmode="decimal" min="0" max="100" step="0.5" [(ngModel)]="b.margeNegociationPct" />
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Caractéristiques</legend>
+      <div class="grille-2">
+        <label class="champ">Surface habitable (m²)
+          <input name="shab" type="number" inputmode="decimal" min="0" [(ngModel)]="b.surfaceHabitable" />
+        </label>
+        <label class="champ">Terrain (m²)
+          <input name="sterr" type="number" inputmode="decimal" min="0" [(ngModel)]="b.surfaceTerrain" />
+        </label>
+        <label class="champ">Année de construction
+          <input name="annee" type="number" inputmode="numeric" min="1000" max="2100" [(ngModel)]="b.anneeConstruction" />
+        </label>
+        <label class="champ">Impression globale
+          <select name="impression" [(ngModel)]="b.impressionGlobale">
+            <option [ngValue]="null">—</option>
+            @for (n of [1, 2, 3, 4, 5]; track n) {
+              <option [ngValue]="n">{{ n }} / 5</option>
+            }
+          </select>
+        </label>
+        <label class="champ">DPE
+          <select name="dpe" [(ngModel)]="b.dpe">
+            <option [ngValue]="null">—</option>
+            @for (n of notes; track n) {
+              <option [ngValue]="n">{{ n }}</option>
+            }
+          </select>
+        </label>
+        <label class="champ">GES
+          <select name="ges" [(ngModel)]="b.ges">
+            <option [ngValue]="null">—</option>
+            @for (n of notes; track n) {
+              <option [ngValue]="n">{{ n }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Contact</legend>
+      <label class="champ">Nom
+        <input name="cnom" [(ngModel)]="b.contact.nom" />
+      </label>
+      <label class="champ">Agence
+        <input name="cagence" [(ngModel)]="b.contact.agence" />
+      </label>
+      <label class="champ">Téléphone
+        <input name="ctel" type="tel" [(ngModel)]="b.contact.telephone" />
+      </label>
+      <label class="champ">E-mail
+        <input name="cmail" type="email" [(ngModel)]="b.contact.email" />
+      </label>
+    </fieldset>
+
+    <label class="champ">Notes
+      <textarea name="notes" rows="4" [(ngModel)]="b.notes"></textarea>
+    </label>
+
+    @if (erreur()) {
+      <p class="erreur" role="alert">{{ erreur() }}</p>
+    }
+    <div class="actions">
+      <button type="submit">Enregistrer</button>
+      <a class="bouton bouton-secondaire" [routerLink]="id() ? ['/biens', b.id] : ['/biens']">Annuler</a>
+    </div>
+  </form>
+}

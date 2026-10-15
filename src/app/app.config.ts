@@ -4,11 +4,15 @@ import { provideServiceWorker } from '@angular/service-worker';
 
 import { routes } from './app.routes';
 import { BaseDonneesDexie } from './adapters/dexie/base-donnees-dexie';
+import { BaremeDexie, BiensDexie, ParametresDexie, PostesTravauxDexie } from './adapters/dexie/depots-dexie';
 import { JournalErreursLocal } from './adapters/journal-erreurs-local';
 import { StockageNavigateur } from './adapters/stockage-navigateur';
 import { CaptureErreurs } from './application/capture-erreurs';
+import { BaremeService } from './application/bareme.service';
 import { DiagnosticService } from './application/diagnostic.service';
+import { ParametresService } from './application/parametres.service';
 import { BaseDonneesPort } from './ports/base-donnees.port';
+import { BaremePort, BiensPort, ParametresPort, PostesTravauxPort } from './ports/depots.port';
 import { JournalErreursPort } from './ports/journal-erreurs.port';
 import { StockagePort } from './ports/stockage.port';
 
@@ -18,11 +22,28 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     { provide: StockagePort, useClass: StockageNavigateur },
     { provide: JournalErreursPort, useClass: JournalErreursLocal },
-    { provide: BaseDonneesPort, useClass: BaseDonneesDexie },
+    BaseDonneesDexie,
+    { provide: BaseDonneesPort, useExisting: BaseDonneesDexie },
+    { provide: BiensPort, useClass: BiensDexie },
+    { provide: PostesTravauxPort, useClass: PostesTravauxDexie },
+    { provide: BaremePort, useClass: BaremeDexie },
+    { provide: ParametresPort, useClass: ParametresDexie },
     { provide: ErrorHandler, useClass: CaptureErreurs },
     // Premier lancement : demande de stockage persistant (SPEC §3), sans bloquer le démarrage.
     provideAppInitializer(() => {
       void inject(DiagnosticService).demanderPersistance();
+    }),
+    // Paramètres et barème (pré-rempli au premier lancement) chargés avant l'affichage des écrans.
+    provideAppInitializer(async () => {
+      const parametres = inject(ParametresService);
+      const bareme = inject(BaremeService);
+      const erreurs = inject(ErrorHandler);
+      try {
+        await parametres.charger();
+        await bareme.charger();
+      } catch (e) {
+        erreurs.handleError(e); // visible dans Paramètres › Diagnostic ; l'appli démarre quand même
+      }
     }),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),

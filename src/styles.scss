@@ -25,3 +25,31 @@ button, .bouton {
   min-height: 44px; min-width: 44px; padding: 0 1rem; border: 0; border-radius: 8px;
   background: var(--primaire); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
 }
+
+a { color: var(--primaire); }
+
+.carte {
+  background: var(--surface); border: 1px solid var(--bordure); border-radius: 12px;
+  padding: 1rem; margin-bottom: 0.75rem;
+}
+.discret { color: var(--texte-discret); }
+.actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0; }
+
+.bouton-secondaire {
+  background: var(--surface); color: var(--primaire); border: 1px solid var(--primaire);
+  display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
+}
+.bouton { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.danger { background: #b3261e; color: #fff; border: 0; }
+.bouton-secondaire.danger { background: var(--surface); color: #b3261e; border: 1px solid #b3261e; }
+
+label.champ { display: block; margin-bottom: 0.75rem; font-weight: 600; font-size: 0.9rem; }
+label.champ > input, label.champ > select, label.champ > textarea {
+  display: block; width: 100%; margin-top: 0.25rem; min-height: 44px; padding: 0.5rem 0.75rem;
+  border: 1px solid var(--bordure); border-radius: 8px; font: inherit; font-weight: 400;
+  background: var(--surface); color: var(--texte);
+}
+.grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.75rem; }
+fieldset { border: 1px solid var(--bordure); border-radius: 12px; margin: 0 0 1rem; padding: 0.75rem 1rem 0.25rem; background: var(--surface); }
+legend { font-weight: 700; padding: 0 0.25rem; }
+.erreur { color: #b3261e; font-weight: 600; }

@@ -1,0 +1,78 @@
+@if (poste(); as p) {
+  <h1>{{ posteId() ? 'Modifier le poste' : 'Nouveau poste de travaux' }}</h1>
+  <form (ngSubmit)="enregistrer()">
+    <fieldset>
+      <legend>Chiffrage</legend>
+      <label class="champ">Mode
+        <select name="mode" [(ngModel)]="p.modeChiffrage">
+          <option value="BAREME">Depuis le barème</option>
+          <option value="MANUEL">Montants saisis à la main</option>
+        </select>
+      </label>
+
+      @if (p.modeChiffrage === 'BAREME') {
+        <label class="champ">Ligne du barème
+          <select name="bareme" [ngModel]="p.baremeId ?? ''" (ngModelChange)="choisirLigne(p, $event)">
+            <option value="">— choisir —</option>
+            @for (l of baremeService.lignes(); track l.id) {
+              <option [value]="l.id">{{ l.categorie }} · {{ l.libelle }}</option>
+            }
+          </select>
+        </label>
+        <label class="champ">Quantité {{ unite(p) ? '(' + unite(p) + ')' : '' }}
+          <input name="quantite" type="number" inputmode="decimal" min="0" step="any" [(ngModel)]="p.quantite" />
+        </label>
+      } @else {
+        <div class="grille-2">
+          <label class="champ">Montant bas (€)
+            <input name="bas" type="number" inputmode="decimal" min="0" [(ngModel)]="p.montantBas" />
+          </label>
+          <label class="champ">Montant haut (€)
+            <input name="haut" type="number" inputmode="decimal" min="0" [(ngModel)]="p.montantHaut" />
+          </label>
+        </div>
+      }
+      <p>Estimation : <strong>{{ apercu(p) }}</strong></p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Poste</legend>
+      <label class="champ">Libellé
+        <input name="libelle" [(ngModel)]="p.libelle" required />
+      </label>
+      <label class="champ">Catégorie
+        <select name="categorie" [(ngModel)]="p.categorie">
+          @for (c of categories; track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </select>
+      </label>
+      <div class="grille-2">
+        <label class="champ">Réalisation
+          <select name="realisation" [(ngModel)]="p.realisation">
+            <option value="ARTISAN">Artisan</option>
+            <option value="DIY">Moi-même (DIY)</option>
+          </select>
+        </label>
+        <label class="champ">Priorité
+          <select name="priorite" [(ngModel)]="p.priorite">
+            <option value="URGENT">Urgent</option>
+            <option value="COURT_TERME">Court terme</option>
+            <option value="CONFORT">Confort</option>
+          </select>
+        </label>
+      </div>
+      <label class="champ">Notes
+        <textarea name="notes" rows="3" [(ngModel)]="p.notes"></textarea>
+      </label>
+    </fieldset>
+
+    @if (erreur()) {
+      <p class="erreur" role="alert">{{ erreur() }}</p>
+    }
+    <div class="actions">
+      <button type="submit">Enregistrer</button>
+      <a class="bouton bouton-secondaire" [routerLink]="['/biens', id()]" [queryParams]="{ onglet: 'travaux' }">Annuler</a>
+    </div>
+  </form>
+}
