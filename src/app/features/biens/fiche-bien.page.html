@@ -1,136 +1,215 @@
 @if (bien(); as b) {
   @if (budget(); as bu) {
-    <a class="retour" routerLink="/biens">‹ Biens</a>
-    <h1>{{ b.titre }}</h1>
-    <p class="discret">{{ b.commune }}{{ b.typeBien === 'RURAL' ? ' · rural' : ' · ville' }}</p>
+    <header class="entete-page">
+      <div>
+        <a class="fil" routerLink="/biens"><app-icone nom="gauche" [taille]="18" /> Biens</a>
+        <h1>{{ b.titre }}</h1>
+        <div class="meta">
+          <span>{{ b.commune || 'Commune non renseignée' }}</span>
+          <span class="etiquette">{{ libelleType[b.typeBien] }}</span>
+          <span class="etape">{{ libelleEtape[b.etape] }}</span>
+        </div>
+      </div>
+      <a class="bouton bouton-secondaire" [routerLink]="['modifier']"><app-icone nom="crayon" [taille]="18" /> Modifier</a>
+    </header>
 
     <div class="onglets" role="tablist">
       <button role="tab" [attr.aria-selected]="onglet() === 'synthese'" (click)="onglet.set('synthese')">Synthèse</button>
-      <button role="tab" [attr.aria-selected]="onglet() === 'travaux'" (click)="onglet.set('travaux')">Travaux</button>
-      <button role="tab" [attr.aria-selected]="onglet() === 'visites'" (click)="onglet.set('visites')">Visites</button>
-      <button role="tab" [attr.aria-selected]="onglet() === 'pieces'" (click)="onglet.set('pieces')">Pièces</button>
+      <button role="tab" [attr.aria-selected]="onglet() === 'travaux'" (click)="onglet.set('travaux')">
+        Travaux <span class="compte">{{ postes().length }}</span>
+      </button>
+      <button role="tab" [attr.aria-selected]="onglet() === 'visites'" (click)="onglet.set('visites')">
+        Visites <span class="compte">{{ visites().length }}</span>
+      </button>
+      <button role="tab" [attr.aria-selected]="onglet() === 'pieces'" (click)="onglet.set('pieces')">
+        Pièces <span class="compte">{{ pieces().length }}</span>
+      </button>
     </div>
 
-    @if (onglet() === 'synthese') {
-      <section class="carte">
-        <h2>Budget total</h2>
-        <p class="total">{{ fourchette(bu.total) }}</p>
-        <table>
-          <tr><td>Prix affiché</td><td>{{ euro(b.prixAffiche) }}</td></tr>
-          <tr><td>Prix négocié (−{{ nombre(b.margeNegociationPct) }} %)</td><td>{{ euro(bu.prixNegocie) }}</td></tr>
-          <tr><td>Frais de notaire</td><td>{{ euro(bu.fraisNotaire) }}</td></tr>
-          <tr><td>Travaux</td><td>{{ fourchette(bu.travaux) }}</td></tr>
+    <div class="mise-en-page" [attr.data-onglet]="onglet()">
+      <!-- Budget : toujours visible à droite sur tablette paysage, en tête de la synthèse sinon. -->
+      <aside class="budget panneau">
+        <span class="surtitre">Budget total</span>
+        <p class="total chiffre">{{ euro(bu.total.bas) }}</p>
+        @if (bu.total.haut !== bu.total.bas) {
+          <p class="total-haut chiffre">à {{ euro(bu.total.haut) }}</p>
+        }
+        <table class="registre">
+          <tr><th>Prix affiché</th><td>{{ euro(b.prixAffiche) }}</td></tr>
+          <tr><th>Négocié <span class="discret">−{{ nombre(b.margeNegociationPct) }} %</span></th><td>{{ euro(bu.prixNegocie) }}</td></tr>
+          <tr><th>Frais de notaire</th><td>{{ euro(bu.fraisNotaire) }}</td></tr>
+          <tr><th>Travaux</th><td>{{ fourchette(bu.travaux) }}</td></tr>
         </table>
-      </section>
+        @if (postes().length > 0) {
+          <div class="repartition">
+            <span class="surtitre">Réalisation des travaux</span>
+            <table class="registre">
+              <tr><th>Artisan</th><td>{{ fourchette(bu.parRealisation.ARTISAN) }}</td></tr>
+              <tr><th>Soi-même</th><td>{{ fourchette(bu.parRealisation.DIY) }}</td></tr>
+            </table>
+          </div>
+        }
+      </aside>
 
-      @if (postes().length > 0) {
-        <section class="carte">
-          <h2>Travaux par catégorie</h2>
-          <table>
-            @for (c of bu.parCategorie; track c.categorie) {
-              <tr><td>{{ c.categorie }}</td><td>{{ fourchette(c.montant) }}</td></tr>
+      <div class="contenu">
+        @switch (onglet()) {
+          @case ('synthese') {
+            @if (postes().length > 0) {
+              <section class="panneau">
+                <h2>Où part l’argent des travaux</h2>
+                <ul class="barres">
+                  @for (c of categories(); track c.categorie) {
+                    <li>
+                      <div class="barre-ligne"><span>{{ c.categorie }}</span><span class="chiffre">{{ fourchette(c.montant) }}</span></div>
+                      <div class="jauge"><span [style.width.%]="c.part"></span></div>
+                    </li>
+                  }
+                </ul>
+                <span class="surtitre espace">Par priorité</span>
+                <table class="registre">
+                  @for (p of bu.parPriorite; track p.priorite) {
+                    <tr><th>{{ libellePriorite[p.priorite] }}</th><td>{{ fourchette(p.montant) }}</td></tr>
+                  }
+                </table>
+              </section>
             }
-          </table>
-          <h2>Par priorité</h2>
-          <table>
-            @for (p of bu.parPriorite; track p.priorite) {
-              <tr><td>{{ libellePriorite[p.priorite] }}</td><td>{{ fourchette(p.montant) }}</td></tr>
-            }
-          </table>
-          <h2>Artisan / à faire soi-même</h2>
-          <table>
-            <tr><td>Artisan</td><td>{{ fourchette(bu.parRealisation.ARTISAN) }}</td></tr>
-            <tr><td>DIY</td><td>{{ fourchette(bu.parRealisation.DIY) }}</td></tr>
-          </table>
-        </section>
-      }
 
-      <section class="carte">
-        <h2>Infos clés</h2>
-        <table>
-          @if (b.surfaceHabitable) { <tr><td>Surface habitable</td><td>{{ nombre(b.surfaceHabitable) }} m²</td></tr> }
-          @if (b.surfaceTerrain) { <tr><td>Terrain</td><td>{{ nombre(b.surfaceTerrain) }} m²</td></tr> }
-          @if (b.anneeConstruction) { <tr><td>Construction</td><td>{{ b.anneeConstruction }}</td></tr> }
-          @if (b.dpe) { <tr><td>DPE / GES</td><td>{{ b.dpe }} / {{ b.ges ?? '—' }}</td></tr> }
-          @if (b.impressionGlobale) { <tr><td>Impression</td><td>{{ b.impressionGlobale }} / 5</td></tr> }
-          @if (b.contact.nom) { <tr><td>Contact</td><td>{{ b.contact.nom }}{{ b.contact.agence ? ' (' + b.contact.agence + ')' : '' }}</td></tr> }
-          @if (b.contact.telephone) { <tr><td>Téléphone</td><td><a [href]="'tel:' + b.contact.telephone">{{ b.contact.telephone }}</a></td></tr> }
-          @if (b.urlAnnonce) { <tr><td>Annonce</td><td><a [href]="b.urlAnnonce" target="_blank" rel="noopener">Ouvrir</a></td></tr> }
-        </table>
-        @if (b.notes) { <p class="notes">{{ b.notes }}</p> }
-      </section>
+            <section class="panneau">
+              <h2>Le bien</h2>
+              <dl class="infos">
+                <div><dt>Surface habitable</dt><dd>{{ b.surfaceHabitable ? nombre(b.surfaceHabitable) + ' m²' : '—' }}</dd></div>
+                <div><dt>Terrain</dt><dd>{{ b.surfaceTerrain ? nombre(b.surfaceTerrain) + ' m²' : '—' }}</dd></div>
+                <div><dt>Construction</dt><dd>{{ b.anneeConstruction ?? '—' }}</dd></div>
+                <div>
+                  <dt>DPE · GES</dt>
+                  <dd>
+                    @if (b.dpe) { <span class="classe-energie" [attr.data-classe]="b.dpe">{{ b.dpe }}</span> } @else { — }
+                    @if (b.ges) { <span class="classe-energie" [attr.data-classe]="b.ges">{{ b.ges }}</span> }
+                  </dd>
+                </div>
+                <div><dt>Impression</dt><dd>{{ b.impressionGlobale ? b.impressionGlobale + ' / 5' : '—' }}</dd></div>
+                @if (b.urlAnnonce) {
+                  <div><dt>Annonce</dt><dd><a [href]="b.urlAnnonce" target="_blank" rel="noopener">Ouvrir l’annonce</a></dd></div>
+                }
+              </dl>
+              @if (b.contact.nom || b.contact.telephone) {
+                <span class="surtitre espace">Contact</span>
+                <p class="contact">
+                  {{ b.contact.nom }}@if (b.contact.agence) { <span class="discret"> · {{ b.contact.agence }}</span> }
+                  @if (b.contact.telephone) { <br /><a [href]="'tel:' + b.contact.telephone">{{ b.contact.telephone }}</a> }
+                  @if (b.contact.email) { <br /><a [href]="'mailto:' + b.contact.email">{{ b.contact.email }}</a> }
+                </p>
+              }
+              @if (b.notes) {
+                <span class="surtitre espace">Notes</span>
+                <p class="notes">{{ b.notes }}</p>
+              }
+            </section>
 
-      <div class="actions">
-        <a class="bouton" [routerLink]="['modifier']">Modifier</a>
-        <button class="bouton-secondaire danger" (click)="supprimerBien()">Supprimer le bien</button>
-      </div>
-    } @else if (onglet() === 'visites') {
-      <div class="actions"><button type="button" (click)="demarrerVisite()">Démarrer une visite</button></div>
-      @if (visites().length === 0) {
-        <p class="discret">Aucune visite. Démarrez-en une pour parcourir la checklist sur place.</p>
-      }
-      @for (v of visites(); track v.id) {
-        <section class="carte poste">
-          <a [routerLink]="['visites', v.id]" class="poste-info">
-            <strong>{{ v.typeVisite === 'PREMIERE' ? 'Première visite' : 'Contre-visite' }} · {{ dateVisite(v) }}</strong>
-            <span class="discret">{{ resumeVisite(v) }}</span>
-          </a>
-          <button class="bouton-secondaire danger" aria-label="Supprimer la visite" (click)="supprimerVisite(v)">✕</button>
-        </section>
-      }
-    } @else if (onglet() === 'pieces') {
-      <div class="actions"><a class="bouton" [routerLink]="['pieces', 'nouveau']">+ Pièce</a></div>
-      @if (pieces().length === 0) {
-        <p class="discret">Aucune pièce. Ajoutez-les avec leurs mesures et leurs photos.</p>
-      }
-      @for (pi of pieces(); track pi.id) {
-        <section class="carte poste">
-          <a [routerLink]="['pieces', pi.id]" class="poste-info">
-            <strong>{{ pi.nom }}</strong>
-            <span class="discret">
-              @if (surfacePiece(pi); as s) { {{ nombre(s) }} m² } @else { surface inconnue }
-              @if (pi.hauteurSousPlafond) { · h. {{ nombre(pi.hauteurSousPlafond) }} m }
-              @if (pi.photoIds.length > 0) { · {{ pi.photoIds.length }} photo(s) }
-            </span>
-          </a>
-        </section>
-      }
-      @if (pieces().length > 0) {
-        <section class="carte">
-          <strong>Surface totale : {{ nombre(surfaceTotale()) }} m²</strong>
-        </section>
-      }
-    } @else {
-      <div class="actions"><a class="bouton" [routerLink]="['travaux', 'nouveau']">+ Poste de travaux</a></div>
-      @if (postes().length === 0) {
-        <p class="discret">Aucun poste de travaux. Ajoutez-en un, à la main ou depuis le barème.</p>
-      }
-      @for (g of groupes(); track g.categorie) {
-        <section class="carte">
-          <h2>{{ g.categorie }}</h2>
-          @for (l of g.lignes; track l.poste.id) {
-            <div class="poste">
-              <a [routerLink]="['travaux', l.poste.id]" class="poste-info">
-                <strong>{{ l.poste.libelle }}</strong>
-                <span class="discret">{{ libellePriorite[l.poste.priorite] }}@if (l.poste.quantite) { · quantité {{ nombre(l.poste.quantite) }} }</span>
-                <span>{{ fourchette(l.montant) }}</span>
-              </a>
-              <button
-                class="bouton-secondaire"
-                [attr.aria-pressed]="l.poste.realisation === 'DIY'"
-                (click)="basculerRealisation(l.poste)"
-                title="Basculer artisan / à faire soi-même"
-              >{{ l.poste.realisation === 'DIY' ? 'DIY' : 'Artisan' }}</button>
-              <button class="bouton-secondaire danger" aria-label="Supprimer le poste" (click)="supprimerPoste(l.poste)">✕</button>
+            <div class="actions">
+              <button class="bouton-texte danger" (click)="supprimerBien()"><app-icone nom="corbeille" [taille]="18" /> Supprimer ce bien</button>
             </div>
           }
-        </section>
-      }
-      @if (postes().length > 0) {
-        <section class="carte">
-          <strong>Total travaux : {{ fourchette(bu.travaux) }}</strong>
-        </section>
-      }
-    }
+
+          @case ('travaux') {
+            <div class="barre-onglet">
+              <span class="discret">Total <strong class="chiffre encre">{{ fourchette(bu.travaux) }}</strong></span>
+              <a class="bouton" [routerLink]="['travaux', 'nouveau']"><app-icone nom="plus" [taille]="20" /> Poste de travaux</a>
+            </div>
+            @if (postes().length === 0) {
+              <div class="vide">Aucun poste de travaux. Ajoutez-en un, à la main ou depuis le barème, ou depuis un point de visite.</div>
+            }
+            @for (g of groupes(); track g.categorie) {
+              <section class="panneau liste">
+                <h2>{{ g.categorie }}</h2>
+                @for (l of g.lignes; track l.poste.id) {
+                  <div class="ligne">
+                    <a [routerLink]="['travaux', l.poste.id]" class="ligne-info">
+                      <span class="ligne-titre">{{ l.poste.libelle }}</span>
+                      <span class="ligne-meta">
+                        <span class="etiquette" [class.urgent]="l.poste.priorite === 'URGENT'">{{ libellePriorite[l.poste.priorite] }}</span>
+                        @if (l.poste.quantite) { <span>quantité {{ nombre(l.poste.quantite) }}</span> }
+                      </span>
+                    </a>
+                    <span class="ligne-montant chiffre">{{ fourchette(l.montant) }}</span>
+                    <div class="bascule" role="group" aria-label="Réalisation">
+                      <button type="button" [attr.aria-pressed]="l.poste.realisation === 'ARTISAN'" (click)="l.poste.realisation !== 'ARTISAN' && basculerRealisation(l.poste)">Artisan</button>
+                      <button type="button" [attr.aria-pressed]="l.poste.realisation === 'DIY'" (click)="l.poste.realisation !== 'DIY' && basculerRealisation(l.poste)">Soi-même</button>
+                    </div>
+                    <button class="bouton-texte bouton-icone danger" aria-label="Supprimer le poste" (click)="supprimerPoste(l.poste)">
+                      <app-icone nom="corbeille" [taille]="20" />
+                    </button>
+                  </div>
+                }
+              </section>
+            }
+          }
+
+          @case ('visites') {
+            <div class="barre-onglet">
+              <span class="discret">{{ visites().length }} visite{{ visites().length > 1 ? 's' : '' }}</span>
+              <button type="button" (click)="demarrerVisite()"><app-icone nom="visite" [taille]="20" /> Démarrer une visite</button>
+            </div>
+            @if (visites().length === 0) {
+              <div class="vide">Aucune visite. Démarrez-en une sur place pour parcourir la checklist.</div>
+            } @else {
+              <section class="panneau liste">
+                @for (v of visites(); track v.id) {
+                  @let r = resumeVisite(v);
+                  <div class="ligne">
+                    <a [routerLink]="['visites', v.id]" class="ligne-info">
+                      <span class="ligne-titre">{{ v.typeVisite === 'PREMIERE' ? 'Première visite' : 'Contre-visite' }}</span>
+                      <span class="ligne-meta">{{ dateVisite(v) }}</span>
+                      <span class="progression-visite">
+                        <span class="jauge"><span [style.width.%]="r.pourcentage"></span></span>
+                        <span class="chiffre">{{ r.verifies }}/{{ r.total }}</span>
+                      </span>
+                    </a>
+                    <span class="constats">
+                      <span class="pastille" data-etat="TRAVAUX">{{ r.etats.TRAVAUX }} travaux</span>
+                      <span class="pastille" data-etat="A_SURVEILLER">{{ r.etats.A_SURVEILLER }} à surveiller</span>
+                    </span>
+                    <button class="bouton-texte bouton-icone danger" aria-label="Supprimer la visite" (click)="supprimerVisite(v)">
+                      <app-icone nom="corbeille" [taille]="20" />
+                    </button>
+                  </div>
+                }
+              </section>
+            }
+          }
+
+          @case ('pieces') {
+            <div class="barre-onglet">
+              <span class="discret">Surface totale <strong class="chiffre encre">{{ nombre(surfaceTotale()) }} m²</strong></span>
+              <a class="bouton" [routerLink]="['pieces', 'nouveau']"><app-icone nom="plus" [taille]="20" /> Pièce</a>
+            </div>
+            @if (pieces().length === 0) {
+              <div class="vide">Aucune pièce. Ajoutez-les avec leurs mesures et leurs photos.</div>
+            } @else {
+              <section class="panneau liste">
+                @for (pi of pieces(); track pi.id) {
+                  <a class="ligne ligne-lien" [routerLink]="['pieces', pi.id]">
+                    <span class="ligne-info">
+                      <span class="ligne-titre">{{ pi.nom }}</span>
+                      <span class="ligne-meta">
+                        @if (pi.longueur && pi.largeur) { <span>{{ nombre(pi.longueur) }} × {{ nombre(pi.largeur) }} m</span> }
+                        @if (pi.hauteurSousPlafond) { <span>h. {{ nombre(pi.hauteurSousPlafond) }} m</span> }
+                        @if (pi.photoIds.length > 0) {
+                          <span class="avec-icone"><app-icone nom="appareil" [taille]="16" /> {{ pi.photoIds.length }}</span>
+                        }
+                      </span>
+                    </span>
+                    <span class="ligne-montant chiffre">
+                      @if (surfacePiece(pi); as s) { {{ nombre(s) }} m² } @else { <span class="discret">—</span> }
+                    </span>
+                    <app-icone nom="droite" [taille]="20" class="discret" />
+                  </a>
+                }
+              </section>
+            }
+          }
+        }
+      </div>
+    </div>
   }
 }

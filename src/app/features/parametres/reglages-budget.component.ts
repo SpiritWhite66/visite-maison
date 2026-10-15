@@ -19,12 +19,14 @@ import { Parametres } from '../../domain/modeles';
         <label class="champ">Coefficient DIY (0,4 ≈ matériaux seuls)
           <input name="diy" type="number" inputmode="decimal" min="0" step="0.05" [(ngModel)]="valeurs.coefDiyDefaut" />
         </label>
-        <button type="submit">Enregistrer</button>
-        @if (enregistre()) { <span class="ok" role="status"> Enregistré ✓</span> }
+        <div class="pied">
+          <button type="submit">Enregistrer</button>
+          @if (enregistre()) { <span class="ok" role="status">Enregistré</span> }
+        </div>
       </form>
     </section>
   `,
-  styles: `h2 { margin: 0 0 .75rem; } .ok { color: #1b7a3d; font-weight: 600; }`,
+  styles: `.pied { display: flex; align-items: center; gap: 1rem; } .ok { color: var(--etat-ok); font-weight: 600; }`,
 })
 export class ReglagesBudgetComponent {
   private readonly service = inject(ParametresService);

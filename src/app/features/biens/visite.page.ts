@@ -7,6 +7,7 @@ import { VisitesService } from '../../application/visites.service';
 import { modifierReponse, progression, progressionTotale, reponseDe, themesPourBien } from '../../domain/checklist';
 import { PointChecklist } from '../../domain/checklist-catalogue';
 import { Bien, EtatPoint, ReponseChecklist, TypeVisite, Visite } from '../../domain/modeles';
+import { IconeComponent } from '../../shared/icone.component';
 import { AjoutPhotoComponent, GaleriePhotosComponent } from '../../shared/photos.component';
 
 const ETATS: { etat: Exclude<EtatPoint, 'NON_VERIFIE'>; libelle: string }[] = [
@@ -22,7 +23,7 @@ const ETATS: { etat: Exclude<EtatPoint, 'NON_VERIFIE'>; libelle: string }[] = [
  */
 @Component({
   selector: 'app-visite',
-  imports: [FormsModule, RouterLink, AjoutPhotoComponent, GaleriePhotosComponent],
+  imports: [FormsModule, RouterLink, AjoutPhotoComponent, GaleriePhotosComponent, IconeComponent],
   templateUrl: './visite.page.html',
   styleUrl: './visite.page.scss',
 })
@@ -42,6 +43,11 @@ export class VisitePage implements OnInit {
   /** Points dont la zone de commentaire est ouverte. */
   protected readonly commentairesOuverts = signal<ReadonlySet<string>>(new Set());
   protected readonly photoEnCours = signal(false);
+  /**
+   * Thème affiché. Sur tablette, un seul thème à la fois à côté du sommaire ;
+   * sur petit écran, il sert d'accordéon. `notes` désigne les notes de la visite.
+   */
+  protected readonly themeOuvert = signal<string | null>(null);
 
   protected readonly etats = ETATS;
   protected readonly reponseDe = reponseDe;
@@ -56,23 +62,43 @@ export class VisitePage implements OnInit {
       return;
     }
     this.themes = themesPourBien(bien.typeBien);
+    this.themeOuvert.set(this.themes[0]?.id ?? null);
     this.bien.set(bien);
     this.visite.set(visite);
   }
 
-  protected progressionTheme(points: readonly PointChecklist[]): string {
-    const v = this.visite();
-    if (!v) return '';
+  protected progressionTheme(points: readonly PointChecklist[]): { verifies: number; total: number; travaux: number } {
+    const v = this.visite()!;
     const { verifies, total } = progression(points, v);
-    return `${verifies}/${total}`;
+    const travaux = points.filter((pt) => reponseDe(v, pt.id).etat === 'TRAVAUX').length;
+    return { verifies, total, travaux };
   }
 
-  protected progressionGlobale(): string {
-    const b = this.bien();
-    const v = this.visite();
-    if (!b || !v) return '';
-    const { verifies, total } = progressionTotale(b.typeBien, v);
-    return `${verifies} / ${total} points vérifiés`;
+  protected progressionGlobale(): { verifies: number; total: number; pourcentage: number } {
+    const { verifies, total } = progressionTotale(this.bien()!.typeBien, this.visite()!);
+    return { verifies, total, pourcentage: total ? (verifies / total) * 100 : 0 };
+  }
+
+  /** Sommaire (tablette) : affiche le thème et remonte en haut de la page. */
+  protected afficherTheme(id: string): void {
+    this.themeOuvert.set(id);
+    window.scrollTo({ top: 0 });
+  }
+
+  /** En-tête d'accordéon (petit écran) : ouvre ou referme. */
+  protected basculerTheme(id: string): void {
+    this.themeOuvert.update((o) => (o === id ? null : id));
+  }
+
+  protected themeSuivant(id: string): { id: string; libelle: string } {
+    const i = this.themes.findIndex((t) => t.id === id);
+    return this.themes[i + 1] ?? { id: 'notes', libelle: 'Notes de la visite' };
+  }
+
+  protected allerA(id: string): void {
+    this.themeOuvert.set(id);
+    // Sur petit écran l'accordéon replie le thème courant : on ramène l'en-tête du suivant en vue.
+    requestAnimationFrame(() => document.getElementById('theme-' + id)?.scrollIntoView({ block: 'start' }));
   }
 
   protected commentaireVisible(r: ReponseChecklist): boolean {

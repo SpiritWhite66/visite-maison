@@ -1,12 +1,19 @@
 @if (piece(); as p) {
-  <a class="retour" [routerLink]="['/biens', id()]" [queryParams]="{ onglet: 'pieces' }">‹ Pièces</a>
-  <h1>{{ pieceId() ? 'Pièce' : 'Nouvelle pièce' }}</h1>
-  <p class="discret" aria-live="polite">
-    @if (p.nom.trim()) { {{ enregistre() ? '✓ Enregistré' : 'Enregistrement…' }} } @else { Donnez un nom à la pièce pour l’enregistrer. }
-  </p>
+  <header class="entete-page">
+    <div>
+      <a class="fil" [routerLink]="['/biens', id()]" [queryParams]="{ onglet: 'pieces' }"><app-icone nom="gauche" [taille]="18" /> Pièces</a>
+      <h1>{{ p.nom.trim() || 'Nouvelle pièce' }}</h1>
+    </div>
+    <span class="etat-auto" [class.ok]="p.nom.trim() && enregistre()" aria-live="polite">
+      @if (p.nom.trim()) {
+        @if (enregistre()) { <app-icone nom="coche" [taille]="16" /> Enregistré } @else { Enregistrement… }
+      } @else { Donnez-lui un nom pour l’enregistrer }
+    </span>
+  </header>
 
-  <fieldset>
-    <legend>Pièce</legend>
+  <section class="bloc-form">
+    <h2>Pièce</h2>
+    <div class="champs">
     <label class="champ">Nom
       <input name="nom" placeholder="Séjour, Grange…" [(ngModel)]="p.nom" (ngModelChange)="modifie()" />
     </label>
@@ -31,21 +38,24 @@
     <label class="champ">Notes
       <textarea name="notes" rows="3" [(ngModel)]="p.notes" (ngModelChange)="modifie()"></textarea>
     </label>
-  </fieldset>
+    </div>
+    </section>
 
-  <fieldset>
-    <legend>Photos</legend>
-    <app-galerie-photos [photoIds]="p.photoIds" (supprimer)="retirerPhoto($event)" />
-    <div class="actions">
+  <section class="bloc-form">
+    <h2>Photos</h2>
+    <div class="champs">
+    <app-galerie-photos class="large" [photoIds]="p.photoIds" (supprimer)="retirerPhoto($event)" />
+    <div class="actions large">
       <app-ajout-photo [desactive]="photoEnCours() || !p.nom.trim()" (choisie)="ajouterPhoto($event)" />
     </div>
-    @if (!p.nom.trim()) { <p class="discret">Saisissez d’abord un nom.</p> }
-  </fieldset>
+    @if (!p.nom.trim()) { <p class="discret large">Saisissez d’abord un nom.</p> }
+    </div>
+    </section>
 
-  <div class="actions">
-    <a class="bouton" [routerLink]="['/biens', id()]" [queryParams]="{ onglet: 'pieces' }">Terminé</a>
+  <div class="barre-actions">
     @if (existe()) {
-      <button type="button" class="bouton-secondaire danger" (click)="supprimer()">Supprimer la pièce</button>
+      <button type="button" class="bouton-texte danger" (click)="supprimer()"><app-icone nom="corbeille" [taille]="18" /> Supprimer</button>
     }
+    <a class="bouton" [routerLink]="['/biens', id()]" [queryParams]="{ onglet: 'pieces' }">Terminé</a>
   </div>
 }

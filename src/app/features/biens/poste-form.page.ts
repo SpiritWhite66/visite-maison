@@ -1,6 +1,7 @@
 import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { IconeComponent } from '../../shared/icone.component';
 import { BaremeService } from '../../application/bareme.service';
 import { BudgetService } from '../../application/budget.service';
 import { VisitesService } from '../../application/visites.service';
@@ -12,7 +13,7 @@ const LIBELLE_UNITE: Record<UniteBareme, string> = { M2: 'm²', ML: 'ml', UNITE:
 
 @Component({
   selector: 'app-poste-form',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, IconeComponent],
   templateUrl: './poste-form.page.html',
 })
 export class PosteFormPage implements OnInit {
