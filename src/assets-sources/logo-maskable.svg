@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Visite Immo</title>
+  <rect width="512" height="512" fill="#2f5d50"/>
+  <g transform="translate(256 262) scale(0.98) translate(-256 -256)" fill="none" stroke="#f2eee6" stroke-linejoin="miter">
+    <!-- Toit -->
+    <path d="M118 250 L256 132 L394 250" stroke-width="34" stroke-linecap="square"/>
+    <!-- Murs, avec l'ouverture de la porte en façade -->
+    <path d="M162 232 V380 H218 M294 380 H350 V232" stroke-width="34" stroke-linecap="square"/>
+    <!-- Porte en symbole de plan : battant et débattement -->
+    <path d="M294 380 V304" stroke-width="12" stroke-linecap="round"/>
+    <path d="M294 304 A76 76 0 0 0 218 380" stroke-width="8" stroke-linecap="round" opacity="0.75"/>
+  </g>
+</svg>

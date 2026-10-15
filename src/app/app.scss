@@ -24,11 +24,7 @@ main {
     inset: 0 auto 0 0; width: var(--rail); flex-direction: column; align-items: stretch; gap: 0.25rem;
     padding: 1rem 0.5rem; border-top: 0; border-right: 1px solid var(--filet);
   }
-  .marque {
-    display: grid; place-items: center; width: 44px; height: 44px; margin: 0 auto 1.25rem;
-    border-radius: var(--rayon); background: var(--encre); color: var(--fond);
-    font-weight: 800; font-size: 0.95rem; letter-spacing: 0.02em;
-  }
+  .marque { display: block; width: 44px; height: 44px; margin: 0 auto 1.25rem; }
   .rail a { flex: 0 0 auto; min-height: 64px; border-radius: var(--rayon); }
   .rail a.actif { background: var(--primaire-pale); }
 }
