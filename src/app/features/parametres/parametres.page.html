@@ -1,0 +1,48 @@
+<h1>Paramètres</h1>
+
+<section class="carte">
+  <h2>Diagnostic</h2>
+  @if (diagnostic(); as d) {
+    <dl>
+      <dt>Version</dt>
+      <dd>{{ d.version }}</dd>
+      <dt>Service worker</dt>
+      <dd>{{ d.serviceWorker }}</dd>
+      <dt>Stockage persistant</dt>
+      <dd>{{ oui(d.stockagePersistant) }}</dd>
+      <dt>Espace utilisé</dt>
+      <dd>{{ taille(d.stockage.usageOctets) }} / {{ taille(d.stockage.quotaOctets) }}</dd>
+      <dt>Base IndexedDB</dt>
+      <dd>
+        @if (d.baseDonnees.ouverte) {
+          ouverte (schéma v{{ d.baseDonnees.version }})
+        } @else {
+          erreur : {{ d.baseDonnees.erreur }}
+        }
+      </dd>
+    </dl>
+
+    <div class="actions">
+      @if (d.stockagePersistant !== true) {
+        <button type="button" (click)="demanderPersistance()">Demander le stockage persistant</button>
+      }
+      <button type="button" (click)="actualiser()">Actualiser</button>
+    </div>
+
+    <h3>Dernières erreurs ({{ d.erreurs.length }})</h3>
+    @if (d.erreurs.length === 0) {
+      <p class="discret">Aucune erreur capturée.</p>
+    } @else {
+      <ul class="erreurs">
+        @for (e of d.erreurs; track $index) {
+          <li>
+            <time>{{ e.date }}</time> <strong>{{ e.source }}</strong><br />{{ e.message }}
+          </li>
+        }
+      </ul>
+      <button type="button" (click)="viderErreurs()">Effacer le journal</button>
+    }
+  } @else {
+    <p class="discret">Chargement…</p>
+  }
+</section>
