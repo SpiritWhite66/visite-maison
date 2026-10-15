@@ -101,6 +101,13 @@ export class PlanEditeurPage implements OnInit, OnDestroy {
   protected readonly apercu = signal<{ outil: 'mur' | 'rectangle'; a: Point; b: Point } | null>(null);
   protected readonly message = signal('');
   protected readonly etatSauvegarde = signal<'ok' | 'en-cours' | 'erreur'>('ok');
+  /**
+   * Mode stylet (activé dès que le stylet touche ou survole l'écran) : le stylet dessine,
+   * les doigts ne font que déplacer et zoomer la vue, et la paume posée est ignorée.
+   */
+  protected readonly modeStylet = signal(false);
+  /** Point où le stylet poserait le trait s'il touchait l'écran (survol). */
+  protected readonly survol = signal<Point | null>(null);
 
   private passe: ElementPlan[][] = [];
   private futur: ElementPlan[][] = [];
@@ -159,6 +166,10 @@ export class PlanEditeurPage implements OnInit, OnDestroy {
   private aBouge = false;
   private departEcran: Point = { x: 0, y: 0 };
   private readonly pointeurs = new Map<number, Point>();
+  /** Type du pointeur qui mène le geste en cours : le stylet est plus précis que le doigt. */
+  private typePointeur = 'touch';
+  /** Identifiant du stylet posé sur l'écran, pour ignorer la paume. */
+  private styletPose: number | null = null;
   private observateur?: ResizeObserver;
   private ecriture: Promise<void> = Promise.resolve();
   private minuterieMessage?: ReturnType<typeof setTimeout>;
@@ -236,9 +247,9 @@ export class PlanEditeurPage implements OnInit, OnDestroy {
     return { x: v.x + ecran.x / v.k, y: v.y + ecran.y / v.k };
   }
 
-  /** Rayon de capture du doigt, en mètres. */
+  /** Rayon de capture, en mètres : celui du doigt, divisé par deux pour la pointe d'un stylet. */
   private rayon(px: number): number {
-    return px / this.vue().k;
+    return (this.typePointeur === 'pen' ? px * 0.5 : px) / this.vue().k;
   }
 
   /* ---------- Aimant ---------- */
@@ -270,8 +281,33 @@ export class PlanEditeurPage implements OnInit, OnDestroy {
   /* ---------- Gestes ---------- */
 
   protected appui(e: PointerEvent): void {
-    (e.currentTarget as Element).setPointerCapture(e.pointerId);
     const ecran = this.ecran(e);
+    const stylet = e.pointerType === 'pen';
+
+    if (stylet) {
+      this.modeStylet.set(true);
+      this.survol.set(null);
+      // Paume posée avant le stylet : on oublie ses contacts et ce qu'ils avaient commencé.
+      if (this.pointeurs.size > 0) {
+        this.annulerGeste();
+        this.pointeurs.clear();
+      }
+      this.styletPose = e.pointerId;
+      // Gomme du stylet : efface l'élément touché.
+      if (e.button === 5 || (e.buttons & 32) !== 0) {
+        this.typePointeur = 'pen';
+        this.effacerSous(this.monde(ecran));
+        return;
+      }
+    } else if (this.styletPose !== null) {
+      return; // paume ou doigt pendant que le stylet dessine
+    }
+
+    try {
+      (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    } catch {
+      // Pointeur déjà relâché : sans capture, le geste reste utilisable.
+    }
     this.pointeurs.set(e.pointerId, ecran);
 
     if (this.pointeurs.size === 2) {
@@ -282,10 +318,19 @@ export class PlanEditeurPage implements OnInit, OnDestroy {
     }
     if (this.pointeurs.size > 2) return;
 
+    this.typePointeur = e.pointerType;
+    // En mode stylet, un doigt seul déplace la vue, quel que soit l'outil.
+    if (this.modeStylet() && !stylet) {
+      this.aBouge = false;
+      this.departEcran = ecran;
+      this.geste = { type: 'pan', depart: ecran, vue: this.vue() };
+      return;
+    }
     this.aBouge = false;
     this.departEcran = ecran;
     const p = this.monde(ecran);
-    const outil = this.outil();
+    // Bouton latéral du stylet maintenu : sélection temporaire, sans changer d'outil.
+    const outil = stylet && (e.buttons & 2) !== 0 ? 'selection' : this.outil();
     if (outil === 'mur' || outil === 'rectangle') {
       const a = this.accrocher(p);
       this.geste = { type: 'dessin', outil, a };
@@ -343,6 +388,13 @@ export class PlanEditeurPage implements OnInit, OnDestroy {
   }
 
   protected deplacement(e: PointerEvent): void {
+    if (e.pointerType === 'pen' && !this.pointeurs.has(e.pointerId)) {
+      // Stylet en survol : on montre où le point serait posé.
+      this.modeStylet.set(true);
+      this.typePointeur = 'pen';
+      this.survol.set(this.pointSurvole(this.monde(this.ecran(e))));
+      return;
+    }
     if (!this.pointeurs.has(e.pointerId)) return;
     const ecran = this.ecran(e);
     this.pointeurs.set(e.pointerId, ecran);
@@ -418,6 +470,7 @@ export class PlanEditeurPage implements OnInit, OnDestroy {
   }
 
   protected relache(e: PointerEvent): void {
+    if (e.pointerId === this.styletPose) this.styletPose = null;
     if (!this.pointeurs.delete(e.pointerId)) return;
     const g = this.geste;
     if (!g) return;
@@ -453,6 +506,36 @@ export class PlanEditeurPage implements OnInit, OnDestroy {
       case 'ouverture':
         if (this.aBouge) this.valider(this.elements(), g.avant);
         return;
+    }
+  }
+
+  protected quitter(e: PointerEvent): void {
+    if (e.pointerType === 'pen') this.survol.set(null);
+  }
+
+  /** Position que prendrait un appui du stylet avec l'outil courant (aimant compris). */
+  private pointSurvole(p: Point): Point | null {
+    const outil = this.outil();
+    if (outil === 'mur' || outil === 'rectangle' || outil === 'texte' || outil === 'equipement') return this.accrocher(p);
+    if (outil === 'porte' || outil === 'fenetre') {
+      let meilleur: { point: Point; d: number } | null = null;
+      for (const m of murs(this.elements())) {
+        const pr = projeter(p, { x: m.x1, y: m.y1 }, { x: m.x2, y: m.y2 });
+        if (pr.distance <= Math.max(0.5, this.rayon(30)) && (!meilleur || pr.distance < meilleur.d)) meilleur = { point: pr.point, d: pr.distance };
+      }
+      return meilleur?.point ?? null;
+    }
+    return null;
+  }
+
+  /** Gomme : supprime l'élément le plus proche du point touché. */
+  private effacerSous(p: Point): void {
+    const g = this.saisir(p);
+    if (g && 'id' in g) {
+      this.valider(supprimerElement(this.elements(), g.id));
+      this.selectionId.set(null);
+    } else if (g?.type === 'extremite') {
+      this.supprimerSelection();
     }
   }
 

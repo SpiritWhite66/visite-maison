@@ -30,6 +30,10 @@
         <button type="button" class="bascule-outil" [attr.aria-pressed]="cotes()" (click)="cotes.set(!cotes())" title="Afficher la longueur des murs">
           <app-icone nom="cote" [taille]="20" /> <span>Cotes</span>
         </button>
+        <button type="button" class="bascule-outil" [attr.aria-pressed]="modeStylet()" (click)="modeStylet.set(!modeStylet())"
+          title="Stylet : le stylet dessine, les doigts déplacent et zooment, la paume est ignorée">
+          <app-icone nom="stylet" [taille]="20" /> <span>Stylet</span>
+        </button>
       </div>
     </header>
 
@@ -50,6 +54,8 @@
         (pointermove)="deplacement($event)"
         (pointerup)="relache($event)"
         (pointercancel)="relache($event)"
+        (pointerleave)="quitter($event)"
+        (contextmenu)="$event.preventDefault()"
         (wheel)="molette($event)"
       >
         <g class="grille">
@@ -70,6 +76,14 @@
           }
           <text class="mesure" [attr.x]="a.b.x" [attr.y]="a.b.y - taillePx(22)" [attr.font-size]="taillePx(15)" text-anchor="middle"
             [attr.stroke-width]="taillePx(4)">{{ longueurApercu() }}</text>
+        }
+
+        @if (survol(); as sv) {
+          <g class="survol">
+            <circle [attr.cx]="sv.x" [attr.cy]="sv.y" [attr.r]="taillePx(7)" [attr.stroke-width]="taillePx(1.5)" />
+            <line [attr.x1]="sv.x - taillePx(12)" [attr.y1]="sv.y" [attr.x2]="sv.x + taillePx(12)" [attr.y2]="sv.y" [attr.stroke-width]="taillePx(1)" />
+            <line [attr.x1]="sv.x" [attr.y1]="sv.y - taillePx(12)" [attr.x2]="sv.x" [attr.y2]="sv.y + taillePx(12)" [attr.stroke-width]="taillePx(1)" />
+          </g>
         }
 
         @if (murSelectionne(); as m) {
@@ -97,7 +111,10 @@
             </select>
           }
         }
-        <span class="aide">{{ aideOutil() }}</span>
+        <span class="aide">
+          {{ aideOutil() }}
+          @if (modeStylet()) { <br />Stylet : il dessine, les doigts déplacent et zooment. Bouton latéral maintenu : sélection. }
+        </span>
       </div>
 
       @if (message()) { <div class="message" role="status">{{ message() }}</div> }

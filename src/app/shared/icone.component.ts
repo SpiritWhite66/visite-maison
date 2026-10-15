@@ -30,6 +30,7 @@ const TRACES = {
   cadrer: 'M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15',
   cote: 'M4 7.5v9M20 7.5v9M4 12h16M7 9.5 4.5 12 7 14.5M17 9.5l2.5 2.5-2.5 2.5',
   moins: 'M5 12h14',
+  stylet: 'M15.5 4.5l4 4L9 19l-5 1 1-5zM13.5 6.5l4 4',
   fichier: 'M6 3.5h8l4 4v13H6zM14 3.5v4h4M9 13h6M9 16.5h6',
 } as const;
 
