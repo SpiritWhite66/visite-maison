@@ -1,55 +1,197 @@
+/*
+ * Visite Immo — feuille globale.
+ * Direction : un carnet de chantier. Papier chaud, encre sombre, une seule couleur d'action (vert sapin),
+ * des couleurs d'état réservées aux constats. Pensé d'abord pour une tablette tenue en main.
+ */
 :root {
-  --primaire: #1b5e8a;
-  --fond: #f4f6f8;
-  --surface: #fff;
-  --texte: #1c2329;
-  --texte-discret: #5b6772;
-  --bordure: #dde2e7;
+  --fond: #f2eee6;
+  --surface: #fffdf9;
+  --surface-2: #f8f5ef;
+  --encre: #22201c;
+  --texte: #2b2924;
+  --texte-discret: #6e675c;
+  --filet: #e3dccf;
+  --filet-fort: #cfc6b5;
+
+  --primaire: #2f5d50;
+  --primaire-fonce: #234a3f;
+  --primaire-pale: #e3ece8;
+
+  --etat-ok: #3d7a4c;
+  --etat-surveiller: #b27417;
+  --etat-travaux: #b0392b;
+  --etat-na: #857e72;
+
+  --rayon: 8px;
+  --rail: 88px;
   color-scheme: light;
 }
 
 * { box-sizing: border-box; }
 
+html { -webkit-text-size-adjust: 100%; }
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
   background: var(--fond);
   color: var(--texte);
-  line-height: 1.4;
+  line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
 }
 
-h1 { font-size: 1.5rem; margin: 0 0 1rem; }
-
-/* Cibles tactiles ≥ 44 px */
-button, .bouton {
-  min-height: 44px; min-width: 44px; padding: 0 1rem; border: 0; border-radius: 8px;
-  background: var(--primaire); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
-}
+h1, h2, h3 { color: var(--encre); letter-spacing: -0.01em; }
+h1 { font-size: 1.75rem; font-weight: 700; margin: 0; line-height: 1.2; }
+h2 { font-size: 1.05rem; font-weight: 650; margin: 0 0 0.75rem; }
 
 a { color: var(--primaire); }
 
-.carte {
-  background: var(--surface); border: 1px solid var(--bordure); border-radius: 12px;
-  padding: 1rem; margin-bottom: 0.75rem;
+.chiffre { font-variant-numeric: tabular-nums; }
+
+/* Petites capitales d'étiquette : titres de section, en-têtes de colonnes. */
+.surtitre {
+  display: block; margin: 0 0 0.5rem;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--texte-discret);
 }
+
 .discret { color: var(--texte-discret); }
-.actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0; }
+.erreur { color: var(--etat-travaux); font-weight: 600; }
+
+/* ---------- Boutons : cibles ≥ 44 px, 48 px pour les actions principales ---------- */
+button, .bouton {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+  min-height: 48px; min-width: 48px; padding: 0 1.1rem;
+  border: 1px solid transparent; border-radius: var(--rayon);
+  background: var(--primaire); color: #fff;
+  font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+  transition: background-color 120ms, border-color 120ms, color 120ms;
+}
+button:active, .bouton:active { background: var(--primaire-fonce); }
+button:focus-visible, .bouton:focus-visible, a:focus-visible, summary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primaire) 45%, transparent); outline-offset: 2px;
+}
+button:disabled { opacity: 0.5; cursor: default; }
 
 .bouton-secondaire {
-  background: var(--surface); color: var(--primaire); border: 1px solid var(--primaire);
-  display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
+  background: var(--surface); color: var(--encre); border-color: var(--filet-fort);
 }
-.bouton { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
-.danger { background: #b3261e; color: #fff; border: 0; }
-.bouton-secondaire.danger { background: var(--surface); color: #b3261e; border: 1px solid #b3261e; }
+.bouton-secondaire:active { background: var(--surface-2); }
 
-label.champ { display: block; margin-bottom: 0.75rem; font-weight: 600; font-size: 0.9rem; }
-label.champ > input, label.champ > select, label.champ > textarea {
-  display: block; width: 100%; margin-top: 0.25rem; min-height: 44px; padding: 0.5rem 0.75rem;
-  border: 1px solid var(--bordure); border-radius: 8px; font: inherit; font-weight: 400;
-  background: var(--surface); color: var(--texte);
+.bouton-texte {
+  background: none; color: var(--primaire); border-color: transparent; padding: 0 0.6rem;
 }
-.grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.75rem; }
-fieldset { border: 1px solid var(--bordure); border-radius: 12px; margin: 0 0 1rem; padding: 0.75rem 1rem 0.25rem; background: var(--surface); }
-legend { font-weight: 700; padding: 0 0.25rem; }
-.erreur { color: #b3261e; font-weight: 600; }
+.bouton-texte:active { background: var(--primaire-pale); }
+
+.danger, .bouton-secondaire.danger, .bouton-texte.danger { color: var(--etat-travaux); }
+button.danger:not(.bouton-secondaire):not(.bouton-texte) { background: var(--etat-travaux); color: #fff; }
+
+.bouton-icone { padding: 0; width: 48px; }
+
+.actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin: 1.25rem 0; }
+
+/* ---------- Panneaux ---------- */
+.carte, .panneau {
+  background: var(--surface); border: 1px solid var(--filet); border-radius: var(--rayon);
+  padding: 1.1rem 1.25rem; margin-bottom: 1rem;
+}
+
+/* Lignes de registre : libellé à gauche, chiffre à droite, séparées par un filet. */
+.registre { width: 100%; border-collapse: collapse; }
+.registre td, .registre th { padding: 0.55rem 0; border-bottom: 1px solid var(--filet); vertical-align: baseline; }
+.registre th { text-align: left; font-weight: 400; color: var(--texte-discret); }
+.registre td:last-child, .registre th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.registre tr:last-child td, .registre tr:last-child th { border-bottom: 0; }
+.registre .total td, .registre .total th { border-top: 2px solid var(--encre); font-weight: 700; color: var(--encre); }
+
+/* Étiquettes */
+.etiquette {
+  display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.1rem 0.5rem; border-radius: 4px;
+  font-size: 0.75rem; font-weight: 650; background: var(--surface-2); color: var(--texte-discret);
+  border: 1px solid var(--filet); white-space: nowrap;
+}
+.etiquette.urgent { color: var(--etat-travaux); border-color: color-mix(in srgb, var(--etat-travaux) 35%, transparent); background: color-mix(in srgb, var(--etat-travaux) 8%, var(--surface)); }
+
+/* Classe énergie : échelle réglementaire A (vert) → G (rouge). */
+.classe-energie {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 1.6rem; height: 1.4rem; padding: 0 0.3rem;
+  border-radius: 3px; color: #fff; font-weight: 800; font-size: 0.8rem;
+  &[data-classe='A'] { background: #00845a; }
+  &[data-classe='B'] { background: #3fa142; }
+  &[data-classe='C'] { background: #a4c638; color: #1d2a00; }
+  &[data-classe='D'] { background: #f2d30f; color: #3a3000; }
+  &[data-classe='E'] { background: #f0a22f; color: #3a2000; }
+  &[data-classe='F'] { background: #e5602a; }
+  &[data-classe='G'] { background: #d42027; }
+}
+
+/* Barre de progression fine */
+.jauge { height: 4px; border-radius: 2px; background: var(--filet); overflow: hidden; }
+.jauge > span { display: block; height: 100%; background: var(--primaire); }
+
+/* ---------- Formulaires ---------- */
+label.champ { display: block; margin-bottom: 1rem; font-size: 0.82rem; font-weight: 650; color: var(--texte-discret); }
+label.champ > input, label.champ > select, label.champ > textarea, textarea.champ-libre {
+  display: block; width: 100%; margin-top: 0.35rem; min-height: 48px; padding: 0.6rem 0.8rem;
+  border: 1px solid var(--filet-fort); border-radius: var(--rayon);
+  font: inherit; font-size: 1rem; font-weight: 400; color: var(--encre); background: var(--surface);
+}
+label.champ > input:disabled { background: var(--surface-2); color: var(--texte-discret); }
+label.champ > input:focus, label.champ > select:focus, label.champ > textarea:focus, textarea.champ-libre:focus {
+  outline: none; border-color: var(--primaire); box-shadow: 0 0 0 3px var(--primaire-pale);
+}
+textarea { resize: vertical; }
+
+.grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+
+/*
+ * Bloc de formulaire : sur tablette, intitulé dans une colonne à gauche et champs à droite,
+ * comme une fiche papier ; sur petit écran, l'intitulé passe au-dessus.
+ */
+.bloc-form {
+  background: var(--surface); border: 1px solid var(--filet); border-radius: var(--rayon);
+  padding: 1.1rem 1.25rem 0.1rem; margin-bottom: 1rem;
+}
+.bloc-form > h2 { font-size: 1rem; }
+.bloc-form > h2 small { display: block; margin-top: 0.2rem; font-size: 0.82rem; font-weight: 400; color: var(--texte-discret); }
+.champs { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 1rem; }
+.champs > .large { grid-column: 1 / -1; }
+
+@media (min-width: 900px) {
+  .bloc-form { display: grid; grid-template-columns: 13rem 1fr; gap: 1.5rem; padding-top: 1.25rem; }
+}
+
+/* Barre d'actions collée en bas des formulaires */
+.barre-actions {
+  position: sticky; bottom: 0; z-index: 5; display: flex; gap: 0.5rem; justify-content: flex-end;
+  margin: 1.5rem -1rem 0; padding: 0.75rem 1rem; background: color-mix(in srgb, var(--fond) 92%, transparent);
+  border-top: 1px solid var(--filet); backdrop-filter: blur(6px);
+}
+
+/* En-tête de page : fil d'Ariane, titre, actions à droite */
+.entete-page { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0.75rem 1rem; margin-bottom: 1.25rem; }
+.entete-page .meta { margin-top: 0.35rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.75rem; color: var(--texte-discret); }
+.fil {
+  display: inline-flex; align-items: center; gap: 0.2rem; min-height: 44px; margin-left: -0.35rem; padding: 0 0.35rem;
+  color: var(--texte-discret); text-decoration: none; font-size: 0.9rem; font-weight: 600;
+}
+
+.vide {
+  padding: 2.5rem 1rem; text-align: center; color: var(--texte-discret);
+  border: 1px dashed var(--filet-fort); border-radius: var(--rayon);
+}
+.champs > .grille-2 { display: contents; }
+.champs > label.champ:has(textarea) { grid-column: 1 / -1; }
+
+/* Formulaire de poste : aperçu du chiffrage */
+.estimation {
+  margin: 0 0 1rem; padding: 0.75rem 1rem; border-radius: var(--rayon);
+  background: var(--primaire-pale); color: var(--encre);
+}
+.estimation .surtitre { margin-bottom: 0.1rem; color: var(--primaire); }
+.estimation strong { font-size: 1.35rem; }
+
+/* Indicateur d'enregistrement automatique */
+.etat-auto { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; font-weight: 600; color: var(--texte-discret); }
+.etat-auto.ok { color: var(--etat-ok); }

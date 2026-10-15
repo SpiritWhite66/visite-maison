@@ -1,6 +1,7 @@
 import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { IconeComponent } from '../../shared/icone.component';
 import { BiensService } from '../../application/biens.service';
 import { Bien, NoteEnergie } from '../../domain/modeles';
 
@@ -13,7 +14,7 @@ function optionnel(v: number | null | undefined): number | undefined {
 
 @Component({
   selector: 'app-bien-form',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, IconeComponent],
   templateUrl: './bien-form.page.html',
 })
 export class BienFormPage implements OnInit {

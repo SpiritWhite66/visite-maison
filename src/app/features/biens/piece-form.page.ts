@@ -1,6 +1,7 @@
 import { Component, ErrorHandler, inject, input, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { IconeComponent } from '../../shared/icone.component';
 import { PhotosService } from '../../application/photos.service';
 import { PiecesService } from '../../application/pieces.service';
 import { Piece } from '../../domain/modeles';
@@ -11,7 +12,7 @@ import { AjoutPhotoComponent, GaleriePhotosComponent } from '../../shared/photos
 /** Fiche d'une pièce : enregistrée automatiquement dès qu'elle porte un nom. */
 @Component({
   selector: 'app-piece-form',
-  imports: [FormsModule, RouterLink, AjoutPhotoComponent, GaleriePhotosComponent],
+  imports: [FormsModule, RouterLink, IconeComponent, AjoutPhotoComponent, GaleriePhotosComponent],
   templateUrl: './piece-form.page.html',
 })
 export class PieceFormPage implements OnInit {

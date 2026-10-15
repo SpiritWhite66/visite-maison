@@ -3,8 +3,8 @@
   "short_name": "Visite Immo",
   "lang": "fr",
   "display": "standalone",
-  "theme_color": "#1b5e8a",
-  "background_color": "#f4f6f8",
+  "theme_color": "#2f5d50",
+  "background_color": "#f2eee6",
   "scope": "./",
   "start_url": "./",
   "icons": [

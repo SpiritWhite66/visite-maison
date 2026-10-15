@@ -8,21 +8,24 @@ import { VisitesService } from '../../application/visites.service';
 import { Fourchette } from '../../domain/budget';
 import { compterEtats, progressionTotale } from '../../domain/checklist';
 import { surfacePiece, surfaceTotale } from '../../domain/piece';
-import { Bien, Piece, PosteTravaux, Priorite, Visite } from '../../domain/modeles';
+import { Bien, EtatPoint, Piece, PosteTravaux, Visite } from '../../domain/modeles';
 import { formaterEuro, formaterFourchette, formaterNombre } from '../../shared/format';
+import { IconeComponent } from '../../shared/icone.component';
+import { LIBELLE_ETAPE, LIBELLE_PRIORITE, LIBELLE_TYPE_BIEN } from '../../shared/libelles';
 
 type Onglet = 'synthese' | 'travaux' | 'visites' | 'pieces';
 const ONGLETS: readonly Onglet[] = ['synthese', 'travaux', 'visites', 'pieces'];
 
-export const LIBELLE_PRIORITE: Record<Priorite, string> = {
-  URGENT: 'Urgent',
-  COURT_TERME: 'Court terme',
-  CONFORT: 'Confort',
-};
+interface ResumeVisite {
+  verifies: number;
+  total: number;
+  pourcentage: number;
+  etats: Record<EtatPoint, number>;
+}
 
 @Component({
   selector: 'app-fiche-bien',
-  imports: [RouterLink],
+  imports: [RouterLink, IconeComponent],
   templateUrl: './fiche-bien.page.html',
   styleUrl: './fiche-bien.page.scss',
 })
@@ -62,16 +65,24 @@ export class FicheBienPage implements OnInit {
   protected readonly surfaceTotale = computed(() => surfaceTotale(this.pieces()));
   protected readonly surfacePiece = surfacePiece;
 
-  /** Résumé d'une visite : progression et points à suivre. */
-  protected resumeVisite(v: Visite): string {
-    const b = this.bien();
-    if (!b) return '';
-    const { verifies, total } = progressionTotale(b.typeBien, v);
-    const c = compterEtats(b.typeBien, v);
-    return `${verifies}/${total} points · ${c.TRAVAUX} travaux · ${c.A_SURVEILLER} à surveiller`;
+  /** Part de chaque catégorie dans le haut de fourchette des travaux, pour les barres de la synthèse. */
+  protected readonly categories = computed(() => {
+    const bu = this.budget();
+    if (!bu) return [];
+    const max = Math.max(...bu.parCategorie.map((c) => c.montant.haut), 1);
+    return [...bu.parCategorie]
+      .sort((a, b) => b.montant.haut - a.montant.haut)
+      .map((c) => ({ ...c, part: (c.montant.haut / max) * 100 }));
+  });
+
+  /** Résumé d'une visite : progression et décompte des constats. */
+  protected resumeVisite(v: Visite): ResumeVisite {
+    const typeBien = this.bien()?.typeBien ?? 'VILLE';
+    const { verifies, total } = progressionTotale(typeBien, v);
+    return { verifies, total, pourcentage: total ? (verifies / total) * 100 : 0, etats: compterEtats(typeBien, v) };
   }
 
-  private readonly formatDate = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+  private readonly formatDate = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   protected dateVisite(v: Visite): string {
     return this.formatDate.format(new Date(v.date));
   }
@@ -80,6 +91,8 @@ export class FicheBienPage implements OnInit {
   protected readonly fourchette = (m: Fourchette) => formaterFourchette(m.bas, m.haut);
   protected readonly nombre = formaterNombre;
   protected readonly libellePriorite = LIBELLE_PRIORITE;
+  protected readonly libelleEtape = LIBELLE_ETAPE;
+  protected readonly libelleType = LIBELLE_TYPE_BIEN;
 
   async ngOnInit(): Promise<void> {
     const initial = ONGLETS.find((o) => o === this.ongletInitial());

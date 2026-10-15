@@ -1,8 +1,14 @@
 @if (bien(); as b) {
-  <h1>{{ id() ? 'Modifier le bien' : 'Nouveau bien' }}</h1>
+  <header class="entete-page">
+    <div>
+      <a class="fil" [routerLink]="id() ? ['/biens', b.id] : ['/biens']"><app-icone nom="gauche" [taille]="18" /> {{ id() ? b.titre : 'Biens' }}</a>
+      <h1>{{ id() ? 'Modifier le bien' : 'Nouveau bien' }}</h1>
+    </div>
+  </header>
   <form (ngSubmit)="enregistrer()">
-    <fieldset>
-      <legend>Le bien</legend>
+    <section class="bloc-form">
+      <h2>Le bien</h2>
+      <div class="champs">
       <label class="champ">Titre
         <input name="titre" [(ngModel)]="b.titre" placeholder="Longère Lombez 4 ch." required />
       </label>
@@ -21,10 +27,12 @@
       <label class="champ">Commune
         <input name="commune" [(ngModel)]="b.commune" />
       </label>
-    </fieldset>
+      </div>
+    </section>
 
-    <fieldset>
-      <legend>Prix</legend>
+    <section class="bloc-form">
+      <h2>Prix</h2>
+      <div class="champs">
       <div class="grille-2">
         <label class="champ">Prix affiché (€)
           <input name="prix" type="number" inputmode="decimal" min="0" [(ngModel)]="b.prixAffiche" />
@@ -33,10 +41,12 @@
           <input name="marge" type="number" inputmode="decimal" min="0" max="100" step="0.5" [(ngModel)]="b.margeNegociationPct" />
         </label>
       </div>
-    </fieldset>
+      </div>
+    </section>
 
-    <fieldset>
-      <legend>Caractéristiques</legend>
+    <section class="bloc-form">
+      <h2>Caractéristiques</h2>
+      <div class="champs">
       <div class="grille-2">
         <label class="champ">Surface habitable (m²)
           <input name="shab" type="number" inputmode="decimal" min="0" [(ngModel)]="b.surfaceHabitable" />
@@ -72,10 +82,12 @@
           </select>
         </label>
       </div>
-    </fieldset>
+      </div>
+    </section>
 
-    <fieldset>
-      <legend>Contact</legend>
+    <section class="bloc-form">
+      <h2>Contact</h2>
+      <div class="champs">
       <label class="champ">Nom
         <input name="cnom" [(ngModel)]="b.contact.nom" />
       </label>
@@ -88,18 +100,24 @@
       <label class="champ">E-mail
         <input name="cmail" type="email" [(ngModel)]="b.contact.email" />
       </label>
-    </fieldset>
+      </div>
+    </section>
 
-    <label class="champ">Notes
-      <textarea name="notes" rows="4" [(ngModel)]="b.notes"></textarea>
-    </label>
+    <section class="bloc-form">
+      <h2>Notes</h2>
+      <div class="champs">
+        <label class="champ">Notes libres
+          <textarea name="notes" rows="4" [(ngModel)]="b.notes"></textarea>
+        </label>
+      </div>
+    </section>
 
     @if (erreur()) {
       <p class="erreur" role="alert">{{ erreur() }}</p>
     }
-    <div class="actions">
-      <button type="submit">Enregistrer</button>
+    <div class="barre-actions">
       <a class="bouton bouton-secondaire" [routerLink]="id() ? ['/biens', b.id] : ['/biens']">Annuler</a>
+      <button type="submit">Enregistrer</button>
     </div>
   </form>
 }

@@ -1,84 +1,130 @@
 @if (visite(); as v) {
   @if (bien(); as b) {
-    <a class="retour" [routerLink]="['/biens', b.id]" [queryParams]="{ onglet: 'visites' }">‹ {{ b.titre }}</a>
-    <h1>Visite</h1>
+    @let g = progressionGlobale();
+    <header class="barre-visite">
+      <a class="fil" [routerLink]="['/biens', b.id]" [queryParams]="{ onglet: 'visites' }">
+        <app-icone nom="gauche" [taille]="18" /> {{ b.titre }}
+      </a>
+      <div class="titre-visite">
+        <h1>Visite</h1>
+        <select class="type-visite" aria-label="Type de visite" [ngModel]="v.typeVisite" (ngModelChange)="changerType($event)">
+          <option value="PREMIERE">Première visite</option>
+          <option value="CONTRE_VISITE">Contre-visite</option>
+        </select>
+        <span class="sauvegarde" [attr.data-etat]="etatSauvegarde()" aria-live="polite">
+          @switch (etatSauvegarde()) {
+            @case ('ok') { <app-icone nom="coche" [taille]="16" /> Enregistré }
+            @case ('en-cours') { Enregistrement… }
+            @case ('erreur') { Échec de l’enregistrement }
+          }
+        </span>
+      </div>
+      <div class="progression-globale">
+        <div class="jauge"><span [style.width.%]="g.pourcentage"></span></div>
+        <span class="chiffre">{{ g.verifies }} / {{ g.total }} points</span>
+      </div>
+    </header>
 
-    <div class="entete">
-      <span class="discret">{{ progressionGlobale() }}</span>
-      <span class="sauvegarde" [class.erreur]="etatSauvegarde() === 'erreur'" aria-live="polite">
-        @switch (etatSauvegarde()) {
-          @case ('ok') { ✓ Enregistré }
-          @case ('en-cours') { Enregistrement… }
-          @case ('erreur') { Échec de l’enregistrement }
+    <div class="visite">
+      <nav class="sommaire" aria-label="Thèmes">
+        @for (t of themes; track t.id) {
+          @let pr = progressionTheme(t.points);
+          <button type="button" class="entree" [class.actif]="themeOuvert() === t.id" [class.complet]="pr.verifies === pr.total" (click)="afficherTheme(t.id)">
+            <span class="entree-nom">{{ t.libelle }}</span>
+            <span class="entree-compte chiffre">
+              @if (pr.travaux > 0) { <span class="point-travaux" [attr.aria-label]="pr.travaux + ' travaux'">{{ pr.travaux }}</span> }
+              @if (pr.verifies === pr.total) { <app-icone nom="coche" [taille]="16" /> } @else { {{ pr.verifies }}/{{ pr.total }} }
+            </span>
+          </button>
         }
-      </span>
-    </div>
+        <button type="button" class="entree" [class.actif]="themeOuvert() === 'notes'" (click)="afficherTheme('notes')">
+          <span class="entree-nom">Notes de la visite</span>
+        </button>
+      </nav>
 
-    <label class="champ">Type de visite
-      <select name="type" [ngModel]="v.typeVisite" (ngModelChange)="changerType($event)">
-        <option value="PREMIERE">Première visite</option>
-        <option value="CONTRE_VISITE">Contre-visite</option>
-      </select>
-    </label>
-
-    @for (t of themes; track t.id) {
-      <details class="theme">
-        <summary>
-          <span>{{ t.libelle }}</span>
-          <span class="progression">{{ progressionTheme(t.points) }}</span>
-        </summary>
-        @for (pt of t.points; track pt.id) {
-          @let r = reponseDe(v, pt.id);
-          <div class="point" [attr.data-etat]="r.etat">
-            <div class="libelle">
-              <strong>{{ pt.libelle }}</strong>
-              @if (pt.aide) { <span class="discret aide">{{ pt.aide }}</span> }
-            </div>
-            <div class="etats" role="group" [attr.aria-label]="'État : ' + pt.libelle">
-              @for (e of etats; track e.etat) {
-                <button
-                  type="button"
-                  [attr.data-etat]="e.etat"
-                  [attr.aria-pressed]="r.etat === e.etat"
-                  (click)="choisirEtat(pt.id, e.etat)"
-                >{{ e.libelle }}</button>
-              }
-            </div>
-            <div class="outils">
-              <button type="button" class="bouton-secondaire" (click)="basculerCommentaire(pt.id)">💬 Commentaire</button>
-              <app-ajout-photo [desactive]="photoEnCours()" (choisie)="ajouterPhoto(pt.id, $event)" />
-              @if (r.etat === 'TRAVAUX') {
-                @if (r.posteTravauxId; as posteId) {
-                  <a class="bouton bouton-secondaire" [routerLink]="['/biens', b.id, 'travaux', posteId]">Voir le poste</a>
-                } @else {
-                  <button type="button" (click)="creerPoste(pt)">Créer un poste de travaux</button>
+      <div class="themes">
+        @for (t of themes; track t.id) {
+          @let pr = progressionTheme(t.points);
+          <section class="theme" [id]="'theme-' + t.id" [class.ouvert]="themeOuvert() === t.id">
+            <button type="button" class="entete-theme" [attr.aria-expanded]="themeOuvert() === t.id" (click)="basculerTheme(t.id)">
+              <span class="entete-nom">{{ t.libelle }}</span>
+              <span class="entete-compte chiffre">{{ pr.verifies }}/{{ pr.total }}</span>
+              <app-icone nom="bas" [taille]="20" class="chevron" />
+            </button>
+            @if (themeOuvert() === t.id) {
+              <div class="points">
+                @for (pt of t.points; track pt.id) {
+                  @let r = reponseDe(v, pt.id);
+                  <article class="point" [attr.data-etat]="r.etat">
+                    <div class="libelle">
+                      <h3>{{ pt.libelle }}</h3>
+                      @if (pt.aide) { <p class="aide">{{ pt.aide }}</p> }
+                    </div>
+                    <div class="etats" role="group" [attr.aria-label]="'État : ' + pt.libelle">
+                      @for (e of etats; track e.etat) {
+                        <button type="button" [attr.data-etat]="e.etat" [attr.aria-pressed]="r.etat === e.etat" (click)="choisirEtat(pt.id, e.etat)">
+                          {{ e.libelle }}
+                        </button>
+                      }
+                    </div>
+                    <div class="outils">
+                      <button type="button" class="bouton-texte" [attr.aria-pressed]="commentaireVisible(r)" (click)="basculerCommentaire(pt.id)">
+                        <app-icone nom="bulle" [taille]="20" /> Commentaire
+                      </button>
+                      <app-ajout-photo [desactive]="photoEnCours()" (choisie)="ajouterPhoto(pt.id, $event)" />
+                      @if (r.etat === 'TRAVAUX') {
+                        @if (r.posteTravauxId; as posteId) {
+                          <a class="bouton bouton-texte" [routerLink]="['/biens', b.id, 'travaux', posteId]">
+                            <app-icone nom="outil" [taille]="20" /> Voir le poste
+                          </a>
+                        } @else {
+                          <button type="button" class="bouton-secondaire poste" (click)="creerPoste(pt)">
+                            <app-icone nom="outil" [taille]="20" /> Créer un poste de travaux
+                          </button>
+                        }
+                      }
+                    </div>
+                    @if (commentaireVisible(r)) {
+                      <textarea
+                        class="champ-libre"
+                        rows="2"
+                        placeholder="Ce que vous avez constaté…"
+                        [attr.aria-label]="'Commentaire : ' + pt.libelle"
+                        [ngModel]="r.commentaire ?? ''"
+                        (ngModelChange)="modifierCommentaire(pt.id, $event)"
+                        [name]="'commentaire-' + pt.id"
+                      ></textarea>
+                    }
+                    @if (r.photoIds.length > 0) {
+                      <app-galerie-photos [photoIds]="r.photoIds" (supprimer)="retirerPhoto(pt.id, $event)" />
+                    }
+                  </article>
                 }
-              }
-            </div>
-            @if (commentaireVisible(r)) {
-              <textarea
-                rows="2"
-                placeholder="Commentaire"
-                [attr.aria-label]="'Commentaire : ' + pt.libelle"
-                [ngModel]="r.commentaire ?? ''"
-                (ngModelChange)="modifierCommentaire(pt.id, $event)"
-                [name]="'commentaire-' + pt.id"
-              ></textarea>
+                @let suivant = themeSuivant(t.id);
+                <button type="button" class="bouton-secondaire suivant" (click)="allerA(suivant.id)">
+                  {{ suivant.libelle }} <app-icone nom="droite" [taille]="20" />
+                </button>
+              </div>
             }
-            @if (r.photoIds.length > 0) {
-              <app-galerie-photos [photoIds]="r.photoIds" (supprimer)="retirerPhoto(pt.id, $event)" />
-            }
-          </div>
+          </section>
         }
-      </details>
-    }
 
-    <label class="champ notes">Notes de la visite
-      <textarea name="notes" rows="4" [ngModel]="v.notes" (ngModelChange)="changerNotes($event)"></textarea>
-    </label>
-
-    <div class="actions">
-      <a class="bouton" [routerLink]="['/biens', b.id]" [queryParams]="{ onglet: 'visites' }">Terminer la visite</a>
+        <section class="theme" id="theme-notes" [class.ouvert]="themeOuvert() === 'notes'">
+          <button type="button" class="entete-theme" [attr.aria-expanded]="themeOuvert() === 'notes'" (click)="basculerTheme('notes')">
+            <span class="entete-nom">Notes de la visite</span>
+            <app-icone nom="bas" [taille]="20" class="chevron" />
+          </button>
+          @if (themeOuvert() === 'notes') {
+            <div class="points notes">
+              <textarea class="champ-libre" name="notes" rows="8" placeholder="Impressions, questions à poser, points à revoir…"
+                aria-label="Notes de la visite" [ngModel]="v.notes" (ngModelChange)="changerNotes($event)"></textarea>
+              <a class="bouton terminer" [routerLink]="['/biens', b.id]" [queryParams]="{ onglet: 'visites' }">
+                <app-icone nom="coche" [taille]="20" /> Terminer la visite
+              </a>
+            </div>
+          }
+        </section>
+      </div>
     </div>
   }
 }

@@ -1,7 +1,14 @@
+<nav class="rail" aria-label="Navigation principale">
+  <span class="marque" aria-hidden="true">VI</span>
+  <a routerLink="/biens" routerLinkActive="actif">
+    <app-icone nom="maison" />
+    <span>Biens</span>
+  </a>
+  <a routerLink="/parametres" routerLinkActive="actif">
+    <app-icone nom="reglages" />
+    <span>Paramètres</span>
+  </a>
+</nav>
 <main>
   <router-outlet />
 </main>
-<nav aria-label="Navigation principale">
-  <a routerLink="/biens" routerLinkActive="actif">Biens</a>
-  <a routerLink="/parametres" routerLinkActive="actif">Paramètres</a>
-</nav>

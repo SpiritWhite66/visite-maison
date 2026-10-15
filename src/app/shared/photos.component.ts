@@ -1,12 +1,14 @@
 import { Component, inject, input, OnDestroy, OnInit, output, signal } from '@angular/core';
 import { PhotosService } from '../application/photos.service';
+import { IconeComponent } from './icone.component';
 
 /** Bouton « Photo » : ouvre l'appareil photo (ou la galerie) et renvoie les fichiers choisis. */
 @Component({
   selector: 'app-ajout-photo',
+  imports: [IconeComponent],
   template: `
-    <label class="bouton bouton-secondaire" [class.desactive]="desactive()">
-      📷 Photo
+    <label class="bouton bouton-texte" [class.desactive]="desactive()">
+      <app-icone nom="appareil" [taille]="20" /> Photo
       <input
         type="file"
         accept="image/*"
@@ -88,8 +90,8 @@ export class VignettePhotoComponent implements OnInit, OnDestroy {
   `,
   styles: `
     .miniatures { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .miniature { width: 64px; height: 64px; min-width: 64px; padding: 0; overflow: hidden; border-radius: 8px; background: none; }
-    .voile { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column; padding: 0.75rem; gap: 0.75rem; }
+    .miniature { width: 88px; height: 88px; min-width: 88px; padding: 0; overflow: hidden; border-radius: 6px; background: none; border: 1px solid var(--filet); }
+    .voile { position: fixed; inset: 0; z-index: 50; background: rgba(20, 18, 15, 0.94); display: flex; flex-direction: column; padding: 0.75rem; gap: 0.75rem; }
     .grande { flex: 1; min-height: 0; }
     .grande app-vignette-photo { height: 100%; }
     .grande ::ng-deep img { object-fit: contain; background: none; }

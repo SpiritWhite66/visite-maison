@@ -1,24 +1,30 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaremeService } from '../../application/bareme.service';
 import { CATEGORIES, LigneBareme } from '../../domain/modeles';
 import { formaterEuro } from '../../shared/format';
+import { IconeComponent } from '../../shared/icone.component';
 
 const UNITES = { M2: 'm²', ML: 'ml', UNITE: 'unité', FORFAIT: 'forfait' } as const;
 
 @Component({
   selector: 'app-bareme-editeur',
-  imports: [FormsModule],
+  imports: [FormsModule, IconeComponent, NgTemplateOutlet],
   template: `
     <section class="carte">
-      <h2>Barème des travaux</h2>
-      <p class="discret">Prix artisan TTC fourni-posé, indicatifs. Ajustez-les selon vos devis.</p>
-      <div class="actions">
-        <button (click)="ajouter()">+ Ligne</button>
-        <button class="bouton-secondaire" (click)="restaurer()">Valeurs par défaut</button>
+      <div class="tete">
+        <div>
+          <h2>Barème des travaux</h2>
+          <p class="discret">Prix artisan TTC fourni-posé, indicatifs. Ajustez-les selon vos devis.</p>
+        </div>
+        <div class="boutons">
+          <button class="bouton-texte" (click)="restaurer()">Valeurs par défaut</button>
+          <button (click)="ajouter()"><app-icone nom="plus" [taille]="20" /> Ligne</button>
+        </div>
       </div>
 
-      @if (edition(); as l) {
+      <ng-template #formulaire let-l>
         <form class="edition" (ngSubmit)="valider()">
           <label class="champ">Libellé
             <input name="libelle" [(ngModel)]="l.libelle" required />
@@ -45,28 +51,55 @@ const UNITES = { M2: 'm²', ML: 'ml', UNITE: 'unité', FORFAIT: 'forfait' } as c
             <input name="coef" type="number" inputmode="decimal" min="0" step="0.05" [(ngModel)]="l.coefDiy" />
           </label>
           @if (erreur()) { <p class="erreur" role="alert">{{ erreur() }}</p> }
-          <div class="actions">
-            <button type="submit">Valider</button>
+          <div class="actions pied-edition">
+            @if (!estNouvelle()) {
+              <button type="button" class="bouton-texte danger" (click)="supprimer(l)"><app-icone nom="corbeille" [taille]="18" /> Supprimer</button>
+            }
+            <span class="espaceur"></span>
             <button type="button" class="bouton-secondaire" (click)="edition.set(null)">Annuler</button>
-            <button type="button" class="bouton-secondaire danger" (click)="supprimer(l)">Supprimer</button>
+            <button type="submit">Valider</button>
           </div>
         </form>
+      </ng-template>
+
+      @if (edition(); as l) {
+        @if (estNouvelle()) {
+          <ng-container *ngTemplateOutlet="formulaire; context: { $implicit: l }" />
+        }
       }
 
-      @for (l of service.lignes(); track l.id) {
-        <button class="ligne" (click)="modifier(l)">
-          <span><strong>{{ l.libelle }}</strong><br /><small>{{ l.categorie }}</small></span>
-          <span class="prix">{{ euro(l.prixBas) }} – {{ euro(l.prixHaut) }}<br /><small>/ {{ unites_[l.unite] }}</small></span>
-        </button>
+      @for (g of groupes(); track g.categorie) {
+        <h3>{{ g.categorie }}</h3>
+        @for (l of g.lignes; track l.id) {
+          <button class="ligne" [class.en-edition]="edition()?.id === l.id" (click)="modifier(l)">
+            <span class="libelle">{{ l.libelle }}</span>
+            <span class="prix">{{ euro(l.prixBas) }} – {{ euro(l.prixHaut) }} <small>/ {{ unites_[l.unite] }}</small></span>
+          </button>
+          @if (edition(); as e) {
+            @if (e.id === l.id) {
+              <ng-container *ngTemplateOutlet="formulaire; context: { $implicit: e }" />
+            }
+          }
+        }
       }
     </section>
   `,
   styles: `
-    h2 { margin: 0 0 .5rem; }
-    .ligne { display: flex; justify-content: space-between; gap: 1rem; width: 100%; text-align: left;
-      background: none; color: var(--texte); border-bottom: 1px solid var(--bordure); border-radius: 0; font-weight: 400; padding: .5rem 0; }
-    .prix { text-align: right; white-space: nowrap; }
-    .edition { border: 2px solid var(--primaire); border-radius: 12px; padding: .75rem; margin-bottom: 1rem; }
+    .tete { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 0.5rem 1rem; }
+    .tete h2 { margin-bottom: 0.25rem; }
+    .tete p { margin: 0 0 0.75rem; font-size: 0.9rem; }
+    .boutons { display: flex; gap: 0.5rem; }
+    h3 { margin: 1.25rem 0 0.25rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--texte-discret); }
+    .ligne {
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem; width: 100%; min-height: 48px; padding: 0.4rem 0.5rem;
+      text-align: left; background: none; color: var(--texte); border: 0; border-bottom: 1px solid var(--filet); border-radius: 0; font-weight: 400;
+    }
+    .ligne:active, .ligne.en-edition { background: var(--primaire-pale); }
+    .libelle { flex: 1; }
+    .prix { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--encre); }
+    .prix small { color: var(--texte-discret); }
+    .pied-edition { margin-bottom: 0; } .espaceur { flex: 1; }
+    .edition { border: 1px solid var(--primaire); box-shadow: 0 0 0 3px var(--primaire-pale); border-radius: var(--rayon); padding: 1rem; margin: 0.5rem 0 1rem; }
   `,
 })
 export class BaremeEditeurComponent {
@@ -77,6 +110,17 @@ export class BaremeEditeurComponent {
   protected readonly euro = formaterEuro;
   protected readonly edition = signal<LigneBareme | null>(null);
   protected readonly erreur = signal('');
+  /** Ligne en cours d'ajout (pas encore dans le barème) : son formulaire s'affiche en tête. */
+  protected readonly estNouvelle = computed(() => {
+    const e = this.edition();
+    return !!e && !this.service.lignes().some((l) => l.id === e.id);
+  });
+  /** Lignes regroupées par catégorie, dans l'ordre des catégories. */
+  protected readonly groupes = computed(() =>
+    CATEGORIES.map((categorie) => ({ categorie, lignes: this.service.lignes().filter((l) => l.categorie === categorie) })).filter(
+      (g) => g.lignes.length > 0,
+    ),
+  );
 
   protected ajouter(): void {
     this.erreur.set('');

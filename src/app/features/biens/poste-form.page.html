@@ -1,8 +1,14 @@
 @if (poste(); as p) {
-  <h1>{{ posteId() ? 'Modifier le poste' : 'Nouveau poste de travaux' }}</h1>
+  <header class="entete-page">
+    <div>
+      <a class="fil" [routerLink]="retour().chemin" [queryParams]="retour().params"><app-icone nom="gauche" [taille]="18" /> {{ visiteId() ? 'Retour à la visite' : 'Travaux' }}</a>
+      <h1>{{ posteId() ? 'Modifier le poste' : 'Nouveau poste de travaux' }}</h1>
+    </div>
+  </header>
   <form (ngSubmit)="enregistrer()">
-    <fieldset>
-      <legend>Chiffrage</legend>
+    <section class="bloc-form">
+      <h2>Chiffrage</h2>
+      <div class="champs">
       <label class="champ">Mode
         <select name="mode" [(ngModel)]="p.modeChiffrage">
           <option value="BAREME">Depuis le barème</option>
@@ -41,11 +47,13 @@
           </label>
         </div>
       }
-      <p>Estimation : <strong>{{ apercu(p) }}</strong></p>
-    </fieldset>
+      <p class="estimation large"><span class="surtitre">Estimation</span><strong class="chiffre">{{ apercu(p) }}</strong></p>
+      </div>
+    </section>
 
-    <fieldset>
-      <legend>Poste</legend>
+    <section class="bloc-form">
+      <h2>Poste</h2>
+      <div class="champs">
       <label class="champ">Libellé
         <input name="libelle" [(ngModel)]="p.libelle" required />
       </label>
@@ -74,14 +82,15 @@
       <label class="champ">Notes
         <textarea name="notes" rows="3" [(ngModel)]="p.notes"></textarea>
       </label>
-    </fieldset>
+      </div>
+    </section>
 
     @if (erreur()) {
       <p class="erreur" role="alert">{{ erreur() }}</p>
     }
-    <div class="actions">
-      <button type="submit">Enregistrer</button>
+    <div class="barre-actions">
       <a class="bouton bouton-secondaire" [routerLink]="retour().chemin" [queryParams]="retour().params">Annuler</a>
+      <button type="submit">Enregistrer</button>
     </div>
   </form>
 }
