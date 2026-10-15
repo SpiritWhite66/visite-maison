@@ -7,6 +7,8 @@
     <div class="onglets" role="tablist">
       <button role="tab" [attr.aria-selected]="onglet() === 'synthese'" (click)="onglet.set('synthese')">Synthèse</button>
       <button role="tab" [attr.aria-selected]="onglet() === 'travaux'" (click)="onglet.set('travaux')">Travaux</button>
+      <button role="tab" [attr.aria-selected]="onglet() === 'visites'" (click)="onglet.set('visites')">Visites</button>
+      <button role="tab" [attr.aria-selected]="onglet() === 'pieces'" (click)="onglet.set('pieces')">Pièces</button>
     </div>
 
     @if (onglet() === 'synthese') {
@@ -62,6 +64,42 @@
         <a class="bouton" [routerLink]="['modifier']">Modifier</a>
         <button class="bouton-secondaire danger" (click)="supprimerBien()">Supprimer le bien</button>
       </div>
+    } @else if (onglet() === 'visites') {
+      <div class="actions"><button type="button" (click)="demarrerVisite()">Démarrer une visite</button></div>
+      @if (visites().length === 0) {
+        <p class="discret">Aucune visite. Démarrez-en une pour parcourir la checklist sur place.</p>
+      }
+      @for (v of visites(); track v.id) {
+        <section class="carte poste">
+          <a [routerLink]="['visites', v.id]" class="poste-info">
+            <strong>{{ v.typeVisite === 'PREMIERE' ? 'Première visite' : 'Contre-visite' }} · {{ dateVisite(v) }}</strong>
+            <span class="discret">{{ resumeVisite(v) }}</span>
+          </a>
+          <button class="bouton-secondaire danger" aria-label="Supprimer la visite" (click)="supprimerVisite(v)">✕</button>
+        </section>
+      }
+    } @else if (onglet() === 'pieces') {
+      <div class="actions"><a class="bouton" [routerLink]="['pieces', 'nouveau']">+ Pièce</a></div>
+      @if (pieces().length === 0) {
+        <p class="discret">Aucune pièce. Ajoutez-les avec leurs mesures et leurs photos.</p>
+      }
+      @for (pi of pieces(); track pi.id) {
+        <section class="carte poste">
+          <a [routerLink]="['pieces', pi.id]" class="poste-info">
+            <strong>{{ pi.nom }}</strong>
+            <span class="discret">
+              @if (surfacePiece(pi); as s) { {{ nombre(s) }} m² } @else { surface inconnue }
+              @if (pi.hauteurSousPlafond) { · h. {{ nombre(pi.hauteurSousPlafond) }} m }
+              @if (pi.photoIds.length > 0) { · {{ pi.photoIds.length }} photo(s) }
+            </span>
+          </a>
+        </section>
+      }
+      @if (pieces().length > 0) {
+        <section class="carte">
+          <strong>Surface totale : {{ nombre(surfaceTotale()) }} m²</strong>
+        </section>
+      }
     } @else {
       <div class="actions"><a class="bouton" [routerLink]="['travaux', 'nouveau']">+ Poste de travaux</a></div>
       @if (postes().length === 0) {

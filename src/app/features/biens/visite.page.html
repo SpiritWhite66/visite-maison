@@ -1,0 +1,84 @@
+@if (visite(); as v) {
+  @if (bien(); as b) {
+    <a class="retour" [routerLink]="['/biens', b.id]" [queryParams]="{ onglet: 'visites' }">‹ {{ b.titre }}</a>
+    <h1>Visite</h1>
+
+    <div class="entete">
+      <span class="discret">{{ progressionGlobale() }}</span>
+      <span class="sauvegarde" [class.erreur]="etatSauvegarde() === 'erreur'" aria-live="polite">
+        @switch (etatSauvegarde()) {
+          @case ('ok') { ✓ Enregistré }
+          @case ('en-cours') { Enregistrement… }
+          @case ('erreur') { Échec de l’enregistrement }
+        }
+      </span>
+    </div>
+
+    <label class="champ">Type de visite
+      <select name="type" [ngModel]="v.typeVisite" (ngModelChange)="changerType($event)">
+        <option value="PREMIERE">Première visite</option>
+        <option value="CONTRE_VISITE">Contre-visite</option>
+      </select>
+    </label>
+
+    @for (t of themes; track t.id) {
+      <details class="theme">
+        <summary>
+          <span>{{ t.libelle }}</span>
+          <span class="progression">{{ progressionTheme(t.points) }}</span>
+        </summary>
+        @for (pt of t.points; track pt.id) {
+          @let r = reponseDe(v, pt.id);
+          <div class="point" [attr.data-etat]="r.etat">
+            <div class="libelle">
+              <strong>{{ pt.libelle }}</strong>
+              @if (pt.aide) { <span class="discret aide">{{ pt.aide }}</span> }
+            </div>
+            <div class="etats" role="group" [attr.aria-label]="'État : ' + pt.libelle">
+              @for (e of etats; track e.etat) {
+                <button
+                  type="button"
+                  [attr.data-etat]="e.etat"
+                  [attr.aria-pressed]="r.etat === e.etat"
+                  (click)="choisirEtat(pt.id, e.etat)"
+                >{{ e.libelle }}</button>
+              }
+            </div>
+            <div class="outils">
+              <button type="button" class="bouton-secondaire" (click)="basculerCommentaire(pt.id)">💬 Commentaire</button>
+              <app-ajout-photo [desactive]="photoEnCours()" (choisie)="ajouterPhoto(pt.id, $event)" />
+              @if (r.etat === 'TRAVAUX') {
+                @if (r.posteTravauxId; as posteId) {
+                  <a class="bouton bouton-secondaire" [routerLink]="['/biens', b.id, 'travaux', posteId]">Voir le poste</a>
+                } @else {
+                  <button type="button" (click)="creerPoste(pt)">Créer un poste de travaux</button>
+                }
+              }
+            </div>
+            @if (commentaireVisible(r)) {
+              <textarea
+                rows="2"
+                placeholder="Commentaire"
+                [attr.aria-label]="'Commentaire : ' + pt.libelle"
+                [ngModel]="r.commentaire ?? ''"
+                (ngModelChange)="modifierCommentaire(pt.id, $event)"
+                [name]="'commentaire-' + pt.id"
+              ></textarea>
+            }
+            @if (r.photoIds.length > 0) {
+              <app-galerie-photos [photoIds]="r.photoIds" (supprimer)="retirerPhoto(pt.id, $event)" />
+            }
+          </div>
+        }
+      </details>
+    }
+
+    <label class="champ notes">Notes de la visite
+      <textarea name="notes" rows="4" [ngModel]="v.notes" (ngModelChange)="changerNotes($event)"></textarea>
+    </label>
+
+    <div class="actions">
+      <a class="bouton" [routerLink]="['/biens', b.id]" [queryParams]="{ onglet: 'visites' }">Terminer la visite</a>
+    </div>
+  }
+}

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { Bien, LigneBareme, Parametres, PosteTravaux } from '../../domain/modeles';
-import { BaremePort, BiensPort, ParametresPort, PostesTravauxPort } from '../../ports/depots.port';
+import { Bien, LigneBareme, Parametres, Photo, Piece, PosteTravaux, Visite } from '../../domain/modeles';
+import { BaremePort, BiensPort, ParametresPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from '../../ports/depots.port';
 import { BaseDonneesDexie, CLE_PARAMETRES } from './base-donnees-dexie';
 
 @Injectable()
@@ -78,5 +78,56 @@ export class ParametresDexie extends ParametresPort {
   }
   async enregistrer(parametres: Parametres): Promise<void> {
     await this.db.parametres.put({ cle: CLE_PARAMETRES, valeur: parametres });
+  }
+}
+
+@Injectable()
+export class VisitesDexie extends VisitesPort {
+  private readonly db = inject(BaseDonneesDexie).db;
+
+  listerParBien(bienId: string): Promise<Visite[]> {
+    return this.db.visites.where('bienId').equals(bienId).toArray();
+  }
+  obtenir(id: string): Promise<Visite | undefined> {
+    return this.db.visites.get(id);
+  }
+  async enregistrer(visite: Visite): Promise<void> {
+    await this.db.visites.put(visite);
+  }
+  async supprimer(id: string): Promise<void> {
+    await this.db.visites.delete(id);
+  }
+}
+
+@Injectable()
+export class PiecesDexie extends PiecesPort {
+  private readonly db = inject(BaseDonneesDexie).db;
+
+  listerParBien(bienId: string): Promise<Piece[]> {
+    return this.db.pieces.where('bienId').equals(bienId).toArray();
+  }
+  obtenir(id: string): Promise<Piece | undefined> {
+    return this.db.pieces.get(id);
+  }
+  async enregistrer(piece: Piece): Promise<void> {
+    await this.db.pieces.put(piece);
+  }
+  async supprimer(id: string): Promise<void> {
+    await this.db.pieces.delete(id);
+  }
+}
+
+@Injectable()
+export class PhotosDexie extends PhotosPort {
+  private readonly db = inject(BaseDonneesDexie).db;
+
+  obtenir(id: string): Promise<Photo | undefined> {
+    return this.db.photos.get(id);
+  }
+  async enregistrer(photo: Photo): Promise<void> {
+    await this.db.photos.put(photo);
+  }
+  async supprimer(ids: readonly string[]): Promise<void> {
+    await this.db.photos.bulkDelete([...ids]);
   }
 }

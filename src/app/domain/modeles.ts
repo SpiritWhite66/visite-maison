@@ -106,3 +106,45 @@ export interface Parametres {
   margeNegociationDefautPct: number;
   coefDiyDefaut: number;
 }
+
+export type TypeVisite = 'PREMIERE' | 'CONTRE_VISITE';
+export type EtatPoint = 'OK' | 'A_SURVEILLER' | 'TRAVAUX' | 'NA' | 'NON_VERIFIE';
+
+export interface ReponseChecklist {
+  pointId: string;
+  etat: EtatPoint;
+  commentaire?: string;
+  photoIds: string[];
+  posteTravauxId?: string;
+}
+
+export interface Visite {
+  id: string;
+  bienId: string;
+  date: string;
+  typeVisite: TypeVisite;
+  /** Seuls les points touchés sont enregistrés : un point absent est `NON_VERIFIE`. */
+  reponses: ReponseChecklist[];
+  notes: string;
+}
+
+export interface Piece {
+  id: string;
+  bienId: string;
+  nom: string;
+  longueur?: number;
+  largeur?: number;
+  surface?: number;
+  hauteurSousPlafond?: number;
+  photoIds: string[];
+  notes: string;
+}
+
+export interface Photo {
+  id: string;
+  bienId: string;
+  /** JPEG compressé. */
+  blob: Blob;
+  legende?: string;
+  prisLe: string;
+}

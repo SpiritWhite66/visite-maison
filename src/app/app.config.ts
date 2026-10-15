@@ -4,7 +4,16 @@ import { provideServiceWorker } from '@angular/service-worker';
 
 import { routes } from './app.routes';
 import { BaseDonneesDexie } from './adapters/dexie/base-donnees-dexie';
-import { BaremeDexie, BiensDexie, ParametresDexie, PostesTravauxDexie } from './adapters/dexie/depots-dexie';
+import {
+  BaremeDexie,
+  BiensDexie,
+  ParametresDexie,
+  PhotosDexie,
+  PiecesDexie,
+  PostesTravauxDexie,
+  VisitesDexie,
+} from './adapters/dexie/depots-dexie';
+import { CompressionPhotoCanvas } from './adapters/compression-photo-canvas';
 import { JournalErreursLocal } from './adapters/journal-erreurs-local';
 import { StockageNavigateur } from './adapters/stockage-navigateur';
 import { CaptureErreurs } from './application/capture-erreurs';
@@ -12,8 +21,9 @@ import { BaremeService } from './application/bareme.service';
 import { DiagnosticService } from './application/diagnostic.service';
 import { ParametresService } from './application/parametres.service';
 import { BaseDonneesPort } from './ports/base-donnees.port';
-import { BaremePort, BiensPort, ParametresPort, PostesTravauxPort } from './ports/depots.port';
+import { BaremePort, BiensPort, ParametresPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from './ports/depots.port';
 import { JournalErreursPort } from './ports/journal-erreurs.port';
+import { CompressionPhotoPort } from './ports/photo.port';
 import { StockagePort } from './ports/stockage.port';
 
 export const appConfig: ApplicationConfig = {
@@ -28,6 +38,10 @@ export const appConfig: ApplicationConfig = {
     { provide: PostesTravauxPort, useClass: PostesTravauxDexie },
     { provide: BaremePort, useClass: BaremeDexie },
     { provide: ParametresPort, useClass: ParametresDexie },
+    { provide: VisitesPort, useClass: VisitesDexie },
+    { provide: PiecesPort, useClass: PiecesDexie },
+    { provide: PhotosPort, useClass: PhotosDexie },
+    { provide: CompressionPhotoPort, useClass: CompressionPhotoCanvas },
     { provide: ErrorHandler, useClass: CaptureErreurs },
     // Premier lancement : demande de stockage persistant (SPEC §3), sans bloquer le démarrage.
     provideAppInitializer(() => {

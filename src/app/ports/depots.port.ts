@@ -1,4 +1,4 @@
-import { Bien, LigneBareme, Parametres, PosteTravaux } from '../domain/modeles';
+import { Bien, LigneBareme, Parametres, Photo, Piece, PosteTravaux, Visite } from '../domain/modeles';
 
 export abstract class BiensPort {
   abstract lister(): Promise<Bien[]>;
@@ -27,4 +27,24 @@ export abstract class ParametresPort {
   /** `undefined` tant que l'utilisateur n'a rien enregistré. */
   abstract lire(): Promise<Parametres | undefined>;
   abstract enregistrer(parametres: Parametres): Promise<void>;
+}
+
+export abstract class VisitesPort {
+  abstract listerParBien(bienId: string): Promise<Visite[]>;
+  abstract obtenir(id: string): Promise<Visite | undefined>;
+  abstract enregistrer(visite: Visite): Promise<void>;
+  abstract supprimer(id: string): Promise<void>;
+}
+
+export abstract class PiecesPort {
+  abstract listerParBien(bienId: string): Promise<Piece[]>;
+  abstract obtenir(id: string): Promise<Piece | undefined>;
+  abstract enregistrer(piece: Piece): Promise<void>;
+  abstract supprimer(id: string): Promise<void>;
+}
+
+export abstract class PhotosPort {
+  abstract obtenir(id: string): Promise<Photo | undefined>;
+  abstract enregistrer(photo: Photo): Promise<void>;
+  abstract supprimer(ids: readonly string[]): Promise<void>;
 }
