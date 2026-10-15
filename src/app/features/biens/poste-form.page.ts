@@ -3,8 +3,9 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { BaremeService } from '../../application/bareme.service';
 import { BudgetService } from '../../application/budget.service';
+import { VisitesService } from '../../application/visites.service';
 import { TravauxService } from '../../application/travaux.service';
-import { CATEGORIES, LigneBareme, PosteTravaux, UniteBareme } from '../../domain/modeles';
+import { Categorie, CATEGORIES, LigneBareme, PosteTravaux, UniteBareme } from '../../domain/modeles';
 import { formaterFourchette } from '../../shared/format';
 
 const LIBELLE_UNITE: Record<UniteBareme, string> = { M2: 'm²', ML: 'ml', UNITE: 'unité(s)', FORFAIT: 'forfait(s)' };
@@ -18,8 +19,15 @@ export class PosteFormPage implements OnInit {
   /** Identifiant du bien (`:id`) et du poste en édition (`:posteId`, absent à la création). */
   readonly id = input.required<string>();
   readonly posteId = input<string>();
+  /** Pré-remplissage depuis un point de visite (paramètres de requête). */
+  readonly categorie = input<Categorie>();
+  readonly libelle = input<string>();
+  readonly notes = input<string>();
+  readonly visiteId = input<string>();
+  readonly pointId = input<string>();
   private readonly travaux = inject(TravauxService);
   private readonly budgets = inject(BudgetService);
+  private readonly visites = inject(VisitesService);
   private readonly router = inject(Router);
   protected readonly baremeService = inject(BaremeService);
 
@@ -30,7 +38,12 @@ export class PosteFormPage implements OnInit {
   async ngOnInit(): Promise<void> {
     const posteId = this.posteId();
     if (!posteId) {
-      this.poste.set(this.travaux.nouveau(this.id()));
+      const nouveau = this.travaux.nouveau(this.id());
+      const categorie = this.categorie();
+      if (categorie && CATEGORIES.includes(categorie)) nouveau.categorie = categorie;
+      nouveau.libelle = this.libelle() ?? '';
+      nouveau.notes = this.notes();
+      this.poste.set(nouveau);
       return;
     }
     const existant = (await this.travaux.listerParBien(this.id())).find((p) => p.id === posteId);
@@ -39,6 +52,23 @@ export class PosteFormPage implements OnInit {
       return;
     }
     this.poste.set(structuredClone(existant));
+  }
+
+  /** Lignes du barème de la catégorie du poste, proposées en premier. */
+  protected suggerees(p: PosteTravaux): LigneBareme[] {
+    return this.baremeService.lignes().filter((l) => l.categorie === p.categorie);
+  }
+
+  protected autres(p: PosteTravaux): LigneBareme[] {
+    return this.baremeService.lignes().filter((l) => l.categorie !== p.categorie);
+  }
+
+  /** Retour : la visite d'où l'on vient, sinon l'onglet Travaux. */
+  protected retour(): { chemin: unknown[]; params: Record<string, string> } {
+    const visiteId = this.visiteId();
+    return visiteId
+      ? { chemin: ['/biens', this.id(), 'visites', visiteId], params: {} }
+      : { chemin: ['/biens', this.id()], params: { onglet: 'travaux' } };
   }
 
   protected ligne(p: PosteTravaux): LigneBareme | undefined {
@@ -84,6 +114,10 @@ export class PosteFormPage implements OnInit {
       montantHaut: p.montantHaut ?? 0,
       notes: p.notes?.trim() || undefined,
     });
-    await this.router.navigate(['/biens', this.id()], { queryParams: { onglet: 'travaux' } });
+    const visiteId = this.visiteId();
+    const pointId = this.pointId();
+    if (visiteId && pointId) await this.visites.lierPoste(visiteId, pointId, p.id);
+    const { chemin, params } = this.retour();
+    await this.router.navigate(chemin, { queryParams: params });
   }
 }

@@ -14,9 +14,18 @@
         <label class="champ">Ligne du barème
           <select name="bareme" [ngModel]="p.baremeId ?? ''" (ngModelChange)="choisirLigne(p, $event)">
             <option value="">— choisir —</option>
-            @for (l of baremeService.lignes(); track l.id) {
-              <option [value]="l.id">{{ l.categorie }} · {{ l.libelle }}</option>
+            @if (suggerees(p).length > 0) {
+              <optgroup [label]="'Suggérées : ' + p.categorie">
+                @for (l of suggerees(p); track l.id) {
+                  <option [value]="l.id">{{ l.libelle }}</option>
+                }
+              </optgroup>
             }
+            <optgroup label="Autres lignes">
+              @for (l of autres(p); track l.id) {
+                <option [value]="l.id">{{ l.categorie }} · {{ l.libelle }}</option>
+              }
+            </optgroup>
           </select>
         </label>
         <label class="champ">Quantité {{ unite(p) ? '(' + unite(p) + ')' : '' }}
@@ -72,7 +81,7 @@
     }
     <div class="actions">
       <button type="submit">Enregistrer</button>
-      <a class="bouton bouton-secondaire" [routerLink]="['/biens', id()]" [queryParams]="{ onglet: 'travaux' }">Annuler</a>
+      <a class="bouton bouton-secondaire" [routerLink]="retour().chemin" [queryParams]="retour().params">Annuler</a>
     </div>
   </form>
 }
