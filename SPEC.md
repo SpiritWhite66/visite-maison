@@ -106,6 +106,16 @@ Prix = **prix artisan TTC fourni-posé**. Pour un poste `DIY`, montant = prix ×
 ### Parametres
 `{ tauxNotairePct (défaut 8), margeNegociationDefautPct (défaut 5), coefDiyDefaut (défaut 0.4) }`
 
+### Etage (plan)
+`{ id, bienId, nom, ordre, elements: ElementPlan[] }` — un niveau du bien (rez-de-chaussée, étage, combles, sous-sol, dépendance…). Coordonnées en mètres.
+- `Mur` : `{ x1, y1, x2, y2, epaisseur }` (cloison 10 cm, mur 20 cm, mur épais 40 cm).
+- `Ouverture` (`PORTE` | `FENETRE`) : accrochée à un mur (`murId`, position `t` de 0 à 1, `largeur`, sens d'ouverture et charnière pour une porte) ; elle suit le mur et disparaît avec lui.
+- `EtiquettePlan` : nom de pièce (`texte`, `pieceId?` pour afficher la surface d'une pièce relevée).
+- `EquipementPlan` : `ECS` (chauffe-eau), `TABLEAU_ELECTRIQUE`, `CHAUFFAGE`, `COMPTEUR_EAU`.
+
+### FichierPlan
+`{ id, bienId, etageId, nom, typeMime, blob, ajouteLe }` — plan importé (photo réduite à 2400 px, ou fichier tel quel, PDF compris).
+
 ## 5. Règles de calcul (domaine pur, testé unitairement)
 
 - `prixNegocie = prixAffiche × (1 − margeNegociationPct / 100)`
@@ -196,6 +206,7 @@ Catalogue **statique versionné dans le code** (`checklist-catalogue.ts`), chaqu
    - **Visites** : liste des visites, bouton « Démarrer une visite ».
    - **Pièces** : pièces avec mesures et photos, surface totale calculée.
    - **Suivi** : étape courante et historique.
+   - **Plan** : un bloc par niveau, avec l'aperçu du dessin et les plans importés (photo ou fichier). Éditeur plein écran : outils mur, pièce rectangulaire, porte, fenêtre, nom de pièce, équipement ; sélection pour déplacer, étirer, modifier la longueur ou supprimer ; aimant désactivable (grille de 10 cm, extrémités des murs, angles à 0/45/90°) ; cotes affichables ; annuler / rétablir ; pincer pour zoomer ; sauvegarde automatique.
 3. **Mode visite** : thèmes en accordéon, pour chaque point des boutons d'état en un tap (OK / À surveiller / Travaux / N/A), commentaire et photo accessibles en un tap, sauvegarde automatique à chaque modification.
 4. **Paramètres** : taux notaire, marge par défaut, coefficient DIY, édition du barème, export/import JSON, état du stockage persistant.
 

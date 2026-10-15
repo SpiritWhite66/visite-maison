@@ -1,0 +1,96 @@
+/* Éditeur plein écran (hors navigation de l'appli). */
+.editeur {
+  position: fixed; z-index: 15; inset: 0 0 calc(60px + env(safe-area-inset-bottom)) 0;
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: 'barre' 'zone' 'proprietes' 'outils';
+  background: var(--fond);
+}
+@media (min-width: 760px) {
+  .editeur {
+    inset: 0 0 0 var(--rail);
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: 'barre barre' 'outils zone';
+  }
+  .editeur.avec-proprietes {
+    grid-template-columns: 5.5rem minmax(0, 1fr) 18rem;
+    grid-template-areas: 'barre barre barre' 'outils zone proprietes';
+  }
+}
+
+/* Barre du haut */
+.barre {
+  grid-area: barre; display: flex; align-items: center; gap: 0.25rem 0.5rem; flex-wrap: wrap;
+  padding: 0.35rem 0.75rem; background: var(--surface); border-bottom: 1px solid var(--filet);
+}
+.titre { font-size: 1.1rem; font-weight: 700; color: var(--encre); gap: 0.4rem; padding: 0 0.5rem; }
+.sauvegarde {
+  display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.82rem; font-weight: 600; color: var(--etat-ok);
+  &[data-etat='en-cours'] { color: var(--texte-discret); }
+  &[data-etat='erreur'] { color: var(--etat-travaux); }
+}
+.espaceur { flex: 1; }
+.groupe { display: flex; gap: 0.25rem; }
+.bascule-outil {
+  min-height: 44px; padding: 0 0.7rem; gap: 0.35rem; font-size: 0.88rem;
+  background: var(--surface); color: var(--texte-discret); border: 1px solid var(--filet-fort);
+}
+.bascule-outil[aria-pressed='true'] { background: var(--primaire-pale); color: var(--primaire); border-color: var(--primaire); }
+@media (max-width: 520px) { .bascule-outil span { display: none; } }
+
+/* Outils : colonne à gauche (tablette), rangée en bas (téléphone) */
+.outils {
+  grid-area: outils; display: flex; gap: 0.25rem; overflow-x: auto; padding: 0.35rem;
+  background: var(--surface); border-top: 1px solid var(--filet);
+}
+.outils button {
+  flex: 0 0 auto; flex-direction: column; gap: 0.1rem; min-width: 64px; min-height: 56px; padding: 0.25rem;
+  background: none; color: var(--texte-discret); border: 0; font-size: 0.72rem; font-weight: 650;
+}
+.outils button[aria-pressed='true'] { background: var(--encre); color: var(--fond); }
+@media (min-width: 760px) {
+  .outils { flex-direction: column; overflow-y: auto; border-top: 0; border-right: 1px solid var(--filet); padding: 0.5rem 0.4rem; }
+  .outils button { min-height: 64px; }
+}
+
+/* Zone de dessin */
+.zone { grid-area: zone; position: relative; overflow: hidden; background: #fffdf9; }
+svg { display: block; width: 100%; height: 100%; touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; }
+.grille line { stroke: #ece6da; stroke-width: 1; }
+.grille line.fort { stroke: #ddd5c6; }
+.apercu { stroke: var(--primaire); opacity: 0.7; }
+.apercu-rect { fill: color-mix(in srgb, var(--primaire) 8%, transparent); stroke: var(--primaire); opacity: 0.7; }
+.mesure { fill: var(--primaire); font-weight: 700; stroke: #fffdf9; paint-order: stroke; }
+.poignee { fill: #fff; stroke: var(--primaire); }
+
+.options {
+  position: absolute; top: 0.6rem; left: 0.6rem; right: 0.6rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  pointer-events: none;
+}
+.options select {
+  pointer-events: auto; min-height: 44px; padding: 0 0.6rem; border: 1px solid var(--filet-fort); border-radius: var(--rayon);
+  background: var(--surface); font: inherit; color: var(--encre);
+}
+.aide {
+  font-size: 0.82rem; color: var(--texte-discret); background: color-mix(in srgb, var(--surface) 88%, transparent);
+  padding: 0.25rem 0.5rem; border-radius: 4px; max-width: 34rem;
+}
+.message {
+  position: absolute; left: 50%; bottom: 1rem; transform: translateX(-50%);
+  padding: 0.6rem 1rem; border-radius: var(--rayon); background: var(--encre); color: var(--fond); font-weight: 600; font-size: 0.9rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15); white-space: nowrap;
+}
+.zoom { position: absolute; right: 0.75rem; bottom: 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.zoom button { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); }
+
+/* Propriétés : panneau à droite (tablette), feuille en bas (téléphone) */
+.proprietes {
+  grid-area: proprietes; padding: 1rem; background: var(--surface); border-top: 1px solid var(--filet);
+  overflow-y: auto; max-height: 45dvh;
+}
+.proprietes h2 { margin-bottom: 0.75rem; }
+.proprietes .boutons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.proprietes p { font-size: 0.85rem; }
+@media (min-width: 760px) {
+  .proprietes { border-top: 0; border-left: 1px solid var(--filet); max-height: none; }
+}

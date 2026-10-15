@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { BiensService } from '../../application/biens.service';
 import { BudgetService } from '../../application/budget.service';
 import { PiecesService } from '../../application/pieces.service';
+import { PlanService } from '../../application/plan.service';
 import { TravauxService } from '../../application/travaux.service';
 import { VisitesService } from '../../application/visites.service';
 import { Fourchette } from '../../domain/budget';
@@ -11,10 +12,11 @@ import { surfacePiece, surfaceTotale } from '../../domain/piece';
 import { Bien, EtatPoint, Piece, PosteTravaux, Visite } from '../../domain/modeles';
 import { formaterEuro, formaterFourchette, formaterNombre } from '../../shared/format';
 import { IconeComponent } from '../../shared/icone.component';
+import { PlanOngletComponent } from './plan/plan-onglet.component';
 import { LIBELLE_ETAPE, LIBELLE_PRIORITE, LIBELLE_TYPE_BIEN } from '../../shared/libelles';
 
-type Onglet = 'synthese' | 'travaux' | 'visites' | 'pieces';
-const ONGLETS: readonly Onglet[] = ['synthese', 'travaux', 'visites', 'pieces'];
+type Onglet = 'synthese' | 'travaux' | 'visites' | 'pieces' | 'plan';
+const ONGLETS: readonly Onglet[] = ['synthese', 'travaux', 'visites', 'pieces', 'plan'];
 
 interface ResumeVisite {
   verifies: number;
@@ -25,7 +27,7 @@ interface ResumeVisite {
 
 @Component({
   selector: 'app-fiche-bien',
-  imports: [RouterLink, IconeComponent],
+  imports: [RouterLink, IconeComponent, PlanOngletComponent],
   templateUrl: './fiche-bien.page.html',
   styleUrl: './fiche-bien.page.scss',
 })
@@ -38,6 +40,7 @@ export class FicheBienPage implements OnInit {
   private readonly visitesService = inject(VisitesService);
   private readonly piecesService = inject(PiecesService);
   private readonly budgets = inject(BudgetService);
+  private readonly plans = inject(PlanService);
   private readonly router = inject(Router);
 
   protected readonly bien = signal<Bien | null>(null);
@@ -45,6 +48,7 @@ export class FicheBienPage implements OnInit {
   protected readonly visites = signal<Visite[]>([]);
   protected readonly pieces = signal<Piece[]>([]);
   protected readonly onglet = signal<Onglet>('synthese');
+  protected readonly nombreEtages = signal(0);
 
   protected readonly budget = computed(() => {
     const b = this.bien();
@@ -103,11 +107,13 @@ export class FicheBienPage implements OnInit {
       return;
     }
     this.bien.set(bien);
-    const [postes, visites, pieces] = await Promise.all([
+    const [postes, visites, pieces, etages] = await Promise.all([
       this.travaux.listerParBien(bien.id),
       this.visitesService.listerParBien(bien.id),
       this.piecesService.listerParBien(bien.id),
+      this.plans.listerEtages(bien.id),
     ]);
+    this.nombreEtages.set(etages.length);
     this.postes.set(postes);
     this.visites.set(visites);
     this.pieces.set(pieces);
@@ -138,7 +144,7 @@ export class FicheBienPage implements OnInit {
 
   protected async supprimerBien(): Promise<void> {
     const b = this.bien();
-    if (!b || !confirm(`Supprimer définitivement « ${b.titre} » et tout ce qui s’y rattache (travaux, visites, pièces, photos) ? Cette action est irréversible.`)) return;
+    if (!b || !confirm(`Supprimer définitivement « ${b.titre} » et tout ce qui s’y rattache (travaux, visites, pièces, photos, plans) ? Cette action est irréversible.`)) return;
     await this.biens.supprimer(b.id);
     await this.router.navigate(['/biens']);
   }

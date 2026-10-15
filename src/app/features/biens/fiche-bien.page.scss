@@ -24,6 +24,9 @@
   .mise-en-page { display: grid; grid-template-columns: minmax(0, 1fr) 21rem; gap: 1.25rem; align-items: start; }
   .mise-en-page .budget { display: block !important; grid-column: 2; grid-row: 1; position: sticky; top: 1.5rem; }
   .contenu { grid-column: 1; grid-row: 1; }
+  /* Le plan a besoin de toute la largeur. */
+  .mise-en-page[data-onglet='plan'] { display: block; }
+  .mise-en-page[data-onglet='plan'] .budget { display: none !important; }
 }
 
 .budget .total { margin: 0; font-size: 2rem; font-weight: 750; color: var(--encre); line-height: 1.1; }

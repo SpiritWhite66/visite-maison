@@ -7,6 +7,8 @@ import { BaseDonneesDexie } from './adapters/dexie/base-donnees-dexie';
 import {
   BaremeDexie,
   BiensDexie,
+  EtagesDexie,
+  FichiersPlanDexie,
   ParametresDexie,
   PhotosDexie,
   PiecesDexie,
@@ -21,7 +23,7 @@ import { BaremeService } from './application/bareme.service';
 import { DiagnosticService } from './application/diagnostic.service';
 import { ParametresService } from './application/parametres.service';
 import { BaseDonneesPort } from './ports/base-donnees.port';
-import { BaremePort, BiensPort, ParametresPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from './ports/depots.port';
+import { BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from './ports/depots.port';
 import { JournalErreursPort } from './ports/journal-erreurs.port';
 import { CompressionPhotoPort } from './ports/photo.port';
 import { StockagePort } from './ports/stockage.port';
@@ -41,6 +43,8 @@ export const appConfig: ApplicationConfig = {
     { provide: VisitesPort, useClass: VisitesDexie },
     { provide: PiecesPort, useClass: PiecesDexie },
     { provide: PhotosPort, useClass: PhotosDexie },
+    { provide: EtagesPort, useClass: EtagesDexie },
+    { provide: FichiersPlanPort, useClass: FichiersPlanDexie },
     { provide: CompressionPhotoPort, useClass: CompressionPhotoCanvas },
     { provide: ErrorHandler, useClass: CaptureErreurs },
     // Premier lancement : demande de stockage persistant (SPEC §3), sans bloquer le démarrage.

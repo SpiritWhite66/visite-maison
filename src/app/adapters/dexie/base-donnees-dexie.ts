@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import Dexie, { Table } from 'dexie';
-import { Bien, LigneBareme, Parametres, Photo, Piece, PosteTravaux, Visite } from '../../domain/modeles';
+import { Bien, Etage, FichierPlan, LigneBareme, Parametres, Photo, Piece, PosteTravaux, Visite } from '../../domain/modeles';
 import { BaseDonneesPort, EtatBaseDonnees } from '../../ports/base-donnees.port';
 
 export interface LigneParametres {
@@ -18,6 +18,8 @@ export class VisiteImmoDb extends Dexie {
   postesTravaux!: Table<PosteTravaux, string>;
   bareme!: Table<LigneBareme, string>;
   parametres!: Table<LigneParametres, string>;
+  etages!: Table<Etage, string>;
+  fichiersPlan!: Table<FichierPlan, string>;
 
   constructor() {
     super('visite-immo');
@@ -31,6 +33,11 @@ export class VisiteImmoDb extends Dexie {
       postesTravaux: 'id, bienId',
       bareme: 'id',
       parametres: 'cle',
+    });
+    // v2 : plans (étages dessinés et fichiers de plan). Les tables existantes ne changent pas.
+    this.version(2).stores({
+      etages: 'id, bienId',
+      fichiersPlan: 'id, bienId, etageId',
     });
   }
 }

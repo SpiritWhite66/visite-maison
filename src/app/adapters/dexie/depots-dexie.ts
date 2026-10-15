@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { Bien, LigneBareme, Parametres, Photo, Piece, PosteTravaux, Visite } from '../../domain/modeles';
-import { BaremePort, BiensPort, ParametresPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from '../../ports/depots.port';
+import { Bien, Etage, FichierPlan, LigneBareme, Parametres, Photo, Piece, PosteTravaux, Visite } from '../../domain/modeles';
+import { BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from '../../ports/depots.port';
 import { BaseDonneesDexie, CLE_PARAMETRES } from './base-donnees-dexie';
 
 @Injectable()
@@ -17,9 +17,11 @@ export class BiensDexie extends BiensPort {
     await this.db.biens.put(bien);
   }
   async supprimer(id: string): Promise<void> {
-    const { biens, visites, pieces, photos, postesTravaux } = this.db;
-    await this.db.transaction('rw', [biens, visites, pieces, photos, postesTravaux], async () => {
+    const { biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan } = this.db;
+    await this.db.transaction('rw', [biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan], async () => {
       await Promise.all([
+        etages.where('bienId').equals(id).delete(),
+        fichiersPlan.where('bienId').equals(id).delete(),
         visites.where('bienId').equals(id).delete(),
         pieces.where('bienId').equals(id).delete(),
         photos.where('bienId').equals(id).delete(),
@@ -129,5 +131,45 @@ export class PhotosDexie extends PhotosPort {
   }
   async supprimer(ids: readonly string[]): Promise<void> {
     await this.db.photos.bulkDelete([...ids]);
+  }
+}
+
+@Injectable()
+export class EtagesDexie extends EtagesPort {
+  private readonly db = inject(BaseDonneesDexie).db;
+
+  listerParBien(bienId: string): Promise<Etage[]> {
+    return this.db.etages.where('bienId').equals(bienId).toArray();
+  }
+  obtenir(id: string): Promise<Etage | undefined> {
+    return this.db.etages.get(id);
+  }
+  async enregistrer(etage: Etage): Promise<void> {
+    await this.db.etages.put(etage);
+  }
+  async supprimer(id: string): Promise<void> {
+    const { etages, fichiersPlan } = this.db;
+    await this.db.transaction('rw', [etages, fichiersPlan], async () => {
+      await fichiersPlan.where('etageId').equals(id).delete();
+      await etages.delete(id);
+    });
+  }
+}
+
+@Injectable()
+export class FichiersPlanDexie extends FichiersPlanPort {
+  private readonly db = inject(BaseDonneesDexie).db;
+
+  listerParBien(bienId: string): Promise<FichierPlan[]> {
+    return this.db.fichiersPlan.where('bienId').equals(bienId).toArray();
+  }
+  obtenir(id: string): Promise<FichierPlan | undefined> {
+    return this.db.fichiersPlan.get(id);
+  }
+  async enregistrer(fichier: FichierPlan): Promise<void> {
+    await this.db.fichiersPlan.put(fichier);
+  }
+  async supprimer(id: string): Promise<void> {
+    await this.db.fichiersPlan.delete(id);
   }
 }

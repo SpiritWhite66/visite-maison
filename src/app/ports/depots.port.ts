@@ -1,10 +1,10 @@
-import { Bien, LigneBareme, Parametres, Photo, Piece, PosteTravaux, Visite } from '../domain/modeles';
+import { Bien, Etage, FichierPlan, LigneBareme, Parametres, Photo, Piece, PosteTravaux, Visite } from '../domain/modeles';
 
 export abstract class BiensPort {
   abstract lister(): Promise<Bien[]>;
   abstract obtenir(id: string): Promise<Bien | undefined>;
   abstract enregistrer(bien: Bien): Promise<void>;
-  /** Supprime le bien et tout ce qui lui est rattaché (postes, visites, pièces, photos). */
+  /** Supprime le bien et tout ce qui lui est rattaché (postes, visites, pièces, photos, plans). */
   abstract supprimer(id: string): Promise<void>;
 }
 
@@ -47,4 +47,19 @@ export abstract class PhotosPort {
   abstract obtenir(id: string): Promise<Photo | undefined>;
   abstract enregistrer(photo: Photo): Promise<void>;
   abstract supprimer(ids: readonly string[]): Promise<void>;
+}
+
+export abstract class EtagesPort {
+  abstract listerParBien(bienId: string): Promise<Etage[]>;
+  abstract obtenir(id: string): Promise<Etage | undefined>;
+  abstract enregistrer(etage: Etage): Promise<void>;
+  /** Supprime l'étage et ses fichiers de plan. */
+  abstract supprimer(id: string): Promise<void>;
+}
+
+export abstract class FichiersPlanPort {
+  abstract listerParBien(bienId: string): Promise<FichierPlan[]>;
+  abstract obtenir(id: string): Promise<FichierPlan | undefined>;
+  abstract enregistrer(fichier: FichierPlan): Promise<void>;
+  abstract supprimer(id: string): Promise<void>;
 }

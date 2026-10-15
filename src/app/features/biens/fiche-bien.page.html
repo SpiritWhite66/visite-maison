@@ -24,6 +24,9 @@
       <button role="tab" [attr.aria-selected]="onglet() === 'pieces'" (click)="onglet.set('pieces')">
         Pièces <span class="compte">{{ pieces().length }}</span>
       </button>
+      <button role="tab" [attr.aria-selected]="onglet() === 'plan'" (click)="onglet.set('plan')">
+        Plan <span class="compte">{{ nombreEtages() }}</span>
+      </button>
     </div>
 
     <div class="mise-en-page" [attr.data-onglet]="onglet()">
@@ -176,6 +179,10 @@
                 }
               </section>
             }
+          }
+
+          @case ('plan') {
+            <app-plan-onglet [bienId]="b.id" [piecesBien]="pieces()" (nombreEtages)="nombreEtages.set($event)" />
           }
 
           @case ('pieces') {

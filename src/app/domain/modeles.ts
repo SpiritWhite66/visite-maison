@@ -148,3 +148,72 @@ export interface Photo {
   legende?: string;
   prisLe: string;
 }
+
+/* ---------- Plan (étages dessinés et fichiers de plan) ---------- */
+
+export interface Mur {
+  type: 'MUR';
+  id: string;
+  /** Coordonnées en mètres, axe y vers le bas. */
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  epaisseur: number;
+}
+
+/** Porte ou fenêtre, accrochée à un mur : elle le suit quand il bouge et disparaît avec lui. */
+export interface Ouverture {
+  type: 'PORTE' | 'FENETRE';
+  id: string;
+  murId: string;
+  /** Position du milieu de l'ouverture le long du mur, de 0 (début) à 1 (fin). */
+  t: number;
+  largeur: number;
+  /** Côté du mur vers lequel la porte s'ouvre. */
+  cote: 1 | -1;
+  /** Charnière à l'extrémité « fin » de l'ouverture plutôt qu'au « début ». */
+  charniereFin: boolean;
+}
+
+export interface EtiquettePlan {
+  type: 'ETIQUETTE';
+  id: string;
+  x: number;
+  y: number;
+  texte: string;
+  /** Pièce de l'onglet Pièces : sa surface s'affiche sous le nom. */
+  pieceId?: string;
+}
+
+export const NATURES_EQUIPEMENT = ['ECS', 'TABLEAU_ELECTRIQUE', 'CHAUFFAGE', 'COMPTEUR_EAU'] as const;
+export type NatureEquipement = (typeof NATURES_EQUIPEMENT)[number];
+
+export interface EquipementPlan {
+  type: 'EQUIPEMENT';
+  id: string;
+  x: number;
+  y: number;
+  nature: NatureEquipement;
+}
+
+export type ElementPlan = Mur | Ouverture | EtiquettePlan | EquipementPlan;
+
+export interface Etage {
+  id: string;
+  bienId: string;
+  nom: string;
+  ordre: number;
+  elements: ElementPlan[];
+}
+
+/** Plan importé (photo ou fichier, PDF compris) rattaché à un étage. */
+export interface FichierPlan {
+  id: string;
+  bienId: string;
+  etageId: string;
+  nom: string;
+  typeMime: string;
+  blob: Blob;
+  ajouteLe: string;
+}

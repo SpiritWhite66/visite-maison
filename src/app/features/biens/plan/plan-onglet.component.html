@@ -1,0 +1,80 @@
+@if (etages(); as liste) {
+  @if (liste.length === 0) {
+    <div class="vide">
+      <p>Aucun plan pour l’instant. Ajoutez un premier niveau, puis dessinez-le ou importez une photo du plan.</p>
+    </div>
+  }
+
+  @for (e of liste; track e.id; let premier = $first; let dernier = $last) {
+    <section class="panneau niveau">
+      <header class="tete">
+        <h2>{{ e.nom }}</h2>
+        <div class="actions-niveau">
+          <button type="button" class="bouton-texte bouton-icone" (click)="renommer(e)" aria-label="Renommer" title="Renommer"><app-icone nom="crayon" [taille]="18" /></button>
+          @if (!premier) {
+            <button type="button" class="bouton-texte bouton-icone fleche" (click)="deplacer(e, -1)" aria-label="Monter" title="Monter"><app-icone nom="bas" [taille]="18" /></button>
+          }
+          @if (!dernier) {
+            <button type="button" class="bouton-texte bouton-icone" (click)="deplacer(e, 1)" aria-label="Descendre" title="Descendre"><app-icone nom="bas" [taille]="18" /></button>
+          }
+          <button type="button" class="bouton-texte bouton-icone danger" (click)="supprimerNiveau(e)" aria-label="Supprimer le niveau" title="Supprimer le niveau"><app-icone nom="corbeille" [taille]="18" /></button>
+        </div>
+      </header>
+
+      <div class="contenu-niveau">
+        <a class="dessin" [routerLink]="['plan', e.id]" [attr.aria-label]="'Dessiner le plan : ' + e.nom">
+          @if (cadre(e); as vb) {
+            <svg [attr.viewBox]="vb" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <g appRenduPlan [elements]="e.elements" [pieces]="infosPieces()" />
+            </svg>
+            <span class="action-dessin"><app-icone nom="crayon" [taille]="18" /> Modifier le dessin</span>
+          } @else {
+            <span class="dessin-vide">
+              <app-icone nom="plan" [taille]="32" />
+              Dessiner le plan
+            </span>
+          }
+        </a>
+
+        <div class="importes">
+          @for (f of fichiersDe(e.id); track f.fichier.id) {
+            <button type="button" class="importe" (click)="ouvrir(f)" [attr.aria-label]="'Ouvrir ' + f.fichier.nom">
+              @if (f.image) {
+                <img [src]="f.url" alt="" />
+              } @else {
+                <span class="document"><app-icone nom="fichier" [taille]="28" /><small>{{ f.fichier.nom }}</small></span>
+              }
+            </button>
+          }
+          <label class="importe ajout" [class.desactive]="envoiEnCours() === e.id">
+            <app-icone nom="plus" [taille]="24" />
+            <small>{{ envoiEnCours() === e.id ? 'Ajout…' : 'Photo ou fichier du plan' }}</small>
+            <input type="file" accept="image/*,application/pdf" multiple hidden (change)="importer(e, $event)" />
+          </label>
+        </div>
+      </div>
+    </section>
+  }
+
+  <div class="ajout-niveau">
+    <span class="surtitre">Ajouter un niveau</span>
+    <div class="propositions">
+      @for (n of niveauxProposes; track n) {
+        <button type="button" class="bouton-secondaire" (click)="ajouterNiveau(n)"><app-icone nom="plus" [taille]="18" /> {{ n }}</button>
+      }
+      <button type="button" class="bouton-texte" (click)="ajouterNiveauLibre()">Autre…</button>
+    </div>
+  </div>
+
+  @if (ouvert(); as f) {
+    <div class="voile" role="dialog" aria-modal="true" [attr.aria-label]="f.fichier.nom">
+      <img [src]="f.url" alt="" />
+      <div class="barre-voile">
+        <button type="button" class="bouton-secondaire" (click)="ouvert.set(null)">Fermer</button>
+        <span class="espaceur"></span>
+        <button type="button" class="bouton-secondaire" (click)="ouvrirEnGrand(f)">Ouvrir pour zoomer</button>
+        <button type="button" class="danger" (click)="supprimerFichier(f)">Supprimer</button>
+      </div>
+    </div>
+  }
+}
