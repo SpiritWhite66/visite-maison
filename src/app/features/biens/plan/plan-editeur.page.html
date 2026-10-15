@@ -1,0 +1,182 @@
+@if (etage(); as et) {
+  <div class="editeur" [class.avec-proprietes]="selection()">
+    <header class="barre">
+      <a class="bouton bouton-texte bouton-icone" [routerLink]="['/biens', id()]" [queryParams]="{ onglet: 'plan' }" aria-label="Retour au bien">
+        <app-icone nom="gauche" />
+      </a>
+      <button type="button" class="titre bouton-texte" (click)="renommer()" title="Renommer le niveau">
+        {{ et.nom }} <app-icone nom="crayon" [taille]="16" />
+      </button>
+      <span class="sauvegarde" [attr.data-etat]="etatSauvegarde()" aria-live="polite">
+        @switch (etatSauvegarde()) {
+          @case ('ok') { <app-icone nom="coche" [taille]="16" /> Enregistré }
+          @case ('en-cours') { Enregistrement… }
+          @case ('erreur') { Échec de l’enregistrement }
+        }
+      </span>
+      <span class="espaceur"></span>
+      <div class="groupe">
+        <button type="button" class="bouton-texte bouton-icone" [disabled]="!peutAnnuler()" (click)="annuler()" aria-label="Annuler" title="Annuler">
+          <app-icone nom="annuler" />
+        </button>
+        <button type="button" class="bouton-texte bouton-icone" [disabled]="!peutRetablir()" (click)="retablir()" aria-label="Rétablir" title="Rétablir">
+          <app-icone nom="retablir" />
+        </button>
+      </div>
+      <div class="groupe">
+        <button type="button" class="bascule-outil" [attr.aria-pressed]="aimant()" (click)="aimant.set(!aimant())" title="Aimant : grille de 10 cm, extrémités des murs, angles droits">
+          <app-icone nom="aimant" [taille]="20" /> <span>Aimant</span>
+        </button>
+        <button type="button" class="bascule-outil" [attr.aria-pressed]="cotes()" (click)="cotes.set(!cotes())" title="Afficher la longueur des murs">
+          <app-icone nom="cote" [taille]="20" /> <span>Cotes</span>
+        </button>
+        <button type="button" class="bascule-outil" [attr.aria-pressed]="modeStylet()" (click)="modeStylet.set(!modeStylet())"
+          title="Stylet : le stylet dessine, les doigts déplacent et zooment, la paume est ignorée">
+          <app-icone nom="stylet" [taille]="20" /> <span>Stylet</span>
+        </button>
+      </div>
+    </header>
+
+    <nav class="outils" aria-label="Outils de dessin">
+      @for (o of outils; track o.id) {
+        <button type="button" [attr.aria-pressed]="outil() === o.id" (click)="choisirOutil(o.id)">
+          <app-icone [nom]="o.icone" />
+          <span>{{ o.libelle }}</span>
+        </button>
+      }
+    </nav>
+
+    <div class="zone" #zone>
+      <svg
+        [attr.viewBox]="viewBox()"
+        preserveAspectRatio="xMinYMin meet"
+        (pointerdown)="appui($event)"
+        (pointermove)="deplacement($event)"
+        (pointerup)="relache($event)"
+        (pointercancel)="relache($event)"
+        (pointerleave)="quitter($event)"
+        (contextmenu)="$event.preventDefault()"
+        (wheel)="molette($event)"
+      >
+        <g class="grille">
+          @for (l of grille(); track $index) {
+            <line [attr.x1]="l.x1" [attr.y1]="l.y1" [attr.x2]="l.x2" [attr.y2]="l.y2" [class.fort]="l.fort" vector-effect="non-scaling-stroke" />
+          }
+        </g>
+
+        <g appRenduPlan [elements]="elements()" [pieces]="pieces()" [selectionId]="selectionId()" [cotes]="cotes()" [pxParMetre]="vue().k" />
+
+        @if (apercu(); as a) {
+          @if (a.outil === 'mur') {
+            <line class="apercu" [attr.x1]="a.a.x" [attr.y1]="a.a.y" [attr.x2]="a.b.x" [attr.y2]="a.b.y" [attr.stroke-width]="epaisseur()" stroke-linecap="square" />
+          } @else {
+            <rect class="apercu-rect" [attr.x]="a.a.x < a.b.x ? a.a.x : a.b.x" [attr.y]="a.a.y < a.b.y ? a.a.y : a.b.y"
+              [attr.width]="a.b.x - a.a.x < 0 ? a.a.x - a.b.x : a.b.x - a.a.x" [attr.height]="a.b.y - a.a.y < 0 ? a.a.y - a.b.y : a.b.y - a.a.y"
+              [attr.stroke-width]="epaisseur()" />
+          }
+          <text class="mesure" [attr.x]="a.b.x" [attr.y]="a.b.y - taillePx(22)" [attr.font-size]="taillePx(15)" text-anchor="middle"
+            [attr.stroke-width]="taillePx(4)">{{ longueurApercu() }}</text>
+        }
+
+        @if (survol(); as sv) {
+          <g class="survol">
+            <circle [attr.cx]="sv.x" [attr.cy]="sv.y" [attr.r]="taillePx(7)" [attr.stroke-width]="taillePx(1.5)" />
+            <line [attr.x1]="sv.x - taillePx(12)" [attr.y1]="sv.y" [attr.x2]="sv.x + taillePx(12)" [attr.y2]="sv.y" [attr.stroke-width]="taillePx(1)" />
+            <line [attr.x1]="sv.x" [attr.y1]="sv.y - taillePx(12)" [attr.x2]="sv.x" [attr.y2]="sv.y + taillePx(12)" [attr.stroke-width]="taillePx(1)" />
+          </g>
+        }
+
+        @if (murSelectionne(); as m) {
+          @for (b of [{ x: m.x1, y: m.y1 }, { x: m.x2, y: m.y2 }]; track $index) {
+            <circle class="poignee" [attr.cx]="b.x" [attr.cy]="b.y" [attr.r]="taillePx(10)" [attr.stroke-width]="taillePx(2.5)" />
+          }
+        }
+      </svg>
+
+      <div class="options">
+        @switch (outil()) {
+          @case ('mur') {
+            <select [ngModel]="epaisseur()" (ngModelChange)="epaisseur.set(+$event)" aria-label="Épaisseur">
+              @for (e of epaisseurs; track e.valeur) { <option [value]="e.valeur">{{ e.libelle }}</option> }
+            </select>
+          }
+          @case ('rectangle') {
+            <select [ngModel]="epaisseur()" (ngModelChange)="epaisseur.set(+$event)" aria-label="Épaisseur">
+              @for (e of epaisseurs; track e.valeur) { <option [value]="e.valeur">{{ e.libelle }}</option> }
+            </select>
+          }
+          @case ('equipement') {
+            <select [ngModel]="nature()" (ngModelChange)="nature.set($event)" aria-label="Équipement">
+              @for (n of natures; track n) { <option [value]="n">{{ equipementsInfo[n].libelle }}</option> }
+            </select>
+          }
+        }
+        <span class="aide">
+          {{ aideOutil() }}
+          @if (modeStylet()) { <br />Stylet : il dessine, les doigts déplacent et zooment. Bouton latéral maintenu : sélection. }
+        </span>
+      </div>
+
+      @if (message()) { <div class="message" role="status">{{ message() }}</div> }
+
+      <div class="zoom">
+        <button type="button" class="bouton-secondaire bouton-icone" (click)="zoomer(1.4)" aria-label="Zoomer"><app-icone nom="plus" /></button>
+        <button type="button" class="bouton-secondaire bouton-icone" (click)="zoomer(1 / 1.4)" aria-label="Dézoomer"><app-icone nom="moins" /></button>
+        <button type="button" class="bouton-secondaire bouton-icone" (click)="cadrer()" aria-label="Tout afficher" title="Tout afficher"><app-icone nom="cadrer" /></button>
+      </div>
+    </div>
+
+    @if (selection(); as s) {
+      <aside class="proprietes" aria-label="Élément sélectionné">
+        @if (estMur(s)) {
+          <h2>Mur</h2>
+          <label class="champ">Longueur (m)
+            <input type="number" inputmode="decimal" min="0.1" step="0.05" [ngModel]="longueur(s)" (change)="changerLongueur(s, +$any($event.target).value)" />
+          </label>
+          <label class="champ">Épaisseur
+            <select [ngModel]="s.epaisseur" (ngModelChange)="modifier(s.id, { epaisseur: +$event })">
+              @for (e of epaisseurs; track e.valeur) { <option [ngValue]="e.valeur">{{ e.libelle }}</option> }
+            </select>
+          </label>
+          <p class="discret">Touchez une extrémité verte pour l’étirer, le milieu pour le déplacer.</p>
+        } @else if (estOuverture(s)) {
+          <h2>{{ s.type === 'PORTE' ? 'Porte' : 'Fenêtre' }}</h2>
+          <label class="champ">Largeur (m)
+            <input type="number" inputmode="decimal" min="0.3" step="0.05" [ngModel]="s.largeur" (change)="changerLargeur(s, +$any($event.target).value)" />
+          </label>
+          @if (s.type === 'PORTE') {
+            <div class="boutons">
+              <button type="button" class="bouton-secondaire" (click)="modifier(s.id, { cote: s.cote === 1 ? -1 : 1 })">Ouvrir de l’autre côté</button>
+              <button type="button" class="bouton-secondaire" (click)="modifier(s.id, { charniereFin: !s.charniereFin })">Inverser la charnière</button>
+            </div>
+          }
+          <p class="discret">Glissez-la le long du mur pour la déplacer.</p>
+        } @else if (estEtiquette(s)) {
+          <h2>Nom de pièce</h2>
+          <label class="champ">Texte
+            <input [ngModel]="s.texte" (change)="modifier(s.id, { texte: $any($event.target).value })" />
+          </label>
+          @if (listePieces().length > 0) {
+            <label class="champ">Pièce relevée (affiche sa surface)
+              <select [ngModel]="s.pieceId ?? ''" (ngModelChange)="choisirPiece(s, $event)">
+                <option value="">— aucune —</option>
+                @for (p of listePieces(); track p.id) { <option [value]="p.id">{{ p.nom }}</option> }
+              </select>
+            </label>
+          }
+        } @else if (estEquipement(s)) {
+          <h2>Équipement</h2>
+          <label class="champ">Nature
+            <select [ngModel]="s.nature" (ngModelChange)="modifier(s.id, { nature: $event })">
+              @for (n of natures; track n) { <option [value]="n">{{ equipementsInfo[n].libelle }}</option> }
+            </select>
+          </label>
+        }
+        <div class="boutons">
+          <button type="button" class="bouton-texte danger" (click)="supprimerSelection()"><app-icone nom="corbeille" [taille]="18" /> Supprimer</button>
+          <button type="button" class="bouton-secondaire" (click)="selectionId.set(null)">Fermer</button>
+        </div>
+      </aside>
+    }
+  </div>
+}
