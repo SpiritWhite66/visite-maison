@@ -1,0 +1,33 @@
+import { LigneBareme } from './modeles';
+
+/** Barème indicatif (SPEC §6) : prix artisan TTC fourni-posé, à ajuster dans Paramètres. */
+export const BAREME_DEFAUT: readonly LigneBareme[] = [
+  { id: 'bareme-01', categorie: 'Toiture', libelle: 'Réfection complète couverture tuiles', unite: 'M2', prixBas: 120, prixHaut: 250 },
+  { id: 'bareme-02', categorie: 'Toiture', libelle: 'Révision / remplacement tuiles ponctuel', unite: 'FORFAIT', prixBas: 500, prixHaut: 2500 },
+  { id: 'bareme-03', categorie: 'Toiture', libelle: 'Traitement charpente', unite: 'M2', prixBas: 20, prixHaut: 40 },
+  { id: 'bareme-04', categorie: 'Isolation', libelle: 'Combles perdus (soufflage)', unite: 'M2', prixBas: 25, prixHaut: 50 },
+  { id: 'bareme-05', categorie: 'Isolation', libelle: 'Murs par l\'intérieur', unite: 'M2', prixBas: 50, prixHaut: 100 },
+  { id: 'bareme-06', categorie: 'Isolation', libelle: 'Murs par l\'extérieur (ITE)', unite: 'M2', prixBas: 120, prixHaut: 200 },
+  { id: 'bareme-07', categorie: 'Menuiseries', libelle: 'Fenêtre double vitrage', unite: 'UNITE', prixBas: 600, prixHaut: 1200 },
+  { id: 'bareme-08', categorie: 'Menuiseries', libelle: 'Porte d\'entrée', unite: 'UNITE', prixBas: 1500, prixHaut: 4000 },
+  { id: 'bareme-09', categorie: 'Électricité', libelle: 'Rénovation complète', unite: 'M2', prixBas: 80, prixHaut: 140 },
+  { id: 'bareme-10', categorie: 'Électricité', libelle: 'Mise en sécurité tableau', unite: 'FORFAIT', prixBas: 1000, prixHaut: 2500 },
+  { id: 'bareme-11', categorie: 'Plomberie', libelle: 'Salle de bain complète', unite: 'FORFAIT', prixBas: 6000, prixHaut: 15000 },
+  { id: 'bareme-12', categorie: 'Plomberie', libelle: 'Remplacement chauffe-eau', unite: 'FORFAIT', prixBas: 800, prixHaut: 2500 },
+  { id: 'bareme-13', categorie: 'Cuisine', libelle: 'Cuisine équipée posée', unite: 'FORFAIT', prixBas: 4000, prixHaut: 15000 },
+  { id: 'bareme-14', categorie: 'Chauffage', libelle: 'Poêle à bois posé avec conduit', unite: 'FORFAIT', prixBas: 3000, prixHaut: 7000 },
+  { id: 'bareme-15', categorie: 'Chauffage', libelle: 'Pompe à chaleur air/eau', unite: 'FORFAIT', prixBas: 10000, prixHaut: 18000 },
+  { id: 'bareme-16', categorie: 'Ventilation', libelle: 'VMC simple flux', unite: 'FORFAIT', prixBas: 800, prixHaut: 2000 },
+  { id: 'bareme-17', categorie: 'Sols', libelle: 'Carrelage posé', unite: 'M2', prixBas: 50, prixHaut: 100 },
+  { id: 'bareme-18', categorie: 'Sols', libelle: 'Parquet posé', unite: 'M2', prixBas: 40, prixHaut: 90 },
+  { id: 'bareme-19', categorie: 'Finitions', libelle: 'Peinture murs et plafonds', unite: 'M2', prixBas: 25, prixHaut: 45 },
+  { id: 'bareme-20', categorie: 'Humidité', libelle: 'Traitement remontées capillaires', unite: 'ML', prixBas: 100, prixHaut: 250 },
+  { id: 'bareme-21', categorie: 'Assainissement', libelle: 'Installation ANC (filtre / micro-station)', unite: 'FORFAIT', prixBas: 7000, prixHaut: 15000 },
+  { id: 'bareme-22', categorie: 'Assainissement', libelle: 'Raccordement tout-à-l\'égout', unite: 'FORFAIT', prixBas: 3000, prixHaut: 10000 },
+  { id: 'bareme-23', categorie: 'Eau', libelle: 'Forage', unite: 'FORFAIT', prixBas: 5000, prixHaut: 15000 },
+  { id: 'bareme-24', categorie: 'Eau', libelle: 'Récupérateur eau de pluie enterré', unite: 'FORFAIT', prixBas: 2000, prixHaut: 6000 },
+  { id: 'bareme-25', categorie: 'Extérieur', libelle: 'Clôture grillage rigide', unite: 'ML', prixBas: 40, prixHaut: 90 },
+  { id: 'bareme-26', categorie: 'Extérieur', libelle: 'Portail', unite: 'UNITE', prixBas: 1500, prixHaut: 5000 },
+  { id: 'bareme-27', categorie: 'Gros œuvre', libelle: 'Reprise de fissures / maçonnerie', unite: 'FORFAIT', prixBas: 1000, prixHaut: 10000 },
+  { id: 'bareme-28', categorie: 'Gros œuvre', libelle: 'Démolition et évacuation', unite: 'FORFAIT', prixBas: 1000, prixHaut: 5000 },
+];

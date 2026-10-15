@@ -1,9 +1,12 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Diagnostic, DiagnosticService } from '../../application/diagnostic.service';
 import { formaterTaille } from '../../shared/format';
+import { BaremeEditeurComponent } from './bareme-editeur.component';
+import { ReglagesBudgetComponent } from './reglages-budget.component';
 
 @Component({
   selector: 'app-parametres',
+  imports: [ReglagesBudgetComponent, BaremeEditeurComponent],
   templateUrl: './parametres.page.html',
   styleUrl: './parametres.page.scss',
 })
