@@ -1,4 +1,4 @@
-import { Bien, Etage, FichierPlan, LigneBareme, Parametres, Photo, Piece, PosteTravaux, Visite } from '../domain/modeles';
+import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PosteTravaux, Visite } from '../domain/modeles';
 
 export abstract class BiensPort {
   abstract lister(): Promise<Bien[]>;
@@ -61,5 +61,19 @@ export abstract class FichiersPlanPort {
   abstract listerParBien(bienId: string): Promise<FichierPlan[]>;
   abstract obtenir(id: string): Promise<FichierPlan | undefined>;
   abstract enregistrer(fichier: FichierPlan): Promise<void>;
+  abstract supprimer(id: string): Promise<void>;
+}
+
+export abstract class PersonnesPort {
+  abstract lister(): Promise<Personne[]>;
+  abstract enregistrer(personne: Personne): Promise<void>;
+  /** Supprime la personne et tous ses avis. */
+  abstract supprimer(id: string): Promise<void>;
+}
+
+export abstract class AvisPort {
+  abstract listerParBien(bienId: string): Promise<Avis[]>;
+  abstract lister(): Promise<Avis[]>;
+  abstract enregistrer(avis: Avis): Promise<void>;
   abstract supprimer(id: string): Promise<void>;
 }

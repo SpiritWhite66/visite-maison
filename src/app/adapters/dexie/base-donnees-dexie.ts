@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import Dexie, { Table } from 'dexie';
-import { Bien, Etage, FichierPlan, LigneBareme, Parametres, Photo, Piece, PosteTravaux, Visite } from '../../domain/modeles';
+import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PosteTravaux, Visite } from '../../domain/modeles';
 import { BaseDonneesPort, EtatBaseDonnees } from '../../ports/base-donnees.port';
 
 export interface LigneParametres {
@@ -20,6 +20,8 @@ export class VisiteImmoDb extends Dexie {
   parametres!: Table<LigneParametres, string>;
   etages!: Table<Etage, string>;
   fichiersPlan!: Table<FichierPlan, string>;
+  personnes!: Table<Personne, string>;
+  avis!: Table<Avis, string>;
 
   constructor() {
     super('visite-immo');
@@ -38,6 +40,11 @@ export class VisiteImmoDb extends Dexie {
     this.version(2).stores({
       etages: 'id, bienId',
       fichiersPlan: 'id, bienId, etageId',
+    });
+    // v3 : personnes (Paramètres) et leurs avis sur chaque bien.
+    this.version(3).stores({
+      personnes: 'id',
+      avis: 'id, bienId, personneId',
     });
   }
 }

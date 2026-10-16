@@ -1,0 +1,29 @@
+.synthese-avis { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 2rem; }
+.moyenne .note { margin: 0; display: flex; align-items: baseline; gap: 0.4rem; font-size: 1rem; color: var(--texte-discret); }
+.moyenne .note strong { font-size: 2rem; color: var(--encre); line-height: 1.1; }
+.moyenne .vide-note { font-size: 2rem; color: var(--filet-fort); }
+.detail { margin: 0; flex: 1; color: var(--texte-discret); }
+.sauvegarde { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; font-weight: 600; color: var(--etat-ok); }
+.sauvegarde[data-etat='en-cours'] { color: var(--texte-discret); }
+.sauvegarde[data-etat='erreur'] { color: var(--etat-travaux); }
+
+.personnes { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: 1rem; align-items: start; }
+.personne { display: grid; gap: 0.75rem; margin: 0; }
+.personne.absente { background: var(--surface-2); }
+.personne header { display: flex; align-items: center; gap: 0.75rem; }
+.pastille {
+  display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
+  color: #fff; font-weight: 750; font-size: 1.15rem;
+}
+.identite { flex: 1; min-width: 0; }
+.identite h2 { margin: 0; font-size: 1.1rem; overflow-wrap: anywhere; }
+.statut { font-size: 0.8rem; font-weight: 650; color: var(--texte-discret); }
+.statut[data-statut='DONNE'] { color: var(--etat-ok); }
+.bascule-absente {
+  min-height: 44px; padding: 0 0.8rem; font-size: 0.85rem;
+  background: var(--surface); color: var(--texte-discret); border: 1px solid var(--filet-fort);
+}
+.bascule-absente[aria-pressed='true'] { background: var(--etat-na); color: #fff; border-color: var(--etat-na); }
+p.discret { margin: 0; font-size: 0.9rem; }
+.vide p { margin: 0 0 0.75rem; }
+textarea { margin-top: 0; }

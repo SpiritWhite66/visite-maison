@@ -1,0 +1,59 @@
+@if (personnesService.personnes().length === 0) {
+  <div class="vide">
+    <p>Aucune personne n’est déclarée. Ajoutez celles qui visitent avec vous, puis chacune pourra donner son avis sur chaque bien.</p>
+    <a class="bouton" routerLink="/parametres"><app-icone nom="plus" [taille]="20" /> Ajouter des personnes</a>
+  </div>
+} @else {
+  <section class="panneau synthese-avis">
+    <div class="moyenne">
+      <span class="surtitre">Moyenne</span>
+      @if (resume().moyenne !== null) {
+        <p class="note"><strong class="chiffre">{{ nombre(resume().moyenne!) }}</strong> <span>/ 5</span></p>
+        <app-etoiles [valeur]="resume().moyenne" />
+      } @else {
+        <p class="note vide-note">—</p>
+      }
+    </div>
+    <p class="detail">
+      {{ resume().notes }} avis noté{{ resume().notes > 1 ? 's' : '' }}
+      @if (resume().absentes > 0) { · {{ resume().absentes }} absent{{ resume().absentes > 1 ? 's' : '' }} (N/A) }
+    </p>
+    <span class="sauvegarde" [attr.data-etat]="etat()" aria-live="polite">
+      @switch (etat()) {
+        @case ('ok') { <app-icone nom="coche" [taille]="16" /> Enregistré }
+        @case ('en-cours') { Enregistrement… }
+        @case ('erreur') { Échec de l’enregistrement }
+      }
+    </span>
+  </section>
+
+  <div class="personnes">
+    @for (l of lignes(); track l.personne.id) {
+      <section class="panneau personne" [class.absente]="l.avis.absente">
+        <header>
+          <span class="pastille" [style.background]="couleur(l.personne.id)" aria-hidden="true">{{ initiale(l.personne.prenom) }}</span>
+          <div class="identite">
+            <h2>{{ l.personne.prenom }}</h2>
+            <span class="statut" [attr.data-statut]="statutAvis(l.avis)">{{ libelleStatut[statutAvis(l.avis)] }}</span>
+          </div>
+          <button type="button" class="bascule-absente" [attr.aria-pressed]="l.avis.absente" (click)="absente(l.avis)">N/A · absent·e</button>
+        </header>
+
+        @if (l.avis.absente) {
+          <p class="discret">{{ l.personne.prenom }} n’était pas présent·e : cet avis ne compte pas dans la moyenne.</p>
+        } @else {
+          <app-etoiles [modifiable]="true" [valeur]="l.avis.etoiles" [libelle]="'Étoiles de ' + l.personne.prenom" (choisie)="etoiles(l.personne, l.avis, $event)" />
+          <textarea
+            class="champ-libre"
+            rows="3"
+            placeholder="Son avis sur ce bien : ce qui plaît, ce qui gêne…"
+            [attr.aria-label]="'Avis de ' + l.personne.prenom"
+            [ngModel]="l.avis.commentaire"
+            (ngModelChange)="commentaire(l.avis, $event)"
+            [name]="'avis-' + l.personne.id"
+          ></textarea>
+        }
+      </section>
+    }
+  </div>
+}

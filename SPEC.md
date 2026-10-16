@@ -107,6 +107,11 @@ Prix = **prix artisan TTC fourni-posé**. Pour un poste `DIY`, montant = prix ×
 ### Parametres
 `{ tauxNotairePct (défaut 8), margeNegociationDefautPct (défaut 5), coefDiyDefaut (défaut 0.4) }`
 
+### Personne et Avis
+- `Personne` : `{ id, prenom }`, déclarée dans Paramètres (prénoms uniques, casse ignorée). Supprimer une personne supprime ses avis.
+- `Avis` : `{ id (bienId:personneId), bienId, personneId, absente, etoiles (1–5 ou null), commentaire, modifieLe }`. Un avis par personne et par bien ; pas d'avis enregistré = « à donner ». `absente: true` est le **N/A** (la personne n'était pas là) : il efface les étoiles et n'entre pas dans la moyenne.
+- Moyenne = moyenne des étoiles données (N/A et avis sans étoiles exclus). Elle s'affiche sur la carte du bien, dans la synthèse et dans le compte rendu.
+
 ### Etage (plan)
 `{ id, bienId, nom, ordre, elements: ElementPlan[] }` — un niveau du bien (rez-de-chaussée, étage, combles, sous-sol, dépendance…). Coordonnées en mètres.
 - `Mur` : `{ x1, y1, x2, y2, epaisseur }` (cloison 10 cm, mur 20 cm, mur épais 40 cm).
@@ -118,7 +123,7 @@ Prix = **prix artisan TTC fourni-posé**. Pour un poste `DIY`, montant = prix ×
 `{ id, bienId, etageId, nom, typeMime, blob, ajouteLe }` — plan importé (photo réduite à 2400 px, ou fichier tel quel, PDF compris).
 
 ### Sauvegarde (export / import JSON)
-Un seul fichier `visite-immo-AAAA-MM-JJ.json` contenant toutes les tables (biens, postes, visites, pièces, étages, barème, réglages) et les images en base 64 (`photos`, `fichiersPlan`, avec leur type MIME). Champs d'en-tête : `format` (« visite-immo »), `version` (du format, 1), `exporteLe`, `versionApp`.
+Un seul fichier `visite-immo-AAAA-MM-JJ.json` contenant toutes les tables (biens, postes, visites, pièces, étages, barème, réglages, personnes, avis) et les images en base 64 (`photos`, `fichiersPlan`, avec leur type MIME). Champs d'en-tête : `format` (« visite-immo »), `version` (du format, 1), `exporteLe`, `versionApp`.
 - **Importer** : le fichier est lu et contrôlé avant toute écriture (format, version, identifiants, fichiers non tronqués) ; un résumé est affiché. Deux modes : *Remplacer* (la base devient identique à la sauvegarde, en une seule transaction : tout ou rien) ou *Fusionner* (ajout ou mise à jour des biens et de ce qui s'y rattache par identifiant ; réglages et barème locaux conservés).
 - Une sauvegarde d'une version plus récente du format est refusée avec un message ; les tables absentes d'une ancienne version sont lues comme vides.
 - Les réglages portent `derniereSauvegarde`. Rappel (bandeau dans la liste des biens, bloc dans Paramètres) s'il y a des biens et qu'aucune sauvegarde n'a été faite depuis 14 jours.
@@ -214,9 +219,10 @@ Catalogue **statique versionné dans le code** (`checklist-catalogue.ts`), chaqu
    - **Visites** : liste des visites, bouton « Démarrer une visite ».
    - **Pièces** : pièces avec mesures et photos, surface totale calculée.
    - **Suivi** : étape courante (depuis combien de jours, dernière offre), changement d'étape en un tap avec commentaire facultatif, historique daté (chronologie).
+   - **Avis** : une carte par personne (étoiles de 1 à 5 — retoucher l'étoile active la retire —, commentaire, bouton N/A · absent·e), moyenne en tête, enregistrement automatique ; l'onglet affiche « répondu/total ».
    - **Plan** : un bloc par niveau, avec l'aperçu du dessin et les plans importés (photo ou fichier). Éditeur plein écran : outils mur, pièce rectangulaire, porte, fenêtre, nom de pièce, équipement ; sélection pour déplacer, étirer, modifier la longueur ou supprimer ; aimant désactivable (grille de 10 cm, extrémités des murs, angles à 0/45/90°) ; cotes affichables ; annuler / rétablir ; pincer pour zoomer ; sauvegarde automatique. Stylet : mode activé automatiquement (le stylet dessine, les doigts déplacent et zooment, la paume est ignorée), réticule aimanté au survol, gomme du stylet, bouton latéral pour sélectionner.
 3. **Mode visite** : thèmes en accordéon, pour chaque point des boutons d'état en un tap (OK / À surveiller / Travaux / N/A), commentaire et photo accessibles en un tap, sauvegarde automatique à chaque modification.
-4. **Paramètres** : taux notaire, marge par défaut, coefficient DIY, édition du barème, export/import JSON (bloc « Sauvegarde »), état du stockage persistant avec bouton pour le demander.
+4. **Paramètres** : personnes (prénoms), taux notaire, marge par défaut, coefficient DIY, édition du barème, export/import JSON (bloc « Sauvegarde »), état du stockage persistant avec bouton pour le demander.
 
 ## 10. Compte rendu PDF
 

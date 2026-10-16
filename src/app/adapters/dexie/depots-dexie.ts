@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { Bien, Etage, FichierPlan, LigneBareme, Parametres, Photo, Piece, PosteTravaux, Visite } from '../../domain/modeles';
-import { BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from '../../ports/depots.port';
+import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PosteTravaux, Visite } from '../../domain/modeles';
+import { AvisPort, BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PersonnesPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from '../../ports/depots.port';
 import { BaseDonneesDexie, CLE_PARAMETRES } from './base-donnees-dexie';
 
 @Injectable()
@@ -17,9 +17,10 @@ export class BiensDexie extends BiensPort {
     await this.db.biens.put(bien);
   }
   async supprimer(id: string): Promise<void> {
-    const { biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan } = this.db;
-    await this.db.transaction('rw', [biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan], async () => {
+    const { biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan, avis } = this.db;
+    await this.db.transaction('rw', [biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan, avis], async () => {
       await Promise.all([
+        avis.where('bienId').equals(id).delete(),
         etages.where('bienId').equals(id).delete(),
         fichiersPlan.where('bienId').equals(id).delete(),
         visites.where('bienId').equals(id).delete(),
@@ -171,5 +172,42 @@ export class FichiersPlanDexie extends FichiersPlanPort {
   }
   async supprimer(id: string): Promise<void> {
     await this.db.fichiersPlan.delete(id);
+  }
+}
+
+@Injectable()
+export class PersonnesDexie extends PersonnesPort {
+  private readonly db = inject(BaseDonneesDexie).db;
+
+  lister(): Promise<Personne[]> {
+    return this.db.personnes.toArray();
+  }
+  async enregistrer(personne: Personne): Promise<void> {
+    await this.db.personnes.put(personne);
+  }
+  async supprimer(id: string): Promise<void> {
+    const { personnes, avis } = this.db;
+    await this.db.transaction('rw', [personnes, avis], async () => {
+      await avis.where('personneId').equals(id).delete();
+      await personnes.delete(id);
+    });
+  }
+}
+
+@Injectable()
+export class AvisDexie extends AvisPort {
+  private readonly db = inject(BaseDonneesDexie).db;
+
+  listerParBien(bienId: string): Promise<Avis[]> {
+    return this.db.avis.where('bienId').equals(bienId).toArray();
+  }
+  lister(): Promise<Avis[]> {
+    return this.db.avis.toArray();
+  }
+  async enregistrer(avis: Avis): Promise<void> {
+    await this.db.avis.put(avis);
+  }
+  async supprimer(id: string): Promise<void> {
+    await this.db.avis.delete(id);
   }
 }

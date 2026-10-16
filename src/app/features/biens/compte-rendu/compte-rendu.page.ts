@@ -2,6 +2,8 @@ import { Component, computed, ErrorHandler, inject, input, OnDestroy, OnInit, si
 import { Title } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { AvisService } from '../../../application/avis.service';
+import { PersonnesService } from '../../../application/personnes.service';
 import { BiensService } from '../../../application/biens.service';
 import { BudgetService } from '../../../application/budget.service';
 import { PhotosService } from '../../../application/photos.service';
@@ -12,7 +14,8 @@ import { VisitesService } from '../../../application/visites.service';
 import { progressionTotale } from '../../../domain/checklist';
 import { pointsSignales, recapitulatifParTheme, trierPostes, visitesAImprimer } from '../../../domain/compte-rendu';
 import { montantOffre } from '../../../domain/etapes';
-import { Bien, Etage, Piece, PosteTravaux, Visite } from '../../../domain/modeles';
+import { avisDesPersonnes, resumerAvis, statutAvis } from '../../../domain/avis';
+import { Avis, Bien, Etage, Personne, Piece, PosteTravaux, Visite } from '../../../domain/modeles';
 import { bornes } from '../../../domain/plan';
 import { surfacePiece, surfaceTotale } from '../../../domain/piece';
 import { formaterEuro, formaterFourchette, formaterNombre } from '../../../shared/format';
@@ -42,6 +45,8 @@ export class CompteRenduPage implements OnInit, OnDestroy {
   private readonly budgets = inject(BudgetService);
   private readonly router = inject(Router);
   private readonly erreurs = inject(ErrorHandler);
+  private readonly avisService = inject(AvisService);
+  private readonly personnesService = inject(PersonnesService);
   private readonly titre = inject(Title);
   private readonly titreInitial = this.titre.getTitle();
 
@@ -50,6 +55,8 @@ export class CompteRenduPage implements OnInit, OnDestroy {
   protected readonly visites = signal<Visite[]>([]);
   protected readonly pieces = signal<Piece[]>([]);
   protected readonly etages = signal<Etage[]>([]);
+  protected readonly personnes = signal<Personne[]>([]);
+  protected readonly avis = signal<Avis[]>([]);
   /** Adresses locales des images (photos signalées et couverture), prêtes avant l'impression. */
   protected readonly images = signal<Record<string, string>>({});
   protected readonly prete = signal(false);
@@ -78,6 +85,15 @@ export class CompteRenduPage implements OnInit, OnDestroy {
   protected readonly lignesPostes = computed(() =>
     trierPostes(this.postes()).map((poste) => ({ poste, montant: this.budgets.montantPoste(poste) })),
   );
+  /** Une ligne par personne déclarée, avec son avis (ou rien). */
+  protected readonly lignesAvis = computed(() => {
+    const parPersonne = new Map(avisDesPersonnes(this.avis(), this.personnes()).map((a) => [a.personneId, a]));
+    return this.personnes().map((personne) => {
+      const avis = parPersonne.get(personne.id);
+      return { personne, avis, statut: statutAvis(avis) };
+    });
+  });
+  protected readonly resumeAvis = computed(() => resumerAvis(this.lignesAvis().flatMap((l) => (l.avis ? [l.avis] : []))));
   protected readonly surfaceTotale = computed(() => surfaceTotale(this.pieces()));
   protected readonly postesParId = computed(() => new Map(this.postes().map((p) => [p.id, p])));
 
@@ -108,11 +124,13 @@ export class CompteRenduPage implements OnInit, OnDestroy {
       await this.router.navigate(['/biens']);
       return;
     }
-    const [postes, visites, pieces, etages] = await Promise.all([
+    const [postes, visites, pieces, etages, avis, personnes] = await Promise.all([
       this.travaux.listerParBien(bien.id),
       this.visitesService.listerParBien(bien.id),
       this.piecesService.listerParBien(bien.id),
       this.plans.listerEtages(bien.id),
+      this.avisService.listerParBien(bien.id),
+      this.personnesService.charger(),
     ]);
     // Chrome propose le titre de la page comme nom du fichier PDF.
     this.titre.setTitle(`Compte rendu - ${bien.titre}`);
@@ -121,6 +139,8 @@ export class CompteRenduPage implements OnInit, OnDestroy {
     this.visites.set(visites);
     this.pieces.set(pieces);
     this.etages.set(etages);
+    this.avis.set(avis);
+    this.personnes.set(personnes);
     await this.preparerImages(bien, visites);
     this.prete.set(true);
   }
@@ -179,6 +199,10 @@ export class CompteRenduPage implements OnInit, OnDestroy {
   protected cadre(e: Etage): string {
     const b = bornes(e.elements)!;
     return `${b.minX - 1} ${b.minY - 1} ${b.maxX - b.minX + 2} ${b.maxY - b.minY + 2}`;
+  }
+
+  protected etoilesTexte(n: number | null): string {
+    return n === null ? '' : '★'.repeat(n) + '☆'.repeat(5 - n);
   }
 
   protected lieu(b: Bien): string {

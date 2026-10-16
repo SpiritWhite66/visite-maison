@@ -5,11 +5,13 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
 import { BaseDonneesDexie } from './adapters/dexie/base-donnees-dexie';
 import {
+  AvisDexie,
   BaremeDexie,
   BiensDexie,
   EtagesDexie,
   FichiersPlanDexie,
   ParametresDexie,
+  PersonnesDexie,
   PhotosDexie,
   PiecesDexie,
   PostesTravauxDexie,
@@ -25,7 +27,7 @@ import { BaremeService } from './application/bareme.service';
 import { DiagnosticService } from './application/diagnostic.service';
 import { ParametresService } from './application/parametres.service';
 import { BaseDonneesPort } from './ports/base-donnees.port';
-import { BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from './ports/depots.port';
+import { AvisPort, BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PersonnesPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from './ports/depots.port';
 import { JournalErreursPort } from './ports/journal-erreurs.port';
 import { CompressionPhotoPort } from './ports/photo.port';
 import { FormatSauvegardePort, SauvegardePort } from './ports/sauvegarde.port';
@@ -46,6 +48,8 @@ export const appConfig: ApplicationConfig = {
     { provide: VisitesPort, useClass: VisitesDexie },
     { provide: PiecesPort, useClass: PiecesDexie },
     { provide: PhotosPort, useClass: PhotosDexie },
+    { provide: PersonnesPort, useClass: PersonnesDexie },
+    { provide: AvisPort, useClass: AvisDexie },
     { provide: EtagesPort, useClass: EtagesDexie },
     { provide: FichiersPlanPort, useClass: FichiersPlanDexie },
     { provide: CompressionPhotoPort, useClass: CompressionPhotoCanvas },

@@ -4,6 +4,7 @@ import { FormatSauvegardePort, SauvegardeLue, SauvegardePort } from '../ports/sa
 import { VERSION_APP } from '../version';
 import { BaremeService } from './bareme.service';
 import { ParametresService } from './parametres.service';
+import { PersonnesService } from './personnes.service';
 
 export type ModeImport = 'REMPLACER' | 'FUSIONNER';
 
@@ -18,6 +19,7 @@ export class SauvegardeService {
   private readonly format = inject(FormatSauvegardePort);
   private readonly parametres = inject(ParametresService);
   private readonly bareme = inject(BaremeService);
+  private readonly personnes = inject(PersonnesService);
 
   /** Y a-t-il quelque chose à perdre ? Sert au rappel de sauvegarde. */
   async aDesDonnees(): Promise<boolean> {
@@ -51,5 +53,6 @@ export class SauvegardeService {
     // Les écrans lisent les réglages et le barème depuis ces services : on les recharge.
     await this.parametres.charger();
     await this.bareme.charger();
+    await this.personnes.charger();
   }
 }
