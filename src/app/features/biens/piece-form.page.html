@@ -44,7 +44,7 @@
   <section class="bloc-form">
     <h2>Photos</h2>
     <div class="champs">
-    <app-galerie-photos class="large" [photoIds]="p.photoIds" (supprimer)="retirerPhoto($event)" />
+    <app-galerie-photos class="large" [photoIds]="p.photoIds" (supprimer)="retirerPhoto($event)" [peutDefinirCouverture]="true" [couvertureId]="couvertureId()" (couverture)="definirCouverture($event)" />
     <div class="actions large">
       <app-ajout-photo [desactive]="photoEnCours() || !p.nom.trim()" (choisie)="ajouterPhoto($event)" />
     </div>

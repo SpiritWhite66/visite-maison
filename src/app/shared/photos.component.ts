@@ -66,6 +66,42 @@ export class VignettePhotoComponent implements OnInit, OnDestroy {
   }
 }
 
+/** Photo de couverture d'un bien, ou un fond neutre avec une maison s'il n'y en a pas. */
+@Component({
+  selector: 'app-couverture-bien',
+  imports: [IconeComponent],
+  template: `
+    @if (url(); as u) {
+      <img [src]="u" alt="" />
+    } @else {
+      <span class="vide"><app-icone nom="maison" [taille]="32" /></span>
+    }
+  `,
+  styles: `
+    :host { display: block; background: var(--surface-2); }
+    img, .vide { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .vide { display: grid; place-items: center; color: var(--filet-fort); }
+  `,
+})
+export class CouvertureBienComponent implements OnInit, OnDestroy {
+  readonly photoId = input<string | undefined>();
+  protected readonly url = signal<string | null>(null);
+  private readonly photos = inject(PhotosService);
+
+  async ngOnInit(): Promise<void> {
+    const id = this.photoId();
+    if (!id) return;
+    // Photo supprimée entre-temps : on retombe simplement sur le fond neutre.
+    const blob = await this.photos.blob(id);
+    if (blob) this.url.set(URL.createObjectURL(blob));
+  }
+
+  ngOnDestroy(): void {
+    const u = this.url();
+    if (u) URL.revokeObjectURL(u);
+  }
+}
+
 /** Miniatures ; un tap ouvre la photo en grand, avec suppression. */
 @Component({
   selector: 'app-galerie-photos',
@@ -83,6 +119,13 @@ export class VignettePhotoComponent implements OnInit, OnDestroy {
         <div class="grande"><app-vignette-photo [photoId]="id" /></div>
         <div class="barre">
           <button type="button" class="bouton-secondaire" (click)="ouverte.set(null)">Fermer</button>
+          @if (peutDefinirCouverture()) {
+            @if (id === couvertureId()) {
+              <span class="est-couverture">Photo de couverture du bien</span>
+            } @else {
+              <button type="button" class="bouton-secondaire" (click)="choisirCouverture(id)">Photo de couverture</button>
+            }
+          }
           <button type="button" class="danger" (click)="retirer(id)">Supprimer</button>
         </div>
       </div>
@@ -95,13 +138,22 @@ export class VignettePhotoComponent implements OnInit, OnDestroy {
     .grande { flex: 1; min-height: 0; }
     .grande app-vignette-photo { height: 100%; }
     .grande ::ng-deep img { object-fit: contain; background: none; }
-    .barre { display: flex; gap: 0.5rem; justify-content: space-between; }
+    .barre { display: flex; gap: 0.5rem; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+    .est-couverture { color: var(--fond); font-size: 0.9rem; font-weight: 600; }
   `,
 })
 export class GaleriePhotosComponent {
   readonly photoIds = input.required<readonly string[]>();
   readonly supprimer = output<string>();
+  /** Propose « Photo de couverture » dans la visionneuse (photos rattachées à un bien). */
+  readonly peutDefinirCouverture = input(false);
+  readonly couvertureId = input<string | undefined>();
+  readonly couverture = output<string>();
   protected readonly ouverte = signal<string | null>(null);
+
+  protected choisirCouverture(id: string): void {
+    this.couverture.emit(id);
+  }
 
   protected retirer(id: string): void {
     if (!confirm('Supprimer cette photo ?')) return;

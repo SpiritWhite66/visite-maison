@@ -7,6 +7,7 @@ import { Budget } from '../../domain/budget';
 import { Bien } from '../../domain/modeles';
 import { formaterEuro, formaterNombre } from '../../shared/format';
 import { IconeComponent } from '../../shared/icone.component';
+import { CouvertureBienComponent } from '../../shared/photos.component';
 import { LIBELLE_ETAPE, LIBELLE_TYPE_BIEN } from '../../shared/libelles';
 
 interface CarteBien {
@@ -17,7 +18,7 @@ interface CarteBien {
 
 @Component({
   selector: 'app-biens',
-  imports: [RouterLink, IconeComponent],
+  imports: [RouterLink, IconeComponent, CouvertureBienComponent],
   template: `
     <header class="entete-page">
       <div>
@@ -40,6 +41,8 @@ interface CarteBien {
       <div class="grille">
         @for (c of cartes(); track c.bien.id) {
           <a class="fiche" [routerLink]="[c.bien.id]">
+            <app-couverture-bien class="couverture" [photoId]="c.bien.photoCouvertureId" />
+            <div class="corps">
             <div class="haut">
               <span class="etiquette">{{ typeBien[c.bien.typeBien] }}</span>
               <span class="etape">{{ etape[c.bien.etape] }}</span>
@@ -61,6 +64,7 @@ interface CarteBien {
                 Affiché {{ euro(c.bien.prixAffiche) }} · {{ c.nbPostes }} poste{{ c.nbPostes > 1 ? 's' : '' }} de travaux
               </span>
             </div>
+            </div>
           </a>
         }
       </div>
@@ -69,10 +73,12 @@ interface CarteBien {
   styles: `
     .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr)); gap: 1rem; }
     .fiche {
-      display: flex; flex-direction: column; padding: 1.1rem 1.25rem; color: inherit; text-decoration: none;
+      display: flex; flex-direction: column; color: inherit; text-decoration: none; overflow: hidden;
       background: var(--surface); border: 1px solid var(--filet); border-radius: var(--rayon);
       transition: border-color 120ms;
     }
+    .couverture { aspect-ratio: 16 / 9; border-bottom: 1px solid var(--filet); }
+    .corps { display: flex; flex-direction: column; flex: 1; padding: 1.1rem 1.25rem; }
     .fiche:active { border-color: var(--primaire); }
     .haut { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
     .etape { font-size: 0.8rem; font-weight: 650; color: var(--primaire); }

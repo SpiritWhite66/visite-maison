@@ -57,6 +57,20 @@
       <div class="contenu">
         @switch (onglet()) {
           @case ('synthese') {
+            <section class="panneau couverture-fiche">
+              @for (cle of [b.photoCouvertureId ?? '']; track cle) {
+                <app-couverture-bien class="visuel" [photoId]="b.photoCouvertureId" />
+              }
+              <div class="couverture-actions">
+                <app-ajout-photo [desactive]="couvertureEnCours()" (choisie)="changerCouverture($event)" />
+                @if (b.photoCouvertureId) {
+                  <button type="button" class="bouton-texte danger" (click)="retirerCouverture()">Retirer la photo</button>
+                } @else {
+                  <span class="discret">Cette photo illustre le bien dans la liste. Vous pouvez aussi choisir une photo de visite ou de pièce.</span>
+                }
+              </div>
+            </section>
+
             @if (postes().length > 0) {
               <section class="panneau">
                 <h2>Où part l’argent des travaux</h2>

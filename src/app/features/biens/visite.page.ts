@@ -153,6 +153,12 @@ export class VisitePage implements OnInit {
     await this.photos.supprimer([photoId]);
   }
 
+  /** Photo de couverture du bien : relit le bien pour ne pas écraser une modification faite ailleurs. */
+  protected async definirCouverture(photoId: string): Promise<void> {
+    await this.biens.definirCouverture(this.id(), photoId);
+    this.bien.update((b) => (b ? { ...b, photoCouvertureId: photoId } : b));
+  }
+
   protected creerPoste(point: PointChecklist): void {
     const r = reponseDe(this.visite()!, point.id);
     void this.attendreEcritures().then(() =>

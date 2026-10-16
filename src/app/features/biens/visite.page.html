@@ -96,7 +96,7 @@
                       ></textarea>
                     }
                     @if (r.photoIds.length > 0) {
-                      <app-galerie-photos [photoIds]="r.photoIds" (supprimer)="retirerPhoto(pt.id, $event)" />
+                      <app-galerie-photos [photoIds]="r.photoIds" (supprimer)="retirerPhoto(pt.id, $event)" [peutDefinirCouverture]="true" [couvertureId]="b.photoCouvertureId" (couverture)="definirCouverture($event)" />
                     }
                   </article>
                 }

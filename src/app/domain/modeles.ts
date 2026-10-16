@@ -45,6 +45,8 @@ export interface Bien {
   etape: Etape;
   historiqueEtapes: EntreeHistorique[];
   impressionGlobale: number | null;
+  /** Photo affichée sur la carte du bien dans la liste. */
+  photoCouvertureId?: string;
   notes: string;
   creeLe: string;
   modifieLe: string;

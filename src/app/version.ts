@@ -1,2 +1,2 @@
 /** Version affichée dans Paramètres › Diagnostic. À incrémenter à chaque déploiement. */
-export const VERSION_APP = '0.4.1';
+export const VERSION_APP = '0.4.2';

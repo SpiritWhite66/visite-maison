@@ -50,6 +50,7 @@ Types de biens couverts : **maison en ville / lotissement** et **maison rurale a
 | etape | Etape (cf. §7) | |
 | historiqueEtapes | { etape, date, commentaire? }[] | horodaté automatiquement |
 | impressionGlobale | 1–5 \| null | |
+| photoCouvertureId | string? | photo de couverture, affichée dans la liste des biens |
 | notes | string | |
 | creeLe, modifieLe | ISO date | |
 

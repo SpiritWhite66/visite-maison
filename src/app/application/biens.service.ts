@@ -44,6 +44,12 @@ export class BiensService {
     await this.port.enregistrer({ ...bien, modifieLe: new Date().toISOString() });
   }
 
+  /** Choisit (ou retire, avec `undefined`) la photo de couverture d'un bien. */
+  async definirCouverture(bienId: string, photoId: string | undefined): Promise<void> {
+    const bien = await this.port.obtenir(bienId);
+    if (bien) await this.enregistrer({ ...bien, photoCouvertureId: photoId });
+  }
+
   supprimer(id: string): Promise<void> {
     return this.port.supprimer(id);
   }
