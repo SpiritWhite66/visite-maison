@@ -177,6 +177,7 @@
                       <span class="ligne-titre">{{ l.poste.libelle }}</span>
                       <span class="ligne-meta">
                         <span class="etiquette" [class.urgent]="l.poste.priorite === 'URGENT'">{{ libellePriorite[l.poste.priorite] }}</span>
+                        @if (gamme(l.poste); as g) { <span class="etiquette" [class.haut-gamme]="l.poste.gamme === 'HAUT'">{{ g }}</span> }
                         @if (l.poste.quantite) { <span>quantité {{ nombre(l.poste.quantite) }}</span> }
                       </span>
                     </a>

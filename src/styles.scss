@@ -205,3 +205,16 @@ textarea { resize: vertical; }
   .rail { display: none !important; }
   app-root > main, main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
 }
+
+/* Sélecteur de gamme (formulaire de poste) */
+.gamme-champ { margin-bottom: 1rem; }
+.gamme-champ .libelle-champ { display: block; margin-bottom: 0.35rem; font-size: 0.82rem; font-weight: 650; color: var(--texte-discret); }
+.gammes { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--filet-fort); border-radius: var(--rayon); overflow: hidden; }
+.gammes button {
+  flex-direction: column; gap: 0.1rem; min-height: 60px; padding: 0.4rem; border: 0; border-radius: 0;
+  background: var(--surface); color: var(--encre); font-size: 0.9rem;
+}
+.gammes button + button { border-left: 1px solid var(--filet-fort); }
+.gammes button span { font-weight: 400; font-size: 0.78rem; color: var(--texte-discret); }
+.gammes button[aria-checked='true'] { background: var(--encre); color: var(--fond); }
+.gammes button[aria-checked='true'] span { color: color-mix(in srgb, var(--fond) 80%, transparent); }

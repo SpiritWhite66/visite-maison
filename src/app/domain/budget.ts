@@ -1,4 +1,4 @@
-import { Bien, Categorie, LigneBareme, Parametres, PosteTravaux, Priorite, Realisation } from './modeles';
+import { Bien, Categorie, Gamme, GAMME_DEFAUT, GAMMES, LigneBareme, Parametres, PosteTravaux, Priorite, Realisation } from './modeles';
 
 export interface Fourchette {
   bas: number;
@@ -19,9 +19,20 @@ export function fraisNotaire(prixNegocieEuros: number, tauxNotairePct: number): 
   return (prixNegocieEuros * tauxNotairePct) / 100;
 }
 
+/** Gammes proposées pour une ligne : le moyen de gamme, plus celles dont le prix est renseigné. */
+export function gammesDisponibles(ligne: LigneBareme): Gamme[] {
+  return GAMMES.filter((g) => g === 'STANDARD' || !!ligne.gammes?.[g]);
+}
+
+/** Prix unitaire d'une ligne pour une gamme ; une gamme non renseignée retombe sur le moyen de gamme. */
+export function prixLigne(ligne: LigneBareme, gamme: Gamme = GAMME_DEFAUT): Fourchette {
+  const prix = gamme === 'STANDARD' ? undefined : ligne.gammes?.[gamme];
+  return prix ? { bas: prix.prixBas, haut: prix.prixHaut } : { bas: ligne.prixBas, haut: ligne.prixHaut };
+}
+
 /**
  * Fourchette d'un poste.
- * - BAREME : quantité × prix × (coefficient DIY si réalisé soi-même), recalculé depuis la ligne de barème.
+ * - BAREME : quantité × prix de la gamme choisie × (coefficient DIY si réalisé soi-même), recalculé depuis la ligne de barème.
  *   Si la ligne a disparu du barème, on garde les montants enregistrés.
  * - MANUEL : montants saisis, tels quels.
  */
@@ -35,7 +46,8 @@ export function montantsPoste(
   if (!ligne) return { bas: poste.montantBas, haut: poste.montantHaut };
   const coef = poste.realisation === 'DIY' ? (ligne.coefDiy ?? coefDiyDefaut) : 1;
   const quantite = poste.quantite ?? 0;
-  return { bas: quantite * ligne.prixBas * coef, haut: quantite * ligne.prixHaut * coef };
+  const prix = prixLigne(ligne, poste.gamme);
+  return { bas: quantite * prix.bas * coef, haut: quantite * prix.haut * coef };
 }
 
 export interface Budget {

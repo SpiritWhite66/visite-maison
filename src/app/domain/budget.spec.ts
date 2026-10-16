@@ -94,9 +94,9 @@ describe('calculerBudget', () => {
 });
 
 describe('barème par défaut', () => {
-  it('contient les 28 lignes de la SPEC, cohérentes', () => {
-    expect(BAREME_DEFAUT.length).toBe(28);
-    expect(new Set(BAREME_DEFAUT.map((l) => l.id)).size).toBe(28);
+  it('contient les lignes de la SPEC, cohérentes', () => {
+    expect(BAREME_DEFAUT.length).toBe(65);
+    expect(new Set(BAREME_DEFAUT.map((l) => l.id)).size).toBe(65);
     for (const l of BAREME_DEFAUT) expect(l.prixBas).toBeLessThanOrEqual(l.prixHaut);
   });
 });

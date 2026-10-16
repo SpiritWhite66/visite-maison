@@ -26,6 +26,7 @@ export class TravauxService {
       categorie: 'Autre',
       libelle: '',
       modeChiffrage: 'BAREME',
+      gamme: 'STANDARD',
       realisation: 'ARTISAN',
       montantBas: 0,
       montantHaut: 0,
@@ -44,7 +45,7 @@ export class TravauxService {
               return { montantBas: m.bas, montantHaut: m.haut };
             })(),
           }
-        : { ...poste, baremeId: undefined, quantite: undefined };
+        : { ...poste, baremeId: undefined, quantite: undefined, gamme: undefined };
     await this.port.enregistrer(final);
   }
 

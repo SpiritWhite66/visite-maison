@@ -106,6 +106,7 @@
                   <td>
                     {{ l.poste.libelle }}
                     @if (l.poste.quantite) { <span class="note">× {{ nombre(l.poste.quantite) }}</span> }
+                    @if (gamme(l.poste); as g) { <span class="note">· {{ g }}</span> }
                     @if (l.poste.notes) { <span class="note bloc-note">{{ l.poste.notes }}</span> }
                   </td>
                   <td>{{ l.poste.categorie }}</td>

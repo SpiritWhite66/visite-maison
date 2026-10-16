@@ -6,8 +6,10 @@ import { BaremeService } from '../../application/bareme.service';
 import { BudgetService } from '../../application/budget.service';
 import { VisitesService } from '../../application/visites.service';
 import { TravauxService } from '../../application/travaux.service';
-import { Categorie, CATEGORIES, LigneBareme, PosteTravaux, UniteBareme } from '../../domain/modeles';
+import { Categorie, CATEGORIES, Gamme, LigneBareme, PosteTravaux, UniteBareme } from '../../domain/modeles';
 import { formaterFourchette } from '../../shared/format';
+import { LIBELLE_GAMME } from '../../shared/libelles';
+import { gammesDisponibles, prixLigne } from '../../domain/budget';
 
 const LIBELLE_UNITE: Record<UniteBareme, string> = { M2: 'm²', ML: 'ml', UNITE: 'unité(s)', FORFAIT: 'forfait(s)' };
 
@@ -35,6 +37,23 @@ export class PosteFormPage implements OnInit {
   protected readonly poste = signal<PosteTravaux | null>(null);
   protected readonly categories = CATEGORIES;
   protected readonly erreur = signal('');
+  protected readonly libelleGamme = LIBELLE_GAMME;
+
+  /** Gammes de la ligne choisie ; vide si la ligne n'en propose qu'une (le choix n'a alors pas de sens). */
+  protected gammes(p: PosteTravaux): { gamme: Gamme; prix: string }[] {
+    const l = this.ligne(p);
+    if (!l) return [];
+    const liste = gammesDisponibles(l);
+    if (liste.length < 2) return [];
+    return liste.map((gamme) => {
+      const { bas, haut } = prixLigne(l, gamme);
+      return { gamme, prix: `${formaterFourchette(bas, haut)} / ${this.unite(p)}` };
+    });
+  }
+
+  protected choisirGamme(p: PosteTravaux, gamme: Gamme): void {
+    p.gamme = gamme;
+  }
 
   async ngOnInit(): Promise<void> {
     const posteId = this.posteId();
@@ -89,6 +108,9 @@ export class PosteFormPage implements OnInit {
       p.categorie = l.categorie;
       p.libelle = l.libelle;
       p.quantite ??= 1;
+      // Une ligne sans gammes est toujours chiffrée en moyen de gamme.
+      if (!gammesDisponibles(l).includes(p.gamme ?? 'STANDARD')) p.gamme = 'STANDARD';
+      p.gamme ??= 'STANDARD';
     }
   }
 
