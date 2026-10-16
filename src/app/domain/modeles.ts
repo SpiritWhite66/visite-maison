@@ -223,3 +223,27 @@ export interface FichierPlan {
   blob: Blob;
   ajouteLe: string;
 }
+
+/* ---------- Personnes et avis ---------- */
+
+/** Une personne qui visite les biens (déclarée dans Paramètres) et donne son avis. */
+export interface Personne {
+  id: string;
+  prenom: string;
+}
+
+/**
+ * Avis d'une personne sur un bien. Un avis absent veut dire « pas encore donné » ;
+ * `absente` correspond au N/A : la personne n'était pas là.
+ */
+export interface Avis {
+  /** `bienId:personneId` : un seul avis par personne et par bien. */
+  id: string;
+  bienId: string;
+  personneId: string;
+  absente: boolean;
+  /** 1 à 5, ou `null` si la personne n'a pas mis d'étoiles. */
+  etoiles: number | null;
+  commentaire: string;
+  modifieLe: string;
+}

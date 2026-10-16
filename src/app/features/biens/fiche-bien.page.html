@@ -30,6 +30,9 @@
       <button role="tab" [attr.aria-selected]="onglet() === 'plan'" (click)="onglet.set('plan')">
         Plan <span class="compte">{{ nombreEtages() }}</span>
       </button>
+      <button role="tab" [attr.aria-selected]="onglet() === 'avis'" (click)="onglet.set('avis')">
+        Avis @if (avancementAvis().total > 0) { <span class="compte">{{ avancementAvis().repondu }}/{{ avancementAvis().total }}</span> }
+      </button>
       <button role="tab" [attr.aria-selected]="onglet() === 'suivi'" (click)="onglet.set('suivi')">Suivi</button>
     </div>
 
@@ -108,6 +111,12 @@
                     @if (b.ges) { <span class="classe-energie" [attr.data-classe]="b.ges">{{ b.ges }}</span> }
                   </dd>
                 </div>
+                @if (resumeAvis().moyenne !== null) {
+                  <div>
+                    <dt>Avis ({{ resumeAvis().notes }})</dt>
+                    <dd><app-etoiles [valeur]="resumeAvis().moyenne" /> <span class="chiffre">{{ nombre(resumeAvis().moyenne!) }}</span></dd>
+                  </div>
+                }
                 @if (offre(); as o) { <div><dt>Dernière offre</dt><dd class="chiffre">{{ euro(o) }}</dd></div> }
                 <div><dt>Impression</dt><dd>{{ b.impressionGlobale ? b.impressionGlobale + ' / 5' : '—' }}</dd></div>
                 @if (b.urlAnnonce) {
@@ -198,6 +207,10 @@
                 }
               </section>
             }
+          }
+
+          @case ('avis') {
+            <app-avis-onglet [bienId]="b.id" [avis]="avisBien()" (avisChange)="avisBien.set($event)" />
           }
 
           @case ('suivi') {

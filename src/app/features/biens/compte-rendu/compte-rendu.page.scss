@@ -60,6 +60,10 @@ p { margin: 0 0 0.4rem; }
 .tableau.budget tr.total th, .tableau.budget tr.total td { font-size: 12.5pt; font-weight: 750; border-top: 1.5pt solid #1c1a17; border-bottom: 0; padding-top: 0.45rem; }
 .tableau.recap { font-size: 9.5pt; }
 
+.tableau.avis .note-etoiles { white-space: nowrap; }
+.etoiles-texte { color: #b27417; letter-spacing: 0.05em; }
+.tableau.avis td:last-child { white-space: pre-wrap; }
+
 /* Points relevés : texte à gauche, vignettes à droite */
 .point { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.4rem 0; border-bottom: 0.5pt solid #ddd5c6; break-inside: avoid; }
 .point-texte { flex: 1; min-width: 0; }

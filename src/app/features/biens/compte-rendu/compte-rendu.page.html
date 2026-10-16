@@ -64,6 +64,32 @@
         </table>
       </section>
 
+      <!-- Avis -->
+      @if (lignesAvis().length > 0) {
+        <section class="bloc">
+          <h2>Avis</h2>
+          <table class="tableau avis">
+            <thead><tr><th>Personne</th><th>Note</th><th>Avis</th></tr></thead>
+            <tbody>
+              @for (l of lignesAvis(); track l.personne.id) {
+                <tr>
+                  <td>{{ l.personne.prenom }}</td>
+                  <td class="note-etoiles">
+                    @if (l.statut === 'ABSENTE') { N/A <span class="note">(absent·e)</span> }
+                    @else if (l.avis?.etoiles; as e) { <span class="etoiles-texte">{{ etoilesTexte(e) }}</span> {{ e }}/5 }
+                    @else { — }
+                  </td>
+                  <td>{{ l.avis?.absente ? '' : l.avis?.commentaire }}</td>
+                </tr>
+              }
+            </tbody>
+            @if (resumeAvis().moyenne !== null) {
+              <tfoot><tr><th>Moyenne</th><td colspan="2">{{ nombre(resumeAvis().moyenne!) }} / 5 <span class="note">({{ resumeAvis().notes }} avis noté{{ resumeAvis().notes > 1 ? 's' : '' }})</span></td></tr></tfoot>
+            }
+          </table>
+        </section>
+      }
+
       <!-- Travaux -->
       <section class="bloc">
         <h2>Travaux</h2>

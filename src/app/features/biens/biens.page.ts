@@ -1,15 +1,19 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BiensService } from '../../application/biens.service';
+import { AvisService } from '../../application/avis.service';
+import { PersonnesService } from '../../application/personnes.service';
 import { FiltreBiensService } from '../../application/filtre-biens.service';
 import { ParametresService } from '../../application/parametres.service';
 import { BudgetService } from '../../application/budget.service';
 import { TravauxService } from '../../application/travaux.service';
 import { Budget } from '../../domain/budget';
+import { avisDesPersonnes, resumerAvis, ResumeAvis } from '../../domain/avis';
 import { compterBiens, ETAPES_PARCOURS, ETAPES_TERMINALES, filtrerBiens, FiltreBiens, memeFiltre, montantOffre } from '../../domain/etapes';
 import { Bien, Etape } from '../../domain/modeles';
 import { joursDepuis, sauvegardeAFaire } from '../../domain/sauvegarde';
 import { formaterEuro, formaterNombre } from '../../shared/format';
+import { EtoilesComponent } from '../../shared/etoiles.component';
 import { IconeComponent } from '../../shared/icone.component';
 import { CouvertureBienComponent } from '../../shared/photos.component';
 import { LIBELLE_ETAPE, LIBELLE_TYPE_BIEN } from '../../shared/libelles';
@@ -19,6 +23,7 @@ interface CarteBien {
   budget: Budget;
   nbPostes: number;
   offre?: number;
+  avis: ResumeAvis;
 }
 
 interface Puce {
@@ -31,7 +36,7 @@ interface Puce {
 
 @Component({
   selector: 'app-biens',
-  imports: [RouterLink, IconeComponent, CouvertureBienComponent],
+  imports: [RouterLink, IconeComponent, CouvertureBienComponent, EtoilesComponent],
   template: `
     <header class="entete-page">
       <div>
@@ -90,6 +95,9 @@ interface Puce {
             <p class="caracteristiques">
               @if (c.bien.surfaceHabitable) { <span>{{ nombre(c.bien.surfaceHabitable) }} m²</span> }
               @if (c.bien.surfaceTerrain) { <span>terrain {{ nombre(c.bien.surfaceTerrain) }} m²</span> }
+              @if (c.avis.moyenne !== null) {
+                <span class="avis" [title]="c.avis.notes + ' avis'"><app-etoiles [valeur]="c.avis.moyenne" /> <span class="chiffre">{{ nombre(c.avis.moyenne) }}</span></span>
+              }
               @if (c.bien.dpe) { <span class="classe-energie" [attr.data-classe]="c.bien.dpe" title="DPE">{{ c.bien.dpe }}</span> }
             </p>
             <div class="bas">
@@ -136,6 +144,7 @@ interface Puce {
     .puce[aria-pressed='true'] { background: var(--encre); color: var(--fond); border-color: var(--encre); }
     .puce .compte { min-width: 1.4rem; padding: 0 0.35rem; border-radius: 999px; background: var(--surface-2); color: var(--texte-discret); font-size: 0.75rem; line-height: 1.4rem; text-align: center; }
     .puce[aria-pressed='true'] .compte { background: color-mix(in srgb, var(--fond) 22%, transparent); color: var(--fond); }
+    .avis { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.9rem; }
     .offre { width: 100%; margin-top: 0.4rem; font-size: 0.88rem; color: var(--primaire); }
     .offre strong { color: var(--encre); }
     .vide p { margin: 0 0 0.75rem; }
@@ -161,6 +170,8 @@ export class BiensPage implements OnInit {
     sauvegardeAFaire(this.parametres.parametres().derniereSauvegarde, new Date(), (this.cartes()?.length ?? 0) > 0),
   );
   private readonly filtreService = inject(FiltreBiensService);
+  private readonly avisService = inject(AvisService);
+  private readonly personnesService = inject(PersonnesService);
   protected readonly euro = formaterEuro;
   protected readonly nombre = formaterNombre;
   protected readonly etape = LIBELLE_ETAPE;
@@ -197,11 +208,12 @@ export class BiensPage implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    const [biens, postes] = await Promise.all([this.biens.lister(), this.travaux.lister()]);
+    const [biens, postes, avis, personnes] = await Promise.all([this.biens.lister(), this.travaux.lister(), this.avisService.lister(), this.personnesService.charger()]);
+    const avisValides = avisDesPersonnes(avis, personnes);
     this.cartes.set(
       biens.map((bien) => {
         const sesPostes = postes.filter((p) => p.bienId === bien.id);
-        return { bien, budget: this.budgets.calculer(bien, sesPostes), nbPostes: sesPostes.length, offre: montantOffre(bien) };
+        return { bien, budget: this.budgets.calculer(bien, sesPostes), nbPostes: sesPostes.length, offre: montantOffre(bien), avis: resumerAvis(avisValides.filter((a) => a.bienId === bien.id)) };
       }),
     );
   }

@@ -52,6 +52,8 @@ export class FormatSauvegardeJson extends FormatSauvegardePort {
     ligne('pieces', d.pieces);
     ligne('etages', d.etages);
     ligne('bareme', d.bareme);
+    ligne('personnes', d.personnes);
+    ligne('avis', d.avis);
     if (d.parametres) ligne('parametres', d.parametres);
 
     parties.push('  "photos": [');
@@ -91,6 +93,8 @@ export class FormatSauvegardeJson extends FormatSauvegardePort {
         etages: s.etages,
         bareme: s.bareme,
         parametres: s.parametres,
+        personnes: s.personnes,
+        avis: s.avis,
         photos: s.photos.map(({ donnees: d, type, ...reste }): Photo => ({ ...reste, blob: depuisBase64(d, type) })),
         fichiersPlan: s.fichiersPlan.map(({ donnees: d, ...reste }): FichierPlan => ({ ...reste, blob: depuisBase64(d, reste.typeMime) })),
       };
