@@ -42,7 +42,7 @@
 .barres .jauge > span { background: var(--encre); opacity: 0.75; }
 
 /* Fiche : caractéristiques en grille */
-.infos { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 1rem 1.5rem; margin: 0; }
+.infos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(10rem, 40%), 1fr)); gap: 1rem 1.5rem; margin: 0; }
 .infos dt { font-size: 0.8rem; color: var(--texte-discret); }
 .infos dd { margin: 0.15rem 0 0; font-weight: 600; color: var(--encre); display: flex; gap: 0.3rem; align-items: center; }
 .contact, .notes { margin: 0; }
@@ -84,10 +84,35 @@
   &[data-etat='A_SURVEILLER'] { color: var(--etat-surveiller); background: color-mix(in srgb, var(--etat-surveiller) 12%, var(--surface)); }
 }
 
-/* Photo de couverture */
-.couverture-fiche { display: grid; gap: 0.75rem; padding: 0; overflow: hidden; }
-.couverture-fiche .visuel { aspect-ratio: 21 / 9; max-height: 16rem; width: 100%; }
-.couverture-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 1rem; padding: 0 1rem 0.9rem; font-size: 0.9rem; }
+/* Photo de couverture : une vignette dans l'en-tête ; un toucher l'ouvre en grand avec les actions. */
+.identite { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+.titres { min-width: 0; }
+.vignette-couverture {
+  position: relative; flex-shrink: 0; width: 7.5rem; height: 5.6rem; padding: 0; overflow: visible;
+  border: 1px solid var(--filet); border-radius: var(--rayon); background: var(--surface-2);
+}
+.vignette-couverture .visuel { width: 100%; height: 100%; border-radius: calc(var(--rayon) - 1px); }
+.badge-photo {
+  position: absolute; right: -0.4rem; bottom: -0.4rem; display: grid; place-items: center; width: 1.6rem; height: 1.6rem;
+  border-radius: 50%; background: var(--surface); color: var(--primaire); border: 1px solid var(--filet-fort);
+}
+@media (max-width: 600px) {
+  .vignette-couverture { width: 4.5rem; height: 3.4rem; }
+  .identite { gap: 0.75rem; align-items: flex-start; }
+}
+
+.voile-couverture {
+  position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 1rem;
+  background: rgba(20, 18, 15, 0.55);
+}
+.fenetre {
+  width: min(36rem, 100%); max-height: calc(100dvh - 2rem); overflow: auto; padding: 1rem;
+  background: var(--surface); border-radius: var(--rayon); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+.apercu .visuel { width: 100%; aspect-ratio: 4 / 3; border-radius: calc(var(--rayon) - 2px); }
+.fenetre p { margin: 0.75rem 0 0.25rem; font-size: 0.9rem; }
+.actions-fenetre { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; margin-top: 0.5rem; }
+.espaceur { flex: 1; }
 
 .etape-lien { min-height: 44px; min-width: 0; padding: 0 0.25rem; background: none; color: var(--primaire); border: 0; font-size: 0.9rem; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
 .actions-entete { display: flex; flex-wrap: wrap; gap: 0.5rem; }
