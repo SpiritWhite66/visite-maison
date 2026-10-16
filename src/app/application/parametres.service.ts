@@ -12,6 +12,11 @@ export class ParametresService {
     this.parametres.set({ ...PARAMETRES_DEFAUT, ...(await this.port.lire()) });
   }
 
+  /** Note la date de la dernière sauvegarde sans toucher aux autres réglages. */
+  async noterSauvegarde(dateIso: string): Promise<void> {
+    await this.enregistrer({ ...this.parametres(), derniereSauvegarde: dateIso });
+  }
+
   async enregistrer(parametres: Parametres): Promise<void> {
     await this.port.enregistrer(parametres);
     this.parametres.set(parametres);

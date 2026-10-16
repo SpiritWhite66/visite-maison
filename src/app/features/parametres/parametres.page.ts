@@ -3,10 +3,11 @@ import { Diagnostic, DiagnosticService } from '../../application/diagnostic.serv
 import { formaterTaille } from '../../shared/format';
 import { BaremeEditeurComponent } from './bareme-editeur.component';
 import { ReglagesBudgetComponent } from './reglages-budget.component';
+import { SauvegardeComponent } from './sauvegarde.component';
 
 @Component({
   selector: 'app-parametres',
-  imports: [ReglagesBudgetComponent, BaremeEditeurComponent],
+  imports: [ReglagesBudgetComponent, BaremeEditeurComponent, SauvegardeComponent],
   templateUrl: './parametres.page.html',
   styleUrl: './parametres.page.scss',
 })

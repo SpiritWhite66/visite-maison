@@ -1,10 +1,12 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BiensService } from '../../application/biens.service';
+import { ParametresService } from '../../application/parametres.service';
 import { BudgetService } from '../../application/budget.service';
 import { TravauxService } from '../../application/travaux.service';
 import { Budget } from '../../domain/budget';
 import { Bien } from '../../domain/modeles';
+import { joursDepuis, sauvegardeAFaire } from '../../domain/sauvegarde';
 import { formaterEuro, formaterNombre } from '../../shared/format';
 import { IconeComponent } from '../../shared/icone.component';
 import { CouvertureBienComponent } from '../../shared/photos.component';
@@ -29,6 +31,18 @@ interface CarteBien {
       </div>
       <a class="bouton" routerLink="nouveau"><app-icone nom="plus" [taille]="20" /> Nouveau bien</a>
     </header>
+
+    @if (rappelSauvegarde()) {
+      <a class="rappel" routerLink="/parametres">
+        <app-icone nom="cloche" [taille]="22" />
+        <span>
+          <strong>Pensez à sauvegarder vos données.</strong>
+          {{ jours() === null ? 'Aucune sauvegarde n’a encore été faite.' : 'Dernière sauvegarde il y a ' + jours() + ' jours.' }}
+          Elles ne sont que sur cet appareil.
+        </span>
+        <app-icone nom="droite" [taille]="20" />
+      </a>
+    }
 
     @if (cartes() === null) {
       <p class="discret">Chargement…</p>
@@ -71,6 +85,12 @@ interface CarteBien {
     }
   `,
   styles: `
+    .rappel {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem 1rem; text-decoration: none; color: var(--encre);
+      border: 1px solid color-mix(in srgb, var(--etat-surveiller) 45%, transparent); border-radius: var(--rayon);
+      background: color-mix(in srgb, var(--etat-surveiller) 10%, var(--surface)); font-size: 0.92rem;
+    }
+    .rappel span { flex: 1; }
     .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr)); gap: 1rem; }
     .fiche {
       display: flex; flex-direction: column; color: inherit; text-decoration: none; overflow: hidden;
@@ -96,7 +116,12 @@ export class BiensPage implements OnInit {
   private readonly biens = inject(BiensService);
   private readonly travaux = inject(TravauxService);
   private readonly budgets = inject(BudgetService);
+  private readonly parametres = inject(ParametresService);
   protected readonly cartes = signal<CarteBien[] | null>(null);
+  protected readonly jours = computed(() => joursDepuis(this.parametres.parametres().derniereSauvegarde, new Date()));
+  protected readonly rappelSauvegarde = computed(() =>
+    sauvegardeAFaire(this.parametres.parametres().derniereSauvegarde, new Date(), (this.cartes()?.length ?? 0) > 0),
+  );
   protected readonly euro = formaterEuro;
   protected readonly nombre = formaterNombre;
   protected readonly etape = LIBELLE_ETAPE;

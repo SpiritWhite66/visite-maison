@@ -30,6 +30,9 @@ const TRACES = {
   cadrer: 'M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15',
   cote: 'M4 7.5v9M20 7.5v9M4 12h16M7 9.5 4.5 12 7 14.5M17 9.5l2.5 2.5-2.5 2.5',
   moins: 'M5 12h14',
+  cloche: 'M6.5 16.5v-5a5.5 5.5 0 0 1 11 0v5l1.5 2h-14zM10 20.5a2 2 0 0 0 4 0',
+  telecharger: 'M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14',
+  importer: 'M12 15V4M7.5 8.5 12 4l4.5 4.5M5 19.5h14',
   stylet: 'M15.5 4.5l4 4L9 19l-5 1 1-5zM13.5 6.5l4 4',
   fichier: 'M6 3.5h8l4 4v13H6zM14 3.5v4h4M9 13h6M9 16.5h6',
 } as const;

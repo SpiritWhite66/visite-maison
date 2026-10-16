@@ -107,6 +107,8 @@ export interface Parametres {
   tauxNotairePct: number;
   margeNegociationDefautPct: number;
   coefDiyDefaut: number;
+  /** Date de la dernière sauvegarde (export JSON) ; sert à rappeler d'en refaire une. */
+  derniereSauvegarde?: string;
 }
 
 export type TypeVisite = 'PREMIERE' | 'CONTRE_VISITE';
