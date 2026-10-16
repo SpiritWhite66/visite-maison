@@ -1,0 +1,93 @@
+/* ---------- Barre d'outils (écran seulement) ---------- */
+.outils-page { max-width: 21cm; margin: 0 auto 1rem; }
+.outils-page .options { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.5rem 1rem; }
+.outils-page label.champ { margin: 0; min-width: 14rem; }
+.outils-page .case { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 48px; font-weight: 600; cursor: pointer; }
+.outils-page .case input { width: 22px; height: 22px; accent-color: var(--primaire); }
+.outils-page .aide { margin: 0.6rem 0 0; font-size: 0.85rem; color: var(--texte-discret); }
+
+/* ---------- La feuille : un A4 à l'écran, la page elle-même à l'impression ---------- */
+.feuille {
+  max-width: 21cm; margin: 0 auto; padding: 1.5cm 1.6cm; background: #fff; color: #1c1a17;
+  border: 1px solid var(--filet); box-shadow: 0 2px 14px rgba(40, 30, 10, 0.08);
+  font-size: 10.5pt; line-height: 1.4;
+}
+@media (max-width: 760px) { .feuille { padding: 1rem; font-size: 10pt; } }
+
+h1 { margin: 0; font-size: 22pt; line-height: 1.15; }
+h2 {
+  margin: 0 0 0.5rem; padding-bottom: 0.25rem; font-size: 12.5pt; letter-spacing: 0.01em;
+  border-bottom: 1.5pt solid #1c1a17; break-after: avoid;
+}
+h3 { margin: 1rem 0 0.4rem; font-size: 10.5pt; break-after: avoid; }
+h3.travaux { color: #a02a1d; }
+h3.surveiller { color: #8a5a00; }
+h3 .compte { font-weight: 400; color: #6e675c; }
+p { margin: 0 0 0.4rem; }
+.surtitre { display: block; font-size: 8.5pt; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6e675c; }
+.note { font-size: 9pt; color: #6e675c; }
+.vide { color: #6e675c; font-style: italic; }
+
+/* En-tête */
+.entete { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.9rem; }
+.titres { flex: 1; min-width: 0; }
+.lieu { margin: 0.2rem 0 0.1rem; font-size: 11pt; }
+.meta { margin: 0; font-size: 9.5pt; color: #6e675c; }
+.couverture { width: 5.2cm; height: 3.6cm; object-fit: cover; border: 0.5pt solid #cfc6b5; }
+
+.infos {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(4.2cm, 1fr)); gap: 0.5rem 1rem;
+  margin: 0 0 1.1rem; padding: 0.6rem 0; border-top: 0.5pt solid #cfc6b5; border-bottom: 0.5pt solid #cfc6b5;
+}
+.infos dt { font-size: 8.5pt; color: #6e675c; }
+.infos dd { margin: 0; font-weight: 650; }
+.infos .large { grid-column: 1 / -1; }
+.infos .url { font-weight: 400; word-break: break-all; font-size: 9pt; }
+
+/* Blocs et tableaux */
+.bloc { margin-bottom: 1.2rem; }
+.tableau { width: 100%; border-collapse: collapse; font-size: 10pt; }
+.tableau th, .tableau td { padding: 0.28rem 0.4rem; border-bottom: 0.5pt solid #ddd5c6; text-align: left; vertical-align: top; }
+.tableau thead th { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: #6e675c; border-bottom: 1pt solid #1c1a17; }
+.tableau tfoot th, .tableau tfoot td { font-weight: 700; border-top: 1pt solid #1c1a17; border-bottom: 0; }
+.tableau tr.sous-total th, .tableau tr.sous-total td { font-weight: 400; color: #6e675c; border-top: 0; }
+.tableau .montant, .tableau .n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tableau .zero { color: #b5ada0; }
+.tableau .urgent { color: #a02a1d; font-weight: 650; }
+.bloc-note { display: block; }
+.tableau.budget th { font-weight: 400; width: 65%; }
+.tableau.budget td { text-align: right; font-variant-numeric: tabular-nums; }
+.tableau.budget tr.total th, .tableau.budget tr.total td { font-size: 12.5pt; font-weight: 750; border-top: 1.5pt solid #1c1a17; border-bottom: 0; padding-top: 0.45rem; }
+.tableau.recap { font-size: 9.5pt; }
+
+/* Points relevés : texte à gauche, vignettes à droite */
+.point { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.4rem 0; border-bottom: 0.5pt solid #ddd5c6; break-inside: avoid; }
+.point-texte { flex: 1; min-width: 0; }
+.point-titre { margin: 0; }
+.theme { margin-left: 0.4rem; font-size: 8.5pt; color: #6e675c; }
+.commentaire { margin: 0.15rem 0 0; white-space: pre-wrap; }
+.lie { margin: 0.15rem 0 0; font-size: 9pt; color: #5b6772; }
+.vignettes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.2cm; max-width: 7.2cm; }
+.vignettes img { width: 3.4cm; height: 2.6cm; object-fit: cover; border: 0.5pt solid #cfc6b5; }
+.notes { white-space: pre-wrap; }
+
+/* Plans */
+.plans figure { margin: 0 0 0.8rem; break-inside: avoid; }
+.plans figcaption { margin-bottom: 0.25rem; font-weight: 700; }
+.plans svg { display: block; width: 100%; max-height: 11cm; border: 0.5pt solid #cfc6b5; }
+
+.pied { margin-top: 1.5rem; padding-top: 0.5rem; border-top: 0.5pt solid #cfc6b5; font-size: 8.5pt; color: #6e675c; text-align: center; }
+
+/* ---------- Impression : le document seul, en A4 ---------- */
+@page { size: A4 portrait; margin: 14mm 14mm 16mm; }
+
+@media print {
+  .outils-page { display: none !important; }
+  .feuille { max-width: none; margin: 0; padding: 0; border: 0; box-shadow: none; }
+  .bloc.visite, .bloc.plans { break-before: auto; }
+  .tableau thead { display: table-header-group; }
+  .tableau tr { break-inside: avoid; }
+  h1, h2, h3, h3.travaux, h3.surveiller, .tableau thead th, .vignettes img, .couverture {
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+}

@@ -222,7 +222,9 @@ Catalogue **statique versionné dans le code** (`checklist-catalogue.ts`), chaqu
 
 - Généré via une **feuille de style d'impression** et `window.print()` (Chrome Android → « Enregistrer au format PDF »). Pas de librairie PDF.
 - Contenu (synthèse brute) : en-tête du bien, budget total décomposé, tableau des postes de travaux, points `TRAVAUX` et `A_SURVEILLER` avec commentaires, pièces et surfaces, vignettes photo des points signalés, notes libres.
-- Les points `OK` sont résumés par un compteur par thème, pas listés.
+- Les points `OK` sont résumés par un compteur par thème, pas listés : tableau « Récapitulatif par thème » (OK, À surveiller, Travaux, N/A, Non vérifiés).
+- Page `Compte rendu` du bien (bouton dans l'en-tête de la fiche) : le document s'affiche comme une feuille A4 ; options : visite (la plus récente par défaut, une visite précise ou toutes), photos, plans. Le bouton « Imprimer / PDF » attend que toutes les images soient chargées, puis ouvre l'impression ; le nom du fichier proposé est « Compte rendu - <titre du bien> ».
+- Contenu complémentaire : dernière offre, poste de travaux lié à chaque point, plans dessinés avec cotes (étages non vides), notes du bien et de la visite.
 
 ## 11. Lotissement
 

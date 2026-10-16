@@ -10,7 +10,10 @@
           <button type="button" class="etape etape-lien" (click)="onglet.set('suivi')" title="Voir le suivi">{{ libelleEtape[b.etape] }}</button>
         </div>
       </div>
-      <a class="bouton bouton-secondaire" [routerLink]="['modifier']"><app-icone nom="crayon" [taille]="18" /> Modifier</a>
+      <div class="actions-entete">
+        <a class="bouton bouton-secondaire" [routerLink]="['compte-rendu']"><app-icone nom="imprimante" [taille]="18" /> Compte rendu</a>
+        <a class="bouton bouton-secondaire" [routerLink]="['modifier']"><app-icone nom="crayon" [taille]="18" /> Modifier</a>
+      </div>
     </header>
 
     <div class="onglets" role="tablist">

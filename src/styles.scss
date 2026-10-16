@@ -195,3 +195,13 @@ textarea { resize: vertical; }
 /* Indicateur d'enregistrement automatique */
 .etat-auto { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; font-weight: 600; color: var(--texte-discret); }
 .etat-auto.ok { color: var(--etat-ok); }
+
+/*
+ * Impression (compte rendu) : on ne garde que le document. L'appli entière est imprimable sans
+ * rien d'autre autour : ni rail de navigation, ni marges de page, ni fond.
+ */
+@media print {
+  html, body { background: #fff !important; }
+  .rail { display: none !important; }
+  app-root > main, main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+}
