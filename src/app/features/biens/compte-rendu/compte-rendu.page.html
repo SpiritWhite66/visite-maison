@@ -1,0 +1,217 @@
+@if (bien(); as b) {
+  @if (budget(); as bu) {
+    <!-- Barre d'outils : visible à l'écran seulement -->
+    <div class="outils-page">
+      <a class="fil" [routerLink]="['/biens', b.id]"><app-icone nom="gauche" [taille]="18" /> {{ b.titre }}</a>
+      <div class="options">
+        @if (visites().length > 0) {
+          <label class="champ">Visite
+            <select name="visite" [ngModel]="choixVisite()" (ngModelChange)="choixVisite.set($event)">
+              <option value="derniere">La plus récente</option>
+              @if (visites().length > 1) { <option value="toutes">Toutes les visites</option> }
+              @for (v of visites(); track v.id) { <option [value]="v.id">{{ libelleVisite(v) }}</option> }
+            </select>
+          </label>
+        }
+        <label class="case"><input type="checkbox" [ngModel]="avecPhotos()" (ngModelChange)="avecPhotos.set($event)" name="photos" /> Photos</label>
+        <label class="case"><input type="checkbox" [ngModel]="avecPlans()" (ngModelChange)="avecPlans.set($event)" name="plans" /> Plans</label>
+        <button type="button" (click)="imprimer()" [disabled]="!prete()">
+          <app-icone nom="imprimante" [taille]="20" /> {{ prete() ? 'Imprimer / PDF' : 'Préparation…' }}
+        </button>
+      </div>
+      <p class="aide">Dans la fenêtre d’impression, choisissez « Enregistrer au format PDF » comme imprimante.</p>
+    </div>
+
+    <article class="feuille">
+      <!-- En-tête -->
+      <header class="entete">
+        <div class="titres">
+          <span class="surtitre">Compte rendu · {{ libelleType[b.typeBien] }}</span>
+          <h1>{{ b.titre }}</h1>
+          <p class="lieu">
+            {{ lieu(b) }}
+          </p>
+          <p class="meta">Étape : <strong>{{ libelleEtape[b.etape] }}</strong> · édité le {{ dateHeure(edition) }}</p>
+        </div>
+        @if (b.photoCouvertureId && images()[b.photoCouvertureId]; as couverture) {
+          <img class="couverture" [src]="couverture" alt="" />
+        }
+      </header>
+
+      <dl class="infos">
+        <div><dt>Prix affiché</dt><dd>{{ euro(b.prixAffiche) }}</dd></div>
+        @if (b.surfaceHabitable) { <div><dt>Surface habitable</dt><dd>{{ nombre(b.surfaceHabitable) }} m²</dd></div> }
+        @if (b.surfaceTerrain) { <div><dt>Terrain</dt><dd>{{ nombre(b.surfaceTerrain) }} m²</dd></div> }
+        @if (b.anneeConstruction) { <div><dt>Construction</dt><dd>{{ b.anneeConstruction }}</dd></div> }
+        @if (b.dpe) { <div><dt>DPE · GES</dt><dd>{{ b.dpe }} · {{ b.ges ?? '—' }}</dd></div> }
+        @if (b.impressionGlobale) { <div><dt>Impression</dt><dd>{{ b.impressionGlobale }} / 5</dd></div> }
+        @if (offre(); as o) { <div><dt>Dernière offre</dt><dd>{{ euro(o) }}</dd></div> }
+        @if (b.contact.nom) {
+          <div class="large"><dt>Contact</dt><dd>{{ b.contact.nom }}@if (b.contact.agence) { · {{ b.contact.agence }} }@if (b.contact.telephone) { · {{ b.contact.telephone }} }@if (b.contact.email) { · {{ b.contact.email }} }</dd></div>
+        }
+        @if (b.urlAnnonce) { <div class="large"><dt>Annonce</dt><dd class="url">{{ b.urlAnnonce }}</dd></div> }
+      </dl>
+
+      <!-- Budget -->
+      <section class="bloc">
+        <h2>Budget</h2>
+        <table class="tableau budget">
+          <tr><th>Prix affiché</th><td>{{ euro(b.prixAffiche) }}</td></tr>
+          <tr><th>Prix négocié visé <span class="note">(−{{ nombre(b.margeNegociationPct) }} %)</span></th><td>{{ euro(bu.prixNegocie) }}</td></tr>
+          <tr><th>Frais de notaire</th><td>{{ euro(bu.fraisNotaire) }}</td></tr>
+          <tr><th>Travaux <span class="note">(estimation)</span></th><td>{{ fourchette(bu.travaux.bas, bu.travaux.haut) }}</td></tr>
+          <tr class="total"><th>Budget total</th><td>{{ fourchette(bu.total.bas, bu.total.haut) }}</td></tr>
+        </table>
+      </section>
+
+      <!-- Travaux -->
+      <section class="bloc">
+        <h2>Travaux</h2>
+        @if (lignesPostes().length === 0) {
+          <p class="vide">Aucun poste de travaux chiffré.</p>
+        } @else {
+          <table class="tableau postes">
+            <thead>
+              <tr><th>Poste</th><th>Catégorie</th><th>Priorité</th><th>Réalisation</th><th class="montant">Estimation</th></tr>
+            </thead>
+            <tbody>
+              @for (l of lignesPostes(); track l.poste.id) {
+                <tr>
+                  <td>
+                    {{ l.poste.libelle }}
+                    @if (l.poste.quantite) { <span class="note">× {{ nombre(l.poste.quantite) }}</span> }
+                    @if (l.poste.notes) { <span class="note bloc-note">{{ l.poste.notes }}</span> }
+                  </td>
+                  <td>{{ l.poste.categorie }}</td>
+                  <td [class.urgent]="l.poste.priorite === 'URGENT'">{{ libellePriorite[l.poste.priorite] }}</td>
+                  <td>{{ l.poste.realisation === 'DIY' ? 'Soi-même' : 'Artisan' }}</td>
+                  <td class="montant">{{ fourchette(l.montant.bas, l.montant.haut) }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr><th colspan="4">Total travaux</th><td class="montant">{{ fourchette(bu.travaux.bas, bu.travaux.haut) }}</td></tr>
+              <tr class="sous-total"><th colspan="4">dont à faire soi-même</th><td class="montant">{{ fourchette(bu.parRealisation.DIY.bas, bu.parRealisation.DIY.haut) }}</td></tr>
+            </tfoot>
+          </table>
+        }
+      </section>
+
+      <!-- Visites -->
+      @for (s of sections(); track s.visite.id) {
+        <section class="bloc visite">
+          <h2>{{ libelleVisite(s.visite) }}</h2>
+          <p class="meta">{{ s.progression.verifies }} points vérifiés sur {{ s.progression.total }}</p>
+
+          @if (s.signales.travaux.length === 0 && s.signales.aSurveiller.length === 0) {
+            <p class="vide">Aucun point à signaler lors de cette visite.</p>
+          }
+
+          @for (groupe of [
+            { titre: 'Travaux à prévoir', liste: s.signales.travaux, classe: 'travaux' },
+            { titre: 'Points à surveiller', liste: s.signales.aSurveiller, classe: 'surveiller' }
+          ]; track groupe.classe) {
+            @if (groupe.liste.length > 0) {
+              <h3 [class]="groupe.classe">{{ groupe.titre }} <span class="compte">{{ groupe.liste.length }}</span></h3>
+              @for (p of groupe.liste; track p.point.id) {
+                <div class="point">
+                  <div class="point-texte">
+                    <p class="point-titre"><strong>{{ p.point.libelle }}</strong> <span class="theme">{{ p.theme }}</span></p>
+                    @if (p.reponse.commentaire) { <p class="commentaire">{{ p.reponse.commentaire }}</p> }
+                    @if (p.reponse.posteTravauxId && postesParId().get(p.reponse.posteTravauxId); as poste) {
+                      <p class="lie">Poste chiffré : {{ poste.libelle }} — {{ fourchette(budgetPoste(poste).bas, budgetPoste(poste).haut) }}</p>
+                    }
+                  </div>
+                  @if (avecPhotos()) {
+                    @let vignettes = photosDe(p.reponse.photoIds);
+                    @if (vignettes.length > 0) {
+                      <div class="vignettes">
+                        @for (u of vignettes; track u) { <img [src]="u" alt="" /> }
+                      </div>
+                    }
+                  }
+                </div>
+              }
+            }
+          }
+
+          <h3>Récapitulatif par thème</h3>
+          <table class="tableau recap">
+            <thead>
+              <tr><th>Thème</th><th class="n">OK</th><th class="n">À surveiller</th><th class="n">Travaux</th><th class="n">N/A</th><th class="n">Non vérifiés</th></tr>
+            </thead>
+            <tbody>
+              @for (l of s.recap; track l.theme) {
+                <tr>
+                  <td>{{ l.theme }}</td>
+                  <td class="n">{{ l.ok }}</td>
+                  <td class="n" [class.zero]="l.aSurveiller === 0">{{ l.aSurveiller }}</td>
+                  <td class="n" [class.zero]="l.travaux === 0">{{ l.travaux }}</td>
+                  <td class="n" [class.zero]="l.na === 0">{{ l.na }}</td>
+                  <td class="n" [class.zero]="l.nonVerifie === 0">{{ l.nonVerifie }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          @if (s.visite.notes) {
+            <h3>Notes de la visite</h3>
+            <p class="notes">{{ s.visite.notes }}</p>
+          }
+        </section>
+      }
+      @if (visites().length === 0) {
+        <section class="bloc">
+          <h2>Visite</h2>
+          <p class="vide">Aucune visite n’a encore été faite pour ce bien.</p>
+        </section>
+      }
+
+      <!-- Pièces -->
+      @if (pieces().length > 0) {
+        <section class="bloc">
+          <h2>Pièces</h2>
+          <table class="tableau pieces">
+            <thead><tr><th>Pièce</th><th>Dimensions</th><th>Hauteur</th><th class="montant">Surface</th></tr></thead>
+            <tbody>
+              @for (pi of pieces(); track pi.id) {
+                <tr>
+                  <td>{{ pi.nom }}@if (pi.notes) { <span class="note bloc-note">{{ pi.notes }}</span> }</td>
+                  <td>@if (pi.longueur && pi.largeur) { {{ nombre(pi.longueur) }} × {{ nombre(pi.largeur) }} m } @else { — }</td>
+                  <td>@if (pi.hauteurSousPlafond) { {{ nombre(pi.hauteurSousPlafond) }} m } @else { — }</td>
+                  <td class="montant">@if (surfacePiece(pi); as s) { {{ nombre(s) }} m² } @else { — }</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot><tr><th colspan="3">Surface totale relevée</th><td class="montant">{{ nombre(surfaceTotale()) }} m²</td></tr></tfoot>
+          </table>
+        </section>
+      }
+
+      <!-- Plans -->
+      @if (avecPlans() && etagesDessines().length > 0) {
+        <section class="bloc plans">
+          <h2>Plans</h2>
+          @for (e of etagesDessines(); track e.id) {
+            <figure>
+              <figcaption>{{ e.nom }}</figcaption>
+              <svg [attr.viewBox]="cadre(e)" preserveAspectRatio="xMidYMid meet" role="img" [attr.aria-label]="'Plan : ' + e.nom">
+                <g appRenduPlan [elements]="e.elements" [pieces]="infosPieces()" [cotes]="true" [pxParMetre]="40" />
+              </svg>
+            </figure>
+          }
+        </section>
+      }
+
+      <!-- Notes -->
+      @if (b.notes) {
+        <section class="bloc">
+          <h2>Notes</h2>
+          <p class="notes">{{ b.notes }}</p>
+        </section>
+      }
+
+      <footer class="pied">Visite Immo · compte rendu édité le {{ dateHeure(edition) }}</footer>
+    </article>
+  }
+}
