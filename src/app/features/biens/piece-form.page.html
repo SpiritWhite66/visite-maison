@@ -46,7 +46,7 @@
     <div class="champs">
     <app-galerie-photos class="large" [photoIds]="p.photoIds" (supprimer)="retirerPhoto($event)" [peutDefinirCouverture]="true" [couvertureId]="couvertureId()" (couverture)="definirCouverture($event)" />
     <div class="actions large">
-      <app-ajout-photo [desactive]="photoEnCours() || !p.nom.trim()" (choisie)="ajouterPhoto($event)" />
+      <app-ajout-photo [plusieurs]="true" [desactive]="photoEnCours() || !p.nom.trim()" (choisie)="ajouterPhoto($event)" />
     </div>
     @if (!p.nom.trim()) { <p class="discret large">Saisissez d’abord un nom.</p> }
     </div>

@@ -54,6 +54,8 @@ export class VisitePage implements OnInit {
   protected themes: ReturnType<typeof themesPourBien> = [];
 
   private ecriture: Promise<void> = Promise.resolve();
+  private fileDePhotos: Promise<void> = Promise.resolve();
+  private photosEnAttente = 0;
 
   async ngOnInit(): Promise<void> {
     const [bien, visite] = await Promise.all([this.biens.obtenir(this.id()), this.visites.obtenir(this.visiteId())]);
@@ -131,20 +133,28 @@ export class VisitePage implements OnInit {
     this.mettreAJour({ ...this.visite()!, notes });
   }
 
-  protected async ajouterPhoto(pointId: string, fichier: File): Promise<void> {
-    const bien = this.bien();
-    if (!bien) return;
+  /**
+   * Plusieurs images peuvent arriver d'un coup (galerie) : elles sont traitées l'une après l'autre,
+   * pour ne pas décoder des dizaines de grandes photos en même temps sur une tablette.
+   */
+  protected ajouterPhoto(pointId: string, fichier: File): Promise<void> {
+    this.photosEnAttente++;
     this.photoEnCours.set(true);
-    try {
-      const photo = await this.photos.ajouter(bien.id, fichier);
-      const r = reponseDe(this.visite()!, pointId);
-      this.modifier(pointId, { photoIds: [...r.photoIds, photo.id] });
-    } catch (e) {
-      this.erreurs.handleError(e);
-      this.etatSauvegarde.set('erreur');
-    } finally {
-      this.photoEnCours.set(false);
-    }
+    this.fileDePhotos = this.fileDePhotos.then(async () => {
+      try {
+        const bien = this.bien();
+        if (!bien) return;
+        const photo = await this.photos.ajouter(bien.id, fichier);
+        const r = reponseDe(this.visite()!, pointId);
+        this.modifier(pointId, { photoIds: [...r.photoIds, photo.id] });
+      } catch (e) {
+        this.erreurs.handleError(e);
+        this.etatSauvegarde.set('erreur');
+      } finally {
+        if (--this.photosEnAttente === 0) this.photoEnCours.set(false);
+      }
+    });
+    return this.fileDePhotos;
   }
 
   protected async retirerPhoto(pointId: string, photoId: string): Promise<void> {

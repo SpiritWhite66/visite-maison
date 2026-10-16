@@ -2,37 +2,44 @@ import { Component, inject, input, OnDestroy, OnInit, output, signal } from '@an
 import { PhotosService } from '../application/photos.service';
 import { IconeComponent } from './icone.component';
 
-/** Bouton « Photo » : ouvre l'appareil photo (ou la galerie) et renvoie les fichiers choisis. */
+/**
+ * Boutons d'ajout de photo : « Photo » ouvre directement l'appareil photo, « Galerie » laisse
+ * choisir une image déjà présente sur l'appareil (sans `capture`, Android propose galerie et fichiers).
+ */
 @Component({
   selector: 'app-ajout-photo',
   imports: [IconeComponent],
   template: `
     <label class="bouton bouton-texte" [class.desactive]="desactive()">
       <app-icone nom="appareil" [taille]="20" /> Photo
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        hidden
-        [disabled]="desactive()"
-        (change)="choisir($event)"
-      />
+      <input type="file" accept="image/*" capture="environment" hidden [disabled]="desactive()" (change)="choisir($event)" />
     </label>
+    @if (galerie()) {
+      <label class="bouton bouton-texte" [class.desactive]="desactive()">
+        <app-icone nom="image" [taille]="20" /> Galerie
+        <input type="file" accept="image/*" hidden [multiple]="plusieurs()" [disabled]="desactive()" (change)="choisir($event)" />
+      </label>
+    }
   `,
   styles: `
+    :host { display: contents; }
     label { cursor: pointer; }
     label.desactive { opacity: 0.5; pointer-events: none; }
   `,
 })
 export class AjoutPhotoComponent {
   readonly desactive = input(false);
+  /** Propose aussi de choisir une image dans la galerie. */
+  readonly galerie = input(true);
+  /** Autorise plusieurs images d'un coup depuis la galerie. */
+  readonly plusieurs = input(false);
   readonly choisie = output<File>();
 
   protected choisir(evenement: Event): void {
     const champ = evenement.target as HTMLInputElement;
-    const fichier = champ.files?.[0];
+    const fichiers = [...(champ.files ?? [])];
     champ.value = ''; // permet de reprendre la même photo
-    if (fichier) this.choisie.emit(fichier);
+    for (const fichier of fichiers) this.choisie.emit(fichier);
   }
 }
 

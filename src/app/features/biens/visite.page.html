@@ -71,7 +71,7 @@
                       <button type="button" class="bouton-texte" [attr.aria-pressed]="commentaireVisible(r)" (click)="basculerCommentaire(pt.id)">
                         <app-icone nom="bulle" [taille]="20" /> Commentaire
                       </button>
-                      <app-ajout-photo [desactive]="photoEnCours()" (choisie)="ajouterPhoto(pt.id, $event)" />
+                      <app-ajout-photo [plusieurs]="true" [desactive]="photoEnCours()" (choisie)="ajouterPhoto(pt.id, $event)" />
                       @if (r.etat === 'TRAVAUX') {
                         @if (r.posteTravauxId; as posteId) {
                           <a class="bouton bouton-texte" [routerLink]="['/biens', b.id, 'travaux', posteId]">
