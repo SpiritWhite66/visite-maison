@@ -35,6 +35,8 @@ export class PieceFormPage implements OnInit {
   protected readonly nombre = formaterNombre;
 
   private ecriture: Promise<void> = Promise.resolve();
+  private fileDePhotos: Promise<void> = Promise.resolve();
+  private photosEnAttente = 0;
 
   async ngOnInit(): Promise<void> {
     this.couvertureId.set((await this.biens.obtenir(this.id()))?.photoCouvertureId);
@@ -66,20 +68,26 @@ export class PieceFormPage implements OnInit {
       .catch((e) => this.erreurs.handleError(e));
   }
 
-  protected async ajouterPhoto(fichier: File): Promise<void> {
-    const p = this.piece();
-    if (!p) return;
+  /** Images traitées l'une après l'autre ; la pièce est relue après chaque ajout pour ne perdre aucune photo. */
+  protected ajouterPhoto(fichier: File): Promise<void> {
+    this.photosEnAttente++;
     this.photoEnCours.set(true);
-    try {
-      const photo = await this.photos.ajouter(p.bienId, fichier);
-      p.photoIds = [...p.photoIds, photo.id];
-      this.piece.set({ ...p });
-      this.modifie();
-    } catch (e) {
-      this.erreurs.handleError(e);
-    } finally {
-      this.photoEnCours.set(false);
-    }
+    this.fileDePhotos = this.fileDePhotos.then(async () => {
+      try {
+        const bienId = this.piece()?.bienId;
+        if (!bienId) return;
+        const photo = await this.photos.ajouter(bienId, fichier);
+        const p = this.piece();
+        if (!p) return;
+        this.piece.set({ ...p, photoIds: [...p.photoIds, photo.id] });
+        this.modifie();
+      } catch (e) {
+        this.erreurs.handleError(e);
+      } finally {
+        if (--this.photosEnAttente === 0) this.photoEnCours.set(false);
+      }
+    });
+    return this.fileDePhotos;
   }
 
   protected async retirerPhoto(photoId: string): Promise<void> {
