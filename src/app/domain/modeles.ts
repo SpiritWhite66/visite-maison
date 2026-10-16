@@ -18,6 +18,8 @@ export interface EntreeHistorique {
   etape: Etape;
   date: string;
   commentaire?: string;
+  /** Montant de l'offre, pour l'étape `OFFRE_FAITE`. */
+  montant?: number;
 }
 
 export interface Contact {

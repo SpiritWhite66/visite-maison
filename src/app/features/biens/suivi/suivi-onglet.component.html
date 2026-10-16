@@ -1,0 +1,71 @@
+@let b = bien();
+<section class="panneau actuelle" [class.terminee]="estTerminee(b.etape)">
+  <span class="surtitre">Étape actuelle</span>
+  <p class="etape">{{ libelle[b.etape] }}</p>
+  <p class="detail">
+    @if (jours() === 0) { Depuis aujourd’hui } @else if (jours() !== null) { Depuis {{ jours() }} jour{{ jours()! > 1 ? 's' : '' }} }
+    @if (offre(); as o) { · dernière offre <strong>{{ euro(o) }}</strong> }
+  </p>
+</section>
+
+<section class="panneau">
+  <h2>Changer d’étape</h2>
+  <p class="discret">Aucun ordre imposé : touchez l’étape où en est ce bien.</p>
+
+  <div class="parcours" role="group" aria-label="Étapes du parcours">
+    @for (e of parcours; track e; let i = $index) {
+      <button type="button" class="etape-bouton" [attr.aria-pressed]="b.etape === e" (click)="choisir(e)" [class.visee]="cible() === e">
+        <span class="rang">{{ i + 1 }}</span> {{ libelle[e] }}
+      </button>
+    }
+  </div>
+  <div class="fins" role="group" aria-label="Fins de parcours">
+    @for (e of terminales; track e) {
+      <button type="button" class="etape-bouton fin" [attr.aria-pressed]="b.etape === e" (click)="choisir(e)" [class.visee]="cible() === e">
+        {{ libelle[e] }}
+      </button>
+    }
+  </div>
+
+  @if (cible(); as c) {
+    <form class="changement" (ngSubmit)="valider()">
+      <h3>
+        @if (c === b.etape) { Nouvelle offre } @else { Passer à « {{ libelle[c] }} » }
+      </h3>
+      @if (c === 'OFFRE_FAITE') {
+        <label class="champ">Montant de l’offre (€)
+          <input name="montant" type="number" inputmode="decimal" min="0" [(ngModel)]="montant" />
+        </label>
+      }
+      <label class="champ">Commentaire (facultatif)
+        <input name="commentaire" [(ngModel)]="commentaire" placeholder="Ex. : rendez-vous avec l’agent à 14 h" />
+      </label>
+      <div class="actions">
+        <button type="submit" [disabled]="enCours()"><app-icone nom="coche" [taille]="20" /> Enregistrer</button>
+        <button type="button" class="bouton-secondaire" (click)="annuler()">Annuler</button>
+      </div>
+    </form>
+  }
+</section>
+
+<section class="panneau">
+  <div class="tete-historique">
+    <h2>Historique</h2>
+    @if (peutAnnuler()) {
+      <button type="button" class="bouton-texte danger" (click)="annulerDernier()" [disabled]="enCours()">Annuler le dernier changement</button>
+    }
+  </div>
+  <ol class="historique">
+    @for (h of historique(); track $index; let premier = $first) {
+      <li [class.courant]="premier">
+        <span class="repere" aria-hidden="true"></span>
+        <div>
+          <strong>{{ libelle[h.etape] }}</strong>
+          @if (h.montant !== undefined) { <span class="montant chiffre">{{ euro(h.montant) }}</span> }
+          <span class="date">{{ date(h.date) }}</span>
+          @if (h.commentaire) { <p class="commentaire">{{ h.commentaire }}</p> }
+        </div>
+      </li>
+    }
+  </ol>
+</section>

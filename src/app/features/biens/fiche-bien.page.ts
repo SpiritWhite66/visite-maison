@@ -10,15 +10,17 @@ import { VisitesService } from '../../application/visites.service';
 import { Fourchette } from '../../domain/budget';
 import { compterEtats, progressionTotale } from '../../domain/checklist';
 import { surfacePiece, surfaceTotale } from '../../domain/piece';
+import { montantOffre } from '../../domain/etapes';
 import { Bien, EtatPoint, Piece, PosteTravaux, Visite } from '../../domain/modeles';
 import { formaterEuro, formaterFourchette, formaterNombre } from '../../shared/format';
 import { IconeComponent } from '../../shared/icone.component';
 import { AjoutPhotoComponent, CouvertureBienComponent } from '../../shared/photos.component';
+import { SuiviOngletComponent } from './suivi/suivi-onglet.component';
 import { PlanOngletComponent } from './plan/plan-onglet.component';
 import { LIBELLE_ETAPE, LIBELLE_PRIORITE, LIBELLE_TYPE_BIEN } from '../../shared/libelles';
 
-type Onglet = 'synthese' | 'travaux' | 'visites' | 'pieces' | 'plan';
-const ONGLETS: readonly Onglet[] = ['synthese', 'travaux', 'visites', 'pieces', 'plan'];
+type Onglet = 'synthese' | 'travaux' | 'visites' | 'pieces' | 'plan' | 'suivi';
+const ONGLETS: readonly Onglet[] = ['synthese', 'travaux', 'visites', 'pieces', 'plan', 'suivi'];
 
 interface ResumeVisite {
   verifies: number;
@@ -29,7 +31,7 @@ interface ResumeVisite {
 
 @Component({
   selector: 'app-fiche-bien',
-  imports: [RouterLink, IconeComponent, PlanOngletComponent, CouvertureBienComponent, AjoutPhotoComponent],
+  imports: [RouterLink, IconeComponent, PlanOngletComponent, CouvertureBienComponent, AjoutPhotoComponent, SuiviOngletComponent],
   templateUrl: './fiche-bien.page.html',
   styleUrl: './fiche-bien.page.scss',
 })
@@ -52,6 +54,10 @@ export class FicheBienPage implements OnInit {
   protected readonly pieces = signal<Piece[]>([]);
   protected readonly onglet = signal<Onglet>('synthese');
   protected readonly nombreEtages = signal(0);
+  protected readonly offre = computed(() => {
+    const b = this.bien();
+    return b ? montantOffre(b) : undefined;
+  });
 
   protected readonly budget = computed(() => {
     const b = this.bien();
