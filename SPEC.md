@@ -48,8 +48,9 @@ Types de biens couverts : **maison en ville / lotissement** et **maison rurale a
 | anneeConstruction | number? | |
 | dpe, ges | `A`…`G` \| null | |
 | etape | Etape (cf. §7) | |
-| historiqueEtapes | { etape, date, commentaire? }[] | horodaté automatiquement |
+| historiqueEtapes | { etape, date, commentaire?, montant? }[] | horodaté automatiquement ; `montant` = montant de l'offre (étape `OFFRE_FAITE`) |
 | impressionGlobale | 1–5 \| null | |
+| photoCouvertureId | string? | photo de couverture, affichée dans la liste des biens |
 | notes | string | |
 | creeLe, modifieLe | ISO date | |
 
@@ -116,6 +117,12 @@ Prix = **prix artisan TTC fourni-posé**. Pour un poste `DIY`, montant = prix ×
 ### FichierPlan
 `{ id, bienId, etageId, nom, typeMime, blob, ajouteLe }` — plan importé (photo réduite à 2400 px, ou fichier tel quel, PDF compris).
 
+### Sauvegarde (export / import JSON)
+Un seul fichier `visite-immo-AAAA-MM-JJ.json` contenant toutes les tables (biens, postes, visites, pièces, étages, barème, réglages) et les images en base 64 (`photos`, `fichiersPlan`, avec leur type MIME). Champs d'en-tête : `format` (« visite-immo »), `version` (du format, 1), `exporteLe`, `versionApp`.
+- **Importer** : le fichier est lu et contrôlé avant toute écriture (format, version, identifiants, fichiers non tronqués) ; un résumé est affiché. Deux modes : *Remplacer* (la base devient identique à la sauvegarde, en une seule transaction : tout ou rien) ou *Fusionner* (ajout ou mise à jour des biens et de ce qui s'y rattache par identifiant ; réglages et barème locaux conservés).
+- Une sauvegarde d'une version plus récente du format est refusée avec un message ; les tables absentes d'une ancienne version sont lues comme vides.
+- Les réglages portent `derniereSauvegarde`. Rappel (bandeau dans la liste des biens, bloc dans Paramètres) s'il y a des biens et qu'aucune sauvegarde n'a été faite depuis 14 jours.
+
 ## 5. Règles de calcul (domaine pur, testé unitairement)
 
 - `prixNegocie = prixAffiche × (1 − margeNegociationPct / 100)`
@@ -168,8 +175,9 @@ Coefficient DIY par défaut : **0.4** (≈ coût matériaux seul).
 Étapes : `REPERE` → `VISITE_PLANIFIEE` → `VISITE` → `CONTRE_VISITE` → `OFFRE_FAITE` → `OFFRE_ACCEPTEE` → `COMPROMIS`, plus les étapes terminales `OFFRE_REFUSEE` et `ABANDONNE`.
 
 - Changement d'étape libre (pas de workflow bloquant), chaque changement ajouté à `historiqueEtapes` avec date et commentaire optionnel.
-- Pour `OFFRE_FAITE` : champ montant de l'offre.
-- Liste des biens filtrable par étape ; les biens terminés sont masqués par défaut.
+- Pour `OFFRE_FAITE` : champ montant de l'offre (pré-rempli avec le prix négocié ou la dernière offre) ; il peut y avoir plusieurs offres, la dernière est affichée.
+- Le dernier changement peut être annulé (l'étape initiale reste toujours).
+- Liste des biens filtrable par étape (puces avec compteurs : En cours, une puce par étape présente, Terminés, Tous) ; les biens terminés sont masqués par défaut (filtre « En cours »). Le filtre est conservé quand on ouvre un bien puis qu'on revient à la liste.
 
 ## 8. Catalogue de checklist
 
@@ -205,10 +213,10 @@ Catalogue **statique versionné dans le code** (`checklist-catalogue.ts`), chaqu
    - **Travaux** : liste des postes groupés par catégorie, ajout manuel ou depuis barème, bascule artisan/DIY, totaux.
    - **Visites** : liste des visites, bouton « Démarrer une visite ».
    - **Pièces** : pièces avec mesures et photos, surface totale calculée.
-   - **Suivi** : étape courante et historique.
+   - **Suivi** : étape courante (depuis combien de jours, dernière offre), changement d'étape en un tap avec commentaire facultatif, historique daté (chronologie).
    - **Plan** : un bloc par niveau, avec l'aperçu du dessin et les plans importés (photo ou fichier). Éditeur plein écran : outils mur, pièce rectangulaire, porte, fenêtre, nom de pièce, équipement ; sélection pour déplacer, étirer, modifier la longueur ou supprimer ; aimant désactivable (grille de 10 cm, extrémités des murs, angles à 0/45/90°) ; cotes affichables ; annuler / rétablir ; pincer pour zoomer ; sauvegarde automatique. Stylet : mode activé automatiquement (le stylet dessine, les doigts déplacent et zooment, la paume est ignorée), réticule aimanté au survol, gomme du stylet, bouton latéral pour sélectionner.
 3. **Mode visite** : thèmes en accordéon, pour chaque point des boutons d'état en un tap (OK / À surveiller / Travaux / N/A), commentaire et photo accessibles en un tap, sauvegarde automatique à chaque modification.
-4. **Paramètres** : taux notaire, marge par défaut, coefficient DIY, édition du barème, export/import JSON, état du stockage persistant.
+4. **Paramètres** : taux notaire, marge par défaut, coefficient DIY, édition du barème, export/import JSON (bloc « Sauvegarde »), état du stockage persistant avec bouton pour le demander.
 
 ## 10. Compte rendu PDF
 

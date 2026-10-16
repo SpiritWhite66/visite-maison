@@ -15,6 +15,8 @@ import {
   PostesTravauxDexie,
   VisitesDexie,
 } from './adapters/dexie/depots-dexie';
+import { SauvegardeDexie } from './adapters/dexie/sauvegarde-dexie';
+import { FormatSauvegardeJson } from './adapters/format-sauvegarde-json';
 import { CompressionPhotoCanvas } from './adapters/compression-photo-canvas';
 import { JournalErreursLocal } from './adapters/journal-erreurs-local';
 import { StockageNavigateur } from './adapters/stockage-navigateur';
@@ -26,6 +28,7 @@ import { BaseDonneesPort } from './ports/base-donnees.port';
 import { BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from './ports/depots.port';
 import { JournalErreursPort } from './ports/journal-erreurs.port';
 import { CompressionPhotoPort } from './ports/photo.port';
+import { FormatSauvegardePort, SauvegardePort } from './ports/sauvegarde.port';
 import { StockagePort } from './ports/stockage.port';
 
 export const appConfig: ApplicationConfig = {
@@ -46,6 +49,8 @@ export const appConfig: ApplicationConfig = {
     { provide: EtagesPort, useClass: EtagesDexie },
     { provide: FichiersPlanPort, useClass: FichiersPlanDexie },
     { provide: CompressionPhotoPort, useClass: CompressionPhotoCanvas },
+    { provide: SauvegardePort, useClass: SauvegardeDexie },
+    { provide: FormatSauvegardePort, useClass: FormatSauvegardeJson },
     { provide: ErrorHandler, useClass: CaptureErreurs },
     // Premier lancement : demande de stockage persistant (SPEC §3), sans bloquer le démarrage.
     provideAppInitializer(() => {

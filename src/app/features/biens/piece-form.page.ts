@@ -2,6 +2,7 @@ import { Component, ErrorHandler, inject, input, OnInit, signal } from '@angular
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { IconeComponent } from '../../shared/icone.component';
+import { BiensService } from '../../application/biens.service';
 import { PhotosService } from '../../application/photos.service';
 import { PiecesService } from '../../application/pieces.service';
 import { Piece } from '../../domain/modeles';
@@ -21,6 +22,8 @@ export class PieceFormPage implements OnInit {
   readonly pieceId = input<string>();
   private readonly pieces = inject(PiecesService);
   private readonly photos = inject(PhotosService);
+  private readonly biens = inject(BiensService);
+  protected readonly couvertureId = signal<string | undefined>(undefined);
   private readonly router = inject(Router);
   private readonly erreurs = inject(ErrorHandler);
 
@@ -34,6 +37,7 @@ export class PieceFormPage implements OnInit {
   private ecriture: Promise<void> = Promise.resolve();
 
   async ngOnInit(): Promise<void> {
+    this.couvertureId.set((await this.biens.obtenir(this.id()))?.photoCouvertureId);
     const pieceId = this.pieceId();
     if (!pieceId) {
       this.piece.set(this.pieces.nouvelle(this.id()));
@@ -85,6 +89,11 @@ export class PieceFormPage implements OnInit {
     this.piece.set({ ...p });
     this.modifie();
     await this.photos.supprimer([photoId]);
+  }
+
+  protected async definirCouverture(photoId: string): Promise<void> {
+    await this.biens.definirCouverture(this.id(), photoId);
+    this.couvertureId.set(photoId);
   }
 
   protected async supprimer(): Promise<void> {

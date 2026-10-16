@@ -1,23 +1,37 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BiensService } from '../../application/biens.service';
+import { FiltreBiensService } from '../../application/filtre-biens.service';
+import { ParametresService } from '../../application/parametres.service';
 import { BudgetService } from '../../application/budget.service';
 import { TravauxService } from '../../application/travaux.service';
 import { Budget } from '../../domain/budget';
-import { Bien } from '../../domain/modeles';
+import { compterBiens, ETAPES_PARCOURS, ETAPES_TERMINALES, filtrerBiens, FiltreBiens, memeFiltre, montantOffre } from '../../domain/etapes';
+import { Bien, Etape } from '../../domain/modeles';
+import { joursDepuis, sauvegardeAFaire } from '../../domain/sauvegarde';
 import { formaterEuro, formaterNombre } from '../../shared/format';
 import { IconeComponent } from '../../shared/icone.component';
+import { CouvertureBienComponent } from '../../shared/photos.component';
 import { LIBELLE_ETAPE, LIBELLE_TYPE_BIEN } from '../../shared/libelles';
 
 interface CarteBien {
   bien: Bien;
   budget: Budget;
   nbPostes: number;
+  offre?: number;
+}
+
+interface Puce {
+  cle: string;
+  libelle: string;
+  nombre: number;
+  filtre: FiltreBiens;
+  actif: boolean;
 }
 
 @Component({
   selector: 'app-biens',
-  imports: [RouterLink, IconeComponent],
+  imports: [RouterLink, IconeComponent, CouvertureBienComponent],
   template: `
     <header class="entete-page">
       <div>
@@ -29,6 +43,18 @@ interface CarteBien {
       <a class="bouton" routerLink="nouveau"><app-icone nom="plus" [taille]="20" /> Nouveau bien</a>
     </header>
 
+    @if (rappelSauvegarde()) {
+      <a class="rappel" routerLink="/parametres">
+        <app-icone nom="cloche" [taille]="22" />
+        <span>
+          <strong>Pensez à sauvegarder vos données.</strong>
+          {{ jours() === null ? 'Aucune sauvegarde n’a encore été faite.' : 'Dernière sauvegarde il y a ' + jours() + ' jours.' }}
+          Elles ne sont que sur cet appareil.
+        </span>
+        <app-icone nom="droite" [taille]="20" />
+      </a>
+    }
+
     @if (cartes() === null) {
       <p class="discret">Chargement…</p>
     } @else if (cartes()!.length === 0) {
@@ -37,9 +63,24 @@ interface CarteBien {
         <a class="bouton" routerLink="nouveau">Ajouter un premier bien</a>
       </div>
     } @else {
+      <div class="filtres" role="group" aria-label="Filtrer par étape">
+        @for (f of puces(); track f.cle) {
+          <button type="button" class="puce" [attr.aria-pressed]="f.actif" (click)="choisirFiltre(f.filtre)">
+            {{ f.libelle }} <span class="compte chiffre">{{ f.nombre }}</span>
+          </button>
+        }
+      </div>
+      @if (visibles().length === 0) {
+        <div class="vide">
+          <p>Aucun bien dans « {{ libelleFiltre() }} ».</p>
+          <button type="button" class="bouton-secondaire" (click)="choisirFiltre({ type: 'TOUS' })">Voir tous les biens</button>
+        </div>
+      }
       <div class="grille">
-        @for (c of cartes(); track c.bien.id) {
+        @for (c of visibles(); track c.bien.id) {
           <a class="fiche" [routerLink]="[c.bien.id]">
+            <app-couverture-bien class="couverture" [photoId]="c.bien.photoCouvertureId" />
+            <div class="corps">
             <div class="haut">
               <span class="etiquette">{{ typeBien[c.bien.typeBien] }}</span>
               <span class="etape">{{ etape[c.bien.etape] }}</span>
@@ -60,6 +101,10 @@ interface CarteBien {
               <span class="detail">
                 Affiché {{ euro(c.bien.prixAffiche) }} · {{ c.nbPostes }} poste{{ c.nbPostes > 1 ? 's' : '' }} de travaux
               </span>
+              @if (c.offre !== undefined) {
+                <span class="offre">Offre : <strong class="chiffre">{{ euro(c.offre) }}</strong></span>
+              }
+            </div>
             </div>
           </a>
         }
@@ -67,14 +112,33 @@ interface CarteBien {
     }
   `,
   styles: `
+    .rappel {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding: 0.75rem 1rem; text-decoration: none; color: var(--encre);
+      border: 1px solid color-mix(in srgb, var(--etat-surveiller) 45%, transparent); border-radius: var(--rayon);
+      background: color-mix(in srgb, var(--etat-surveiller) 10%, var(--surface)); font-size: 0.92rem;
+    }
+    .rappel span { flex: 1; }
     .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr)); gap: 1rem; }
     .fiche {
-      display: flex; flex-direction: column; padding: 1.1rem 1.25rem; color: inherit; text-decoration: none;
+      display: flex; flex-direction: column; color: inherit; text-decoration: none; overflow: hidden;
       background: var(--surface); border: 1px solid var(--filet); border-radius: var(--rayon);
       transition: border-color 120ms;
     }
+    .couverture { aspect-ratio: 16 / 9; border-bottom: 1px solid var(--filet); }
+    .corps { display: flex; flex-direction: column; flex: 1; padding: 1.1rem 1.25rem; }
     .fiche:active { border-color: var(--primaire); }
     .haut { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .filtres { display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 0.25rem; scrollbar-width: none; }
+    .puce {
+      flex: 0 0 auto; gap: 0.5rem; min-height: 44px; padding: 0 0.9rem; font-size: 0.9rem;
+      background: var(--surface); color: var(--encre); border: 1px solid var(--filet-fort);
+    }
+    .puce[aria-pressed='true'] { background: var(--encre); color: var(--fond); border-color: var(--encre); }
+    .puce .compte { min-width: 1.4rem; padding: 0 0.35rem; border-radius: 999px; background: var(--surface-2); color: var(--texte-discret); font-size: 0.75rem; line-height: 1.4rem; text-align: center; }
+    .puce[aria-pressed='true'] .compte { background: color-mix(in srgb, var(--fond) 22%, transparent); color: var(--fond); }
+    .offre { width: 100%; margin-top: 0.4rem; font-size: 0.88rem; color: var(--primaire); }
+    .offre strong { color: var(--encre); }
+    .vide p { margin: 0 0 0.75rem; }
     .etape { font-size: 0.8rem; font-weight: 650; color: var(--primaire); }
     h2 { font-size: 1.2rem; margin: 0; }
     .lieu { margin: 0.1rem 0 0; color: var(--texte-discret); }
@@ -90,18 +154,54 @@ export class BiensPage implements OnInit {
   private readonly biens = inject(BiensService);
   private readonly travaux = inject(TravauxService);
   private readonly budgets = inject(BudgetService);
+  private readonly parametres = inject(ParametresService);
   protected readonly cartes = signal<CarteBien[] | null>(null);
+  protected readonly jours = computed(() => joursDepuis(this.parametres.parametres().derniereSauvegarde, new Date()));
+  protected readonly rappelSauvegarde = computed(() =>
+    sauvegardeAFaire(this.parametres.parametres().derniereSauvegarde, new Date(), (this.cartes()?.length ?? 0) > 0),
+  );
+  private readonly filtreService = inject(FiltreBiensService);
   protected readonly euro = formaterEuro;
   protected readonly nombre = formaterNombre;
   protected readonly etape = LIBELLE_ETAPE;
   protected readonly typeBien = LIBELLE_TYPE_BIEN;
+
+  /** Biens affichés : le filtre choisi, « En cours » par défaut (les biens terminés sont masqués). */
+  protected readonly visibles = computed(() => {
+    const cartes = this.cartes() ?? [];
+    const gardes = new Set(filtrerBiens(cartes.map((c) => c.bien), this.filtreService.filtre()).map((b) => b.id));
+    return cartes.filter((c) => gardes.has(c.bien.id));
+  });
+
+  protected readonly puces = computed<Puce[]>(() => {
+    const decompte = compterBiens((this.cartes() ?? []).map((c) => c.bien));
+    const actuel = this.filtreService.filtre();
+    const puce = (cle: string, libelle: string, nombre: number, filtre: FiltreBiens): Puce => ({ cle, libelle, nombre, filtre, actif: memeFiltre(actuel, filtre) });
+    const etapes = (liste: readonly Etape[]) =>
+      liste.filter((e) => decompte.parEtape[e] > 0 || memeFiltre(actuel, { type: 'ETAPE', etape: e })).map((e) => puce(e, LIBELLE_ETAPE[e], decompte.parEtape[e], { type: 'ETAPE', etape: e }));
+    return [
+      puce('en-cours', 'En cours', decompte.enCours, { type: 'EN_COURS' }),
+      ...etapes(ETAPES_PARCOURS),
+      ...(decompte.termines > 0 || actuel.type === 'TERMINES' ? [puce('termines', 'Terminés', decompte.termines, { type: 'TERMINES' })] : []),
+      puce('tous', 'Tous', decompte.tous, { type: 'TOUS' }),
+    ];
+  });
+
+  protected libelleFiltre(): string {
+    const f = this.filtreService.filtre();
+    return f.type === 'ETAPE' ? LIBELLE_ETAPE[f.etape] : f.type === 'EN_COURS' ? 'En cours' : f.type === 'TERMINES' ? 'Terminés' : 'Tous';
+  }
+
+  protected choisirFiltre(f: FiltreBiens): void {
+    this.filtreService.filtre.set(f);
+  }
 
   async ngOnInit(): Promise<void> {
     const [biens, postes] = await Promise.all([this.biens.lister(), this.travaux.lister()]);
     this.cartes.set(
       biens.map((bien) => {
         const sesPostes = postes.filter((p) => p.bienId === bien.id);
-        return { bien, budget: this.budgets.calculer(bien, sesPostes), nbPostes: sesPostes.length };
+        return { bien, budget: this.budgets.calculer(bien, sesPostes), nbPostes: sesPostes.length, offre: montantOffre(bien) };
       }),
     );
   }

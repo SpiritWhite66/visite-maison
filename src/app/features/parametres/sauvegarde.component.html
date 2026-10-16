@@ -1,0 +1,72 @@
+<section class="carte">
+  <h2>Sauvegarde</h2>
+  <p class="discret">
+    Vos données sont uniquement sur cet appareil. Si l’appli est désinstallée ou si les données de Chrome sont effacées, elles sont perdues :
+    exportez-les de temps en temps et gardez le fichier ailleurs (Drive, e-mail…).
+  </p>
+
+  <div class="statut" [class.alerte]="alerte()">
+    @if (derniere(); as d) {
+      <app-icone [nom]="alerte() ? 'cloche' : 'coche'" [taille]="20" />
+      <span>
+        Dernière sauvegarde : {{ date(d) }}
+        @if (jours() !== null) { ({{ jours() === 0 ? 'aujourd’hui' : 'il y a ' + jours() + ' jour' + (jours()! > 1 ? 's' : '') }}) }
+      </span>
+    } @else {
+      <app-icone nom="cloche" [taille]="20" />
+      <span>Aucune sauvegarde faite depuis cet appareil.</span>
+    }
+  </div>
+
+  <div class="persistance" [class.alerte]="persistant() === false">
+    @switch (persistant()) {
+      @case (true) { <span>Stockage protégé : Chrome ne supprimera pas les données tout seul.</span> }
+      @case (false) {
+        <span>Stockage non protégé : Chrome peut effacer les données si l’appareil manque de place.</span>
+        <button type="button" class="bouton-secondaire" (click)="demanderPersistance()">Demander la protection</button>
+      }
+      @default { <span class="discret">Protection du stockage : non disponible sur ce navigateur.</span> }
+    }
+  </div>
+
+  <div class="actions">
+    <button type="button" (click)="exporter()" [disabled]="etat() !== 'repos'">
+      <app-icone nom="telecharger" [taille]="20" /> {{ etat() === 'export' ? 'Préparation…' : 'Exporter mes données' }}
+    </button>
+    @if (peutPartager) {
+      <button type="button" class="bouton-secondaire" (click)="partager()" [disabled]="etat() !== 'repos'">Partager…</button>
+    }
+    <label class="bouton bouton-secondaire" [class.desactive]="etat() !== 'repos'">
+      <app-icone nom="importer" [taille]="20" /> Importer une sauvegarde
+      <input type="file" accept=".json,application/json" hidden [disabled]="etat() !== 'repos'" (change)="choisirFichier($event)" />
+    </label>
+  </div>
+
+  @if (etat() === 'lecture') { <p class="discret" role="status">Lecture du fichier…</p> }
+  @if (etat() === 'import') { <p class="discret" role="status">Import en cours…</p> }
+
+  @if (enAttente(); as a) {
+    <div class="import" role="group" aria-label="Importer cette sauvegarde">
+      <strong>{{ a.nom }}</strong>
+      <p>
+        @if (a.lue.exporteLe) { Sauvegarde du {{ date(a.lue.exporteLe) }}. }
+        Contient : {{ decrire(a.lue.resume) }}.
+      </p>
+      <div class="choix">
+        <button type="button" class="remplacer" (click)="importer('REMPLACER')" [disabled]="etat() !== 'repos'">
+          <strong>Remplacer mes données</strong>
+          <span>Restaurer exactement cette sauvegarde (nouvel appareil, réinstallation).</span>
+        </button>
+        <button type="button" class="bouton-secondaire fusionner" (click)="importer('FUSIONNER')" [disabled]="etat() !== 'repos'">
+          <strong>Fusionner avec mes données</strong>
+          <span>Ajouter les biens de la sauvegarde sans rien effacer. Réglages et barème actuels conservés.</span>
+        </button>
+      </div>
+      <button type="button" class="bouton-texte" (click)="annulerImport()">Annuler</button>
+    </div>
+  }
+
+  @if (message(); as m) {
+    <p class="message" [class.erreur]="m.type === 'erreur'" [attr.role]="m.type === 'erreur' ? 'alert' : 'status'">{{ m.texte }}</p>
+  }
+</section>

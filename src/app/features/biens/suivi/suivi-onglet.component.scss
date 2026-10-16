@@ -1,0 +1,41 @@
+.actuelle { border-left: 4px solid var(--primaire); }
+.actuelle.terminee { border-left-color: var(--etat-na); }
+.actuelle .etape { margin: 0; font-size: 1.75rem; font-weight: 750; color: var(--encre); line-height: 1.2; }
+.actuelle .detail { margin: 0.25rem 0 0; color: var(--texte-discret); }
+.actuelle .detail strong { color: var(--encre); font-variant-numeric: tabular-nums; }
+h2 { margin-bottom: 0.25rem; }
+p.discret { margin: 0 0 0.9rem; font-size: 0.9rem; }
+
+.parcours { display: grid; grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr)); gap: 0.5rem; }
+.fins { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--filet-fort); }
+.etape-bouton {
+  justify-content: flex-start; gap: 0.6rem; min-height: 56px; padding: 0 0.9rem; text-align: left;
+  background: var(--surface); color: var(--encre); border: 1px solid var(--filet-fort);
+}
+.etape-bouton:active { background: var(--surface-2); }
+.etape-bouton[aria-pressed='true'] { background: var(--encre); color: var(--fond); border-color: var(--encre); }
+.etape-bouton.visee { border-color: var(--primaire); box-shadow: 0 0 0 3px var(--primaire-pale); }
+.etape-bouton.fin { color: var(--texte-discret); }
+.etape-bouton.fin[aria-pressed='true'] { background: var(--etat-na); color: #fff; border-color: var(--etat-na); }
+.rang {
+  display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; flex-shrink: 0; border-radius: 50%;
+  background: var(--surface-2); color: var(--texte-discret); font-size: 0.8rem; font-weight: 700;
+}
+.etape-bouton[aria-pressed='true'] .rang { background: color-mix(in srgb, var(--fond) 25%, transparent); color: var(--fond); }
+
+.changement { margin-top: 1rem; padding: 1rem; border: 1px solid var(--primaire); border-radius: var(--rayon); background: var(--primaire-pale); }
+.changement h3 { margin: 0 0 0.75rem; font-size: 1rem; }
+.changement .actions { margin-bottom: 0; }
+.changement label.champ { color: var(--encre); }
+
+.tete-historique { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+.tete-historique h2 { margin: 0; }
+.historique { list-style: none; margin: 0.75rem 0 0; padding: 0; }
+.historique li { position: relative; display: flex; gap: 0.9rem; padding-bottom: 1rem; }
+.historique li:not(:last-child)::before { content: ''; position: absolute; left: 0.4rem; top: 1rem; bottom: 0; width: 2px; background: var(--filet); }
+.repere { flex-shrink: 0; width: 0.9rem; height: 0.9rem; margin-top: 0.3rem; border-radius: 50%; background: var(--surface); border: 2px solid var(--filet-fort); }
+.courant .repere { background: var(--primaire); border-color: var(--primaire); }
+.historique strong { color: var(--encre); }
+.montant { margin-left: 0.5rem; font-weight: 650; color: var(--primaire); }
+.date { display: block; font-size: 0.85rem; color: var(--texte-discret); }
+.commentaire { margin: 0.25rem 0 0; font-size: 0.92rem; }

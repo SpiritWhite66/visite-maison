@@ -2,6 +2,7 @@ import { Component, computed, inject, input, OnInit, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { BiensService } from '../../application/biens.service';
 import { BudgetService } from '../../application/budget.service';
+import { PhotosService } from '../../application/photos.service';
 import { PiecesService } from '../../application/pieces.service';
 import { PlanService } from '../../application/plan.service';
 import { TravauxService } from '../../application/travaux.service';
@@ -9,14 +10,17 @@ import { VisitesService } from '../../application/visites.service';
 import { Fourchette } from '../../domain/budget';
 import { compterEtats, progressionTotale } from '../../domain/checklist';
 import { surfacePiece, surfaceTotale } from '../../domain/piece';
+import { montantOffre } from '../../domain/etapes';
 import { Bien, EtatPoint, Piece, PosteTravaux, Visite } from '../../domain/modeles';
 import { formaterEuro, formaterFourchette, formaterNombre } from '../../shared/format';
 import { IconeComponent } from '../../shared/icone.component';
+import { AjoutPhotoComponent, CouvertureBienComponent } from '../../shared/photos.component';
+import { SuiviOngletComponent } from './suivi/suivi-onglet.component';
 import { PlanOngletComponent } from './plan/plan-onglet.component';
 import { LIBELLE_ETAPE, LIBELLE_PRIORITE, LIBELLE_TYPE_BIEN } from '../../shared/libelles';
 
-type Onglet = 'synthese' | 'travaux' | 'visites' | 'pieces' | 'plan';
-const ONGLETS: readonly Onglet[] = ['synthese', 'travaux', 'visites', 'pieces', 'plan'];
+type Onglet = 'synthese' | 'travaux' | 'visites' | 'pieces' | 'plan' | 'suivi';
+const ONGLETS: readonly Onglet[] = ['synthese', 'travaux', 'visites', 'pieces', 'plan', 'suivi'];
 
 interface ResumeVisite {
   verifies: number;
@@ -27,7 +31,7 @@ interface ResumeVisite {
 
 @Component({
   selector: 'app-fiche-bien',
-  imports: [RouterLink, IconeComponent, PlanOngletComponent],
+  imports: [RouterLink, IconeComponent, PlanOngletComponent, CouvertureBienComponent, AjoutPhotoComponent, SuiviOngletComponent],
   templateUrl: './fiche-bien.page.html',
   styleUrl: './fiche-bien.page.scss',
 })
@@ -41,6 +45,7 @@ export class FicheBienPage implements OnInit {
   private readonly piecesService = inject(PiecesService);
   private readonly budgets = inject(BudgetService);
   private readonly plans = inject(PlanService);
+  private readonly photos = inject(PhotosService);
   private readonly router = inject(Router);
 
   protected readonly bien = signal<Bien | null>(null);
@@ -49,6 +54,10 @@ export class FicheBienPage implements OnInit {
   protected readonly pieces = signal<Piece[]>([]);
   protected readonly onglet = signal<Onglet>('synthese');
   protected readonly nombreEtages = signal(0);
+  protected readonly offre = computed(() => {
+    const b = this.bien();
+    return b ? montantOffre(b) : undefined;
+  });
 
   protected readonly budget = computed(() => {
     const b = this.bien();
@@ -117,6 +126,40 @@ export class FicheBienPage implements OnInit {
     this.postes.set(postes);
     this.visites.set(visites);
     this.pieces.set(pieces);
+  }
+
+  protected readonly couvertureEnCours = signal(false);
+
+  /** Une photo ajoutée seulement comme couverture n'appartient à rien d'autre : on la supprime avec son remplacement. */
+  private photoUtilisee(photoId: string): boolean {
+    return (
+      this.visites().some((v) => v.reponses.some((r) => r.photoIds.includes(photoId))) ||
+      this.pieces().some((p) => p.photoIds.includes(photoId))
+    );
+  }
+
+  protected async changerCouverture(fichier: File): Promise<void> {
+    const bien = this.bien();
+    if (!bien) return;
+    this.couvertureEnCours.set(true);
+    try {
+      const photo = await this.photos.ajouter(bien.id, fichier);
+      const ancienne = bien.photoCouvertureId;
+      await this.biens.definirCouverture(bien.id, photo.id);
+      this.bien.set({ ...bien, photoCouvertureId: photo.id });
+      if (ancienne && !this.photoUtilisee(ancienne)) await this.photos.supprimer([ancienne]);
+    } finally {
+      this.couvertureEnCours.set(false);
+    }
+  }
+
+  protected async retirerCouverture(): Promise<void> {
+    const bien = this.bien();
+    const ancienne = bien?.photoCouvertureId;
+    if (!bien || !ancienne) return;
+    await this.biens.definirCouverture(bien.id, undefined);
+    this.bien.set({ ...bien, photoCouvertureId: undefined });
+    if (!this.photoUtilisee(ancienne)) await this.photos.supprimer([ancienne]);
   }
 
   protected async demarrerVisite(): Promise<void> {

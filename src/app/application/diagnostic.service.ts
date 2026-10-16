@@ -28,6 +28,10 @@ export class DiagnosticService {
     return this.stockage.demanderPersistance();
   }
 
+  async etatPersistance(): Promise<boolean | null> {
+    return this.stockage.estPersistant();
+  }
+
   async collecter(): Promise<Diagnostic> {
     const [stockagePersistant, stockage, baseDonnees, serviceWorker] = await Promise.all([
       this.stockage.estPersistant(),

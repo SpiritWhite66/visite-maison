@@ -18,6 +18,8 @@ export interface EntreeHistorique {
   etape: Etape;
   date: string;
   commentaire?: string;
+  /** Montant de l'offre, pour l'étape `OFFRE_FAITE`. */
+  montant?: number;
 }
 
 export interface Contact {
@@ -45,6 +47,8 @@ export interface Bien {
   etape: Etape;
   historiqueEtapes: EntreeHistorique[];
   impressionGlobale: number | null;
+  /** Photo affichée sur la carte du bien dans la liste. */
+  photoCouvertureId?: string;
   notes: string;
   creeLe: string;
   modifieLe: string;
@@ -105,6 +109,8 @@ export interface Parametres {
   tauxNotairePct: number;
   margeNegociationDefautPct: number;
   coefDiyDefaut: number;
+  /** Date de la dernière sauvegarde (export JSON) ; sert à rappeler d'en refaire une. */
+  derniereSauvegarde?: string;
 }
 
 export type TypeVisite = 'PREMIERE' | 'CONTRE_VISITE';
