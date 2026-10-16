@@ -149,6 +149,7 @@ export class FicheBienPage implements OnInit {
   }
 
   protected readonly couvertureEnCours = signal(false);
+  protected readonly couvertureOuverte = signal(false);
 
   /** Une photo ajoutée seulement comme couverture n'appartient à rien d'autre : on la supprime avec son remplacement. */
   private photoUtilisee(photoId: string): boolean {
@@ -168,6 +169,7 @@ export class FicheBienPage implements OnInit {
       await this.biens.definirCouverture(bien.id, photo.id);
       this.bien.set({ ...bien, photoCouvertureId: photo.id });
       if (ancienne && !this.photoUtilisee(ancienne)) await this.photos.supprimer([ancienne]);
+      this.couvertureOuverte.set(false);
     } finally {
       this.couvertureEnCours.set(false);
     }
@@ -180,6 +182,7 @@ export class FicheBienPage implements OnInit {
     await this.biens.definirCouverture(bien.id, undefined);
     this.bien.set({ ...bien, photoCouvertureId: undefined });
     if (!this.photoUtilisee(ancienne)) await this.photos.supprimer([ancienne]);
+    this.couvertureOuverte.set(false);
   }
 
   protected async demarrerVisite(): Promise<void> {

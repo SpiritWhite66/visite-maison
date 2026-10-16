@@ -81,17 +81,21 @@ export class VignettePhotoComponent implements OnInit, OnDestroy {
     @if (url(); as u) {
       <img [src]="u" alt="" />
     } @else {
-      <span class="vide"><app-icone nom="maison" [taille]="32" /></span>
+      <span class="sans-photo"><app-icone nom="maison" [taille]="taille()" /></span>
     }
   `,
   styles: `
-    :host { display: block; background: var(--surface-2); }
-    img, .vide { display: block; width: 100%; height: 100%; object-fit: cover; }
-    .vide { display: grid; place-items: center; color: var(--filet-fort); }
+    /* La taille vient du parent (aspect-ratio, largeur, hauteur) : l'image est toujours recadrée, jamais étirée. */
+    :host { position: relative; display: block; overflow: hidden; background: var(--surface-2); }
+    img, .sans-photo { position: absolute; inset: 0; width: 100%; height: 100%; }
+    img { object-fit: cover; }
+    .sans-photo { display: grid; place-items: center; color: var(--filet-fort); }
   `,
 })
 export class CouvertureBienComponent implements OnInit, OnDestroy {
   readonly photoId = input<string | undefined>();
+  /** Taille de la maison affichée quand il n'y a pas de photo. */
+  readonly taille = input(32);
   protected readonly url = signal<string | null>(null);
   private readonly photos = inject(PhotosService);
 

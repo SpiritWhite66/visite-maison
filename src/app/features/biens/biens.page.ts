@@ -132,7 +132,8 @@ interface Puce {
       background: var(--surface); border: 1px solid var(--filet); border-radius: var(--rayon);
       transition: border-color 120ms;
     }
-    .couverture { aspect-ratio: 16 / 9; border-bottom: 1px solid var(--filet); }
+    .couverture { aspect-ratio: 2 / 1; border-bottom: 1px solid var(--filet); }
+    @media (max-width: 600px) { .couverture { aspect-ratio: 5 / 2; } }
     .corps { display: flex; flex-direction: column; flex: 1; padding: 1.1rem 1.25rem; }
     .fiche:active { border-color: var(--primaire); }
     .haut { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }

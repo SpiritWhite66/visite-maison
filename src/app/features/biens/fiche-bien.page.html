@@ -1,7 +1,15 @@
 @if (bien(); as b) {
   @if (budget(); as bu) {
     <header class="entete-page">
-      <div>
+      <div class="identite">
+        <button type="button" class="vignette-couverture" (click)="couvertureOuverte.set(true)"
+          [attr.aria-label]="b.photoCouvertureId ? 'Photo de couverture : voir ou changer' : 'Ajouter une photo de couverture'">
+          @for (cle of [b.photoCouvertureId ?? '']; track cle) {
+            <app-couverture-bien class="visuel" [photoId]="b.photoCouvertureId" [taille]="24" />
+          }
+          <span class="badge-photo" aria-hidden="true"><app-icone [nom]="b.photoCouvertureId ? 'crayon' : 'plus'" [taille]="14" /></span>
+        </button>
+        <div class="titres">
         <a class="fil" routerLink="/biens"><app-icone nom="gauche" [taille]="18" /> Biens</a>
         <h1>{{ b.titre }}</h1>
         <div class="meta">
@@ -9,12 +17,35 @@
           <span class="etiquette">{{ libelleType[b.typeBien] }}</span>
           <button type="button" class="etape etape-lien" (click)="onglet.set('suivi')" title="Voir le suivi">{{ libelleEtape[b.etape] }}</button>
         </div>
+        </div>
       </div>
       <div class="actions-entete">
         <a class="bouton bouton-secondaire" [routerLink]="['compte-rendu']"><app-icone nom="imprimante" [taille]="18" /> Compte rendu</a>
         <a class="bouton bouton-secondaire" [routerLink]="['modifier']"><app-icone nom="crayon" [taille]="18" /> Modifier</a>
       </div>
     </header>
+
+    @if (couvertureOuverte()) {
+      <div class="voile-couverture" role="dialog" aria-modal="true" aria-label="Photo de couverture" (click)="couvertureOuverte.set(false)">
+        <div class="fenetre" (click)="$event.stopPropagation()">
+          <div class="apercu">
+            @for (cle of [b.photoCouvertureId ?? '']; track cle) {
+              <app-couverture-bien class="visuel" [photoId]="b.photoCouvertureId" [taille]="48" />
+            }
+          </div>
+          <p class="discret">Cette photo illustre le bien dans la liste et en tête du compte rendu.</p>
+          <div class="actions-fenetre">
+            <app-ajout-photo [desactive]="couvertureEnCours()" (choisie)="changerCouverture($event)" />
+            @if (b.photoCouvertureId) {
+              <button type="button" class="bouton-texte danger" (click)="retirerCouverture()">Retirer</button>
+            }
+            <span class="espaceur"></span>
+            <button type="button" class="bouton-secondaire" (click)="couvertureOuverte.set(false)">Fermer</button>
+          </div>
+          @if (couvertureEnCours()) { <p class="discret" role="status">Enregistrement de la photo…</p> }
+        </div>
+      </div>
+    }
 
     <div class="onglets" role="tablist">
       <button role="tab" [attr.aria-selected]="onglet() === 'synthese'" (click)="onglet.set('synthese')">Synthèse</button>
@@ -64,19 +95,6 @@
       <div class="contenu">
         @switch (onglet()) {
           @case ('synthese') {
-            <section class="panneau couverture-fiche">
-              @for (cle of [b.photoCouvertureId ?? '']; track cle) {
-                <app-couverture-bien class="visuel" [photoId]="b.photoCouvertureId" />
-              }
-              <div class="couverture-actions">
-                <app-ajout-photo [desactive]="couvertureEnCours()" (choisie)="changerCouverture($event)" />
-                @if (b.photoCouvertureId) {
-                  <button type="button" class="bouton-texte danger" (click)="retirerCouverture()">Retirer la photo</button>
-                } @else {
-                  <span class="discret">Cette photo illustre le bien dans la liste. Vous pouvez aussi choisir une photo de visite ou de pièce.</span>
-                }
-              </div>
-            </section>
 
             @if (postes().length > 0) {
               <section class="panneau">
