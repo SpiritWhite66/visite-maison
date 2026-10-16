@@ -2,6 +2,8 @@ import { Component, computed, ErrorHandler, inject, input, OnDestroy, OnInit, si
 import { Title } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { BaremeService } from '../../../application/bareme.service';
+import { gammesDisponibles } from '../../../domain/budget';
 import { AvisService } from '../../../application/avis.service';
 import { PersonnesService } from '../../../application/personnes.service';
 import { BiensService } from '../../../application/biens.service';
@@ -20,7 +22,7 @@ import { bornes } from '../../../domain/plan';
 import { surfacePiece, surfaceTotale } from '../../../domain/piece';
 import { formaterEuro, formaterFourchette, formaterNombre } from '../../../shared/format';
 import { IconeComponent } from '../../../shared/icone.component';
-import { LIBELLE_ETAPE, LIBELLE_PRIORITE, LIBELLE_TYPE_BIEN } from '../../../shared/libelles';
+import { LIBELLE_ETAPE, LIBELLE_GAMME, LIBELLE_PRIORITE, LIBELLE_TYPE_BIEN } from '../../../shared/libelles';
 import { InfoPiece, RenduPlanComponent } from '../plan/rendu-plan.component';
 
 /**
@@ -46,6 +48,7 @@ export class CompteRenduPage implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly erreurs = inject(ErrorHandler);
   private readonly avisService = inject(AvisService);
+  private readonly bareme = inject(BaremeService);
   private readonly personnesService = inject(PersonnesService);
   private readonly titre = inject(Title);
   private readonly titreInitial = this.titre.getTitle();
@@ -203,6 +206,12 @@ export class CompteRenduPage implements OnInit, OnDestroy {
 
   protected etoilesTexte(n: number | null): string {
     return n === null ? '' : '★'.repeat(n) + '☆'.repeat(5 - n);
+  }
+
+  protected gamme(poste: PosteTravaux): string | null {
+    if (poste.modeChiffrage !== 'BAREME') return null;
+    const ligne = this.bareme.lignes().find((l) => l.id === poste.baremeId);
+    return ligne && gammesDisponibles(ligne).length > 1 ? LIBELLE_GAMME[poste.gamme ?? 'STANDARD'] : null;
   }
 
   protected lieu(b: Bien): string {

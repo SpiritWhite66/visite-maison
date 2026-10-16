@@ -34,6 +34,19 @@
             </optgroup>
           </select>
         </label>
+        @if (gammes(p).length > 0) {
+          <div class="champ large gamme-champ">
+            <span class="libelle-champ">Gamme</span>
+            <div class="gammes" role="radiogroup" aria-label="Gamme">
+              @for (g of gammes(p); track g.gamme) {
+                <button type="button" role="radio" [attr.aria-checked]="(p.gamme ?? 'STANDARD') === g.gamme" (click)="choisirGamme(p, g.gamme)">
+                  <strong>{{ libelleGamme[g.gamme] }}</strong>
+                  <span>{{ g.prix }}</span>
+                </button>
+              }
+            </div>
+          </div>
+        }
         <label class="champ">Quantité {{ unite(p) ? '(' + unite(p) + ')' : '' }}
           <input name="quantite" type="number" inputmode="decimal" min="0" step="any" [(ngModel)]="p.quantite" />
         </label>

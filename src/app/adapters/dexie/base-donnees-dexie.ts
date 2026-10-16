@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import Dexie, { Table } from 'dexie';
 import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PosteTravaux, Visite } from '../../domain/modeles';
+import { BAREME_DEFAUT } from '../../domain/bareme-defaut';
+import { enrichirBareme } from '../../domain/bareme-migration';
 import { BaseDonneesPort, EtatBaseDonnees } from '../../ports/base-donnees.port';
 
 export interface LigneParametres {
@@ -46,6 +48,19 @@ export class VisiteImmoDb extends Dexie {
       personnes: 'id',
       avis: 'id, bienId, personneId',
     });
+    // v4 : gammes. Schéma inchangé, mise à niveau des données existantes (une seule fois) :
+    // les postes existants au barème passent en moyen de gamme, le barème reçoit les gammes et les nouvelles lignes.
+    this.version(4)
+      .stores({})
+      .upgrade(async (tx) => {
+        await tx.table<PosteTravaux, string>('postesTravaux').toCollection().modify((p) => {
+          if (p.modeChiffrage === 'BAREME') p.gamme ??= 'STANDARD';
+        });
+        const bareme = tx.table<LigneBareme, string>('bareme');
+        const existantes = await bareme.toArray();
+        // Barème vide : il sera pré-rempli au démarrage avec le barème complet.
+        if (existantes.length > 0) await bareme.bulkPut(enrichirBareme(existantes, BAREME_DEFAUT));
+      });
   }
 }
 

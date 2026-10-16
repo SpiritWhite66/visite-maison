@@ -142,38 +142,77 @@ Un seul fichier `visite-immo-AAAA-MM-JJ.json` contenant toutes les tables (biens
 
 Ordres de grandeur France, artisan TTC fourni-posé. **À vérifier et ajuster** : ils servent de point de départ, pas de devis.
 
-| Catégorie | Libellé | Unité | Bas | Haut |
-|---|---|---|---|---|
-| Toiture | Réfection complète couverture tuiles | m² | 120 | 250 |
-| Toiture | Révision / remplacement tuiles ponctuel | forfait | 500 | 2 500 |
-| Toiture | Traitement charpente | m² | 20 | 40 |
-| Isolation | Combles perdus (soufflage) | m² | 25 | 50 |
-| Isolation | Murs par l'intérieur | m² | 50 | 100 |
-| Isolation | Murs par l'extérieur (ITE) | m² | 120 | 200 |
-| Menuiseries | Fenêtre double vitrage | unité | 600 | 1 200 |
-| Menuiseries | Porte d'entrée | unité | 1 500 | 4 000 |
-| Électricité | Rénovation complète | m² | 80 | 140 |
-| Électricité | Mise en sécurité tableau | forfait | 1 000 | 2 500 |
-| Plomberie | Salle de bain complète | forfait | 6 000 | 15 000 |
-| Plomberie | Remplacement chauffe-eau | forfait | 800 | 2 500 |
-| Cuisine | Cuisine équipée posée | forfait | 4 000 | 15 000 |
-| Chauffage | Poêle à bois posé avec conduit | forfait | 3 000 | 7 000 |
-| Chauffage | Pompe à chaleur air/eau | forfait | 10 000 | 18 000 |
-| Ventilation | VMC simple flux | forfait | 800 | 2 000 |
-| Sols | Carrelage posé | m² | 50 | 100 |
-| Sols | Parquet posé | m² | 40 | 90 |
-| Finitions | Peinture murs et plafonds | m² | 25 | 45 |
-| Humidité | Traitement remontées capillaires | ml | 100 | 250 |
-| Assainissement | Installation ANC (filtre / micro-station) | forfait | 7 000 | 15 000 |
-| Assainissement | Raccordement tout-à-l'égout | forfait | 3 000 | 10 000 |
-| Eau | Forage | forfait | 5 000 | 15 000 |
-| Eau | Récupérateur eau de pluie enterré | forfait | 2 000 | 6 000 |
-| Extérieur | Clôture grillage rigide | ml | 40 | 90 |
-| Extérieur | Portail | unité | 1 500 | 5 000 |
-| Gros œuvre | Reprise de fissures / maçonnerie | forfait | 1 000 | 10 000 |
-| Gros œuvre | Démolition et évacuation | forfait | 1 000 | 5 000 |
+**Gammes** : chaque ligne a un prix de *moyen de gamme* (la gamme par défaut). Quand le niveau de finition change vraiment le prix (parquet, cuisine, fenêtres…), la ligne a aussi des prix *bas de gamme* et *haut de gamme* ; un poste au barème choisit sa gamme (moyen de gamme par défaut, y compris pour les postes créés avant l'arrivée des gammes). Une ligne sans prix pour une gamme n'est proposée qu'en moyen de gamme. Les prix de chaque gamme s'éditent dans Paramètres.
 
-Coefficient DIY par défaut : **0.4** (≈ coût matériaux seul).
+À la mise à jour d'une base existante (IndexedDB v4) : les postes au barème passent en moyen de gamme ; les lignes d'origine reçoivent les prix bas et haut de gamme sans que leur prix (éventuellement modifié) change ; les nouvelles lignes sont ajoutées ; une ligne d'origine supprimée ne revient pas.
+
+| Catégorie | Libellé | Unité | Bas de gamme | Moyen de gamme (défaut) | Haut de gamme |
+|---|---|---|---|---|---|
+| Toiture | Réfection complète couverture tuiles | m² | 90 – 150 | 120 – 250 | 200 – 350 |
+| Toiture | Révision / remplacement tuiles ponctuel | forfait | — | 500 – 2 500 | — |
+| Toiture | Traitement charpente | m² | — | 20 – 40 | — |
+| Toiture | Démoussage et hydrofuge de toiture | m² | — | 15 – 35 | — |
+| Toiture | Gouttières et descentes | ml | 25 – 45 | 40 – 90 | 80 – 150 |
+| Toiture | Fenêtre de toit (type Velux) | unité | 600 – 1 100 | 900 – 2 000 | 1 800 – 3 500 |
+| Isolation | Combles perdus (soufflage) | m² | — | 25 – 50 | — |
+| Isolation | Murs par l'intérieur | m² | 40 – 70 | 50 – 100 | 80 – 130 |
+| Isolation | Murs par l'extérieur (ITE) | m² | 100 – 150 | 120 – 200 | 180 – 260 |
+| Isolation | Rampants / sous toiture | m² | 40 – 70 | 50 – 110 | 90 – 150 |
+| Isolation | Plancher bas (sous-sol, vide sanitaire) | m² | — | 30 – 70 | — |
+| Menuiseries | Fenêtre double vitrage | unité | 400 – 700 | 600 – 1 200 | 1 100 – 2 000 |
+| Menuiseries | Porte d'entrée | unité | 900 – 1 600 | 1 500 – 4 000 | 3 500 – 7 000 |
+| Menuiseries | Porte-fenêtre / baie vitrée | unité | 900 – 1 700 | 1 500 – 3 500 | 3 000 – 7 000 |
+| Menuiseries | Volet roulant | unité | 300 – 550 | 450 – 1 100 | 900 – 1 800 |
+| Menuiseries | Porte intérieure | unité | 180 – 350 | 300 – 700 | 600 – 1 300 |
+| Menuiseries | Porte de garage | unité | 800 – 1 500 | 1 200 – 3 500 | 3 000 – 6 000 |
+| Électricité | Rénovation complète | m² | — | 80 – 140 | — |
+| Électricité | Mise en sécurité tableau | forfait | — | 1 000 – 2 500 | — |
+| Électricité | Ajout prise ou point lumineux | unité | — | 80 – 200 | — |
+| Plomberie | Salle de bain complète | forfait | 4 000 – 8 000 | 6 000 – 15 000 | 12 000 – 25 000 |
+| Plomberie | Remplacement chauffe-eau | forfait | — | 800 – 2 500 | — |
+| Plomberie | Chauffe-eau thermodynamique | forfait | — | 2 500 – 4 500 | — |
+| Plomberie | Douche à l'italienne | forfait | 2 000 – 4 000 | 3 000 – 7 000 | 6 000 – 12 000 |
+| Plomberie | Remplacement WC | unité | 250 – 500 | 400 – 1 000 | 900 – 2 000 |
+| Plomberie | Réfection réseau d'eau (cuivre / PER) | forfait | — | 2 000 – 6 000 | — |
+| Cuisine | Cuisine équipée posée | forfait | 2 500 – 6 000 | 4 000 – 15 000 | 12 000 – 30 000 |
+| Cuisine | Rafraîchissement (façades, plan de travail) | forfait | 800 – 2 000 | 1 500 – 5 000 | 4 000 – 9 000 |
+| Chauffage | Poêle à bois posé avec conduit | forfait | 2 000 – 4 000 | 3 000 – 7 000 | 6 000 – 12 000 |
+| Chauffage | Pompe à chaleur air/eau | forfait | 8 000 – 12 000 | 10 000 – 18 000 | 15 000 – 22 000 |
+| Chauffage | Chaudière gaz à condensation | forfait | 3 000 – 5 000 | 4 000 – 8 000 | 7 000 – 11 000 |
+| Chauffage | Radiateur électrique performant | unité | 200 – 450 | 400 – 1 100 | 900 – 1 800 |
+| Chauffage | Tubage de conduit de cheminée | forfait | — | 1 200 – 2 500 | — |
+| Ventilation | VMC simple flux | forfait | — | 800 – 2 000 | — |
+| Ventilation | VMC double flux | forfait | — | 4 000 – 8 000 | — |
+| Sols | Carrelage posé | m² | 35 – 60 | 50 – 100 | 90 – 180 |
+| Sols | Parquet posé | m² | 30 – 50 | 40 – 90 | 80 – 160 |
+| Sols | Sol stratifié posé | m² | 18 – 30 | 25 – 55 | 45 – 75 |
+| Sols | Sol vinyle / PVC posé | m² | 18 – 32 | 25 – 60 | 50 – 90 |
+| Sols | Ragréage | m² | — | 15 – 30 | — |
+| Finitions | Peinture murs et plafonds | m² | 18 – 30 | 25 – 45 | 40 – 70 |
+| Finitions | Cloison en plaques de plâtre | m² | — | 40 – 80 | — |
+| Finitions | Faux plafond | m² | — | 40 – 80 | — |
+| Humidité | Traitement remontées capillaires | ml | — | 100 – 250 | — |
+| Humidité | Drainage périphérique | ml | — | 80 – 200 | — |
+| Assainissement | Installation ANC (filtre / micro-station) | forfait | — | 7 000 – 15 000 | — |
+| Assainissement | Raccordement tout-à-l'égout | forfait | — | 3 000 – 10 000 | — |
+| Assainissement | Vidange de fosse | forfait | — | 200 – 450 | — |
+| Eau | Forage | forfait | — | 5 000 – 15 000 | — |
+| Eau | Récupérateur eau de pluie enterré | forfait | — | 2 000 – 6 000 | — |
+| Eau | Analyse d'eau (puits, forage) | forfait | — | 100 – 300 | — |
+| Eau | Adoucisseur d'eau | forfait | — | 1 000 – 2 500 | — |
+| Extérieur | Clôture grillage rigide | ml | 25 – 45 | 40 – 90 | 80 – 150 |
+| Extérieur | Portail | unité | 800 – 1 800 | 1 500 – 5 000 | 4 000 – 9 000 |
+| Extérieur | Ravalement de façade | m² | 30 – 50 | 40 – 100 | 80 – 150 |
+| Extérieur | Terrasse bois | m² | 70 – 120 | 100 – 220 | 180 – 320 |
+| Extérieur | Terrasse carrelée ou béton | m² | 50 – 100 | 80 – 180 | 150 – 280 |
+| Extérieur | Abattage d'arbre | unité | — | 400 – 1 500 | — |
+| Extérieur | Allée ou cour gravillonnée | m² | — | 20 – 50 | — |
+| Gros œuvre | Reprise de fissures / maçonnerie | forfait | — | 1 000 – 10 000 | — |
+| Gros œuvre | Démolition et évacuation | forfait | — | 1 000 – 5 000 | — |
+| Gros œuvre | Ouverture dans un mur porteur | forfait | — | 3 000 – 8 000 | — |
+| Gros œuvre | Dalle béton | m² | — | 60 – 120 | — |
+| Autre | Désamiantage | forfait | — | 2 000 – 8 000 | — |
+| Autre | Traitement anti-termites | forfait | — | 1 500 – 3 500 | — |
 
 ## 7. Suivi des étapes
 

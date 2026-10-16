@@ -2,6 +2,7 @@ import { Component, computed, inject, input, OnInit, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { BiensService } from '../../application/biens.service';
 import { BudgetService } from '../../application/budget.service';
+import { BaremeService } from '../../application/bareme.service';
 import { AvisService } from '../../application/avis.service';
 import { PersonnesService } from '../../application/personnes.service';
 import { PhotosService } from '../../application/photos.service';
@@ -13,6 +14,7 @@ import { Fourchette } from '../../domain/budget';
 import { compterEtats, progressionTotale } from '../../domain/checklist';
 import { surfacePiece, surfaceTotale } from '../../domain/piece';
 import { montantOffre } from '../../domain/etapes';
+import { gammesDisponibles } from '../../domain/budget';
 import { avisDesPersonnes, resumerAvis, statutAvis } from '../../domain/avis';
 import { Avis, Bien, EtatPoint, Piece, PosteTravaux, Visite } from '../../domain/modeles';
 import { formaterEuro, formaterFourchette, formaterNombre } from '../../shared/format';
@@ -22,7 +24,7 @@ import { AvisOngletComponent } from './avis/avis-onglet.component';
 import { EtoilesComponent } from '../../shared/etoiles.component';
 import { SuiviOngletComponent } from './suivi/suivi-onglet.component';
 import { PlanOngletComponent } from './plan/plan-onglet.component';
-import { LIBELLE_ETAPE, LIBELLE_PRIORITE, LIBELLE_TYPE_BIEN } from '../../shared/libelles';
+import { LIBELLE_ETAPE, LIBELLE_GAMME, LIBELLE_PRIORITE, LIBELLE_TYPE_BIEN } from '../../shared/libelles';
 
 type Onglet = 'synthese' | 'travaux' | 'visites' | 'pieces' | 'plan' | 'avis' | 'suivi';
 const ONGLETS: readonly Onglet[] = ['synthese', 'travaux', 'visites', 'pieces', 'plan', 'avis', 'suivi'];
@@ -52,6 +54,7 @@ export class FicheBienPage implements OnInit {
   private readonly plans = inject(PlanService);
   private readonly photos = inject(PhotosService);
   private readonly avisService = inject(AvisService);
+  private readonly bareme = inject(BaremeService);
   private readonly personnesService = inject(PersonnesService);
   private readonly router = inject(Router);
 
@@ -150,6 +153,14 @@ export class FicheBienPage implements OnInit {
 
   protected readonly couvertureEnCours = signal(false);
   protected readonly couvertureOuverte = signal(false);
+
+  /** Gamme d'un poste au barème, seulement si sa ligne en propose plusieurs. */
+  protected gamme(poste: PosteTravaux): string | null {
+    if (poste.modeChiffrage !== 'BAREME') return null;
+    const ligne = this.bareme.lignes().find((l) => l.id === poste.baremeId);
+    if (!ligne || gammesDisponibles(ligne).length < 2) return null;
+    return LIBELLE_GAMME[poste.gamme ?? 'STANDARD'];
+  }
 
   /** Une photo ajoutée seulement comme couverture n'appartient à rien d'autre : on la supprime avec son remplacement. */
   private photoUtilisee(photoId: string): boolean {

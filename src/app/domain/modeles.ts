@@ -76,14 +76,30 @@ export type Categorie = (typeof CATEGORIES)[number];
 
 export type UniteBareme = 'M2' | 'ML' | 'UNITE' | 'FORFAIT';
 
+/** Niveau de finition d'un poste : bas, moyen (par défaut) ou haut de gamme. */
+export const GAMMES = ['ECO', 'STANDARD', 'HAUT'] as const;
+export type Gamme = (typeof GAMMES)[number];
+export const GAMME_DEFAUT: Gamme = 'STANDARD';
+
+export interface PrixGamme {
+  prixBas: number;
+  prixHaut: number;
+}
+
 export interface LigneBareme {
   id: string;
   categorie: Categorie;
   libelle: string;
   unite: UniteBareme;
+  /** Prix du moyen de gamme (gamme par défaut). */
   prixBas: number;
   prixHaut: number;
   coefDiy?: number;
+  /**
+   * Prix des autres gammes, quand le choix a un sens (parquet, cuisine, fenêtres…).
+   * Une gamme absente retombe sur le moyen de gamme.
+   */
+  gammes?: Partial<Record<'ECO' | 'HAUT', PrixGamme>>;
 }
 
 export type ModeChiffrage = 'MANUEL' | 'BAREME';
@@ -98,6 +114,8 @@ export interface PosteTravaux {
   modeChiffrage: ModeChiffrage;
   baremeId?: string;
   quantite?: number;
+  /** Si `BAREME` : gamme retenue ; absente = moyen de gamme. */
+  gamme?: Gamme;
   realisation: Realisation;
   montantBas: number;
   montantHaut: number;
