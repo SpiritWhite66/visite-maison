@@ -10,13 +10,14 @@ import { PiecesService } from '../../application/pieces.service';
 import { PlanService } from '../../application/plan.service';
 import { TravauxService } from '../../application/travaux.service';
 import { VisitesService } from '../../application/visites.service';
+import { DevisService } from '../../application/devis.service';
 import { Fourchette } from '../../domain/budget';
 import { compterEtats, progressionTotale } from '../../domain/checklist';
 import { surfacePiece, surfaceTotale } from '../../domain/piece';
 import { montantOffre } from '../../domain/etapes';
 import { gammesDisponibles } from '../../domain/budget';
 import { avisDesPersonnes, resumerAvis, statutAvis } from '../../domain/avis';
-import { Avis, Bien, EtatPoint, Piece, PosteTravaux, Visite } from '../../domain/modeles';
+import { Avis, Bien, Devis, EtatPoint, Piece, PosteTravaux, Visite } from '../../domain/modeles';
 import { formaterEuro, formaterFourchette, formaterNombre } from '../../shared/format';
 import { IconeComponent } from '../../shared/icone.component';
 import { AjoutPhotoComponent, CouvertureBienComponent } from '../../shared/photos.component';
@@ -57,6 +58,13 @@ export class FicheBienPage implements OnInit {
   private readonly bareme = inject(BaremeService);
   private readonly personnesService = inject(PersonnesService);
   private readonly router = inject(Router);
+  private readonly devisService = inject(DevisService);
+  protected readonly devis = signal<Devis[]>([]);
+
+  /** Devis du poste, pour l'étiquette « 2 devis » de la liste. */
+  protected nbDevis(poste: PosteTravaux): number {
+    return this.devis().filter((d) => d.posteId === poste.id).length;
+  }
 
   protected readonly bien = signal<Bien | null>(null);
   protected readonly postes = signal<PosteTravaux[]>([]);
@@ -136,14 +144,16 @@ export class FicheBienPage implements OnInit {
       return;
     }
     this.bien.set(bien);
-    const [postes, visites, pieces, etages, avis] = await Promise.all([
+    const [postes, visites, pieces, etages, avis, devis] = await Promise.all([
       this.travaux.listerParBien(bien.id),
       this.visitesService.listerParBien(bien.id),
       this.piecesService.listerParBien(bien.id),
       this.plans.listerEtages(bien.id),
       this.avisService.listerParBien(bien.id),
+      this.devisService.listerParBien(bien.id),
       this.personnesService.charger(),
     ]);
+    this.devis.set(devis);
     this.nombreEtages.set(etages.length);
     this.avisBien.set(avis);
     this.postes.set(postes);
@@ -214,9 +224,13 @@ export class FicheBienPage implements OnInit {
   }
 
   protected async supprimerPoste(poste: PosteTravaux): Promise<void> {
-    if (!confirm(`Supprimer le poste « ${poste.libelle} » ?`)) return;
+    const n = this.nbDevis(poste);
+    const suite = n ? ` Ses ${n > 1 ? n + ' devis restent' : 'devis reste'} dans la liste des devis, sans poste.` : '';
+    if (!confirm(`Supprimer le poste « ${poste.libelle} » ?${suite}`)) return;
     await this.travaux.supprimer(poste.id);
     this.postes.update((l) => l.filter((p) => p.id !== poste.id));
+    // Ses devis restent, détachés du poste.
+    this.devis.set(await this.devisService.listerParBien(this.id()));
   }
 
   protected async supprimerBien(): Promise<void> {

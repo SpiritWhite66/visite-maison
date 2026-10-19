@@ -1,4 +1,4 @@
-import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PlanFinancement, PosteTravaux, Visite } from '../domain/modeles';
+import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PlanFinancement, PosteTravaux, Visite, Devis, FichierDevis } from '../domain/modeles';
 
 export abstract class BiensPort {
   abstract lister(): Promise<Bien[]>;
@@ -12,6 +12,7 @@ export abstract class PostesTravauxPort {
   abstract listerParBien(bienId: string): Promise<PosteTravaux[]>;
   abstract lister(): Promise<PosteTravaux[]>;
   abstract enregistrer(poste: PosteTravaux): Promise<void>;
+  /** Supprime le poste ; ses devis restent, détachés (sans poste). */
   abstract supprimer(id: string): Promise<void>;
 }
 
@@ -45,6 +46,7 @@ export abstract class PiecesPort {
 
 export abstract class PhotosPort {
   abstract obtenir(id: string): Promise<Photo | undefined>;
+  abstract listerParBien(bienId: string): Promise<Photo[]>;
   abstract enregistrer(photo: Photo): Promise<void>;
   abstract supprimer(ids: readonly string[]): Promise<void>;
 }
@@ -83,4 +85,19 @@ export abstract class PlansFinancementPort {
   abstract lister(): Promise<PlanFinancement[]>;
   abstract enregistrer(plan: PlanFinancement): Promise<void>;
   abstract supprimer(bienId: string): Promise<void>;
+}
+
+export abstract class DevisPort {
+  abstract listerParBien(bienId: string): Promise<Devis[]>;
+  abstract obtenir(id: string): Promise<Devis | undefined>;
+  /** Enregistre des devis et, dans la même transaction, les postes dont le devis retenu change. */
+  abstract enregistrer(devis: readonly Devis[], postes: readonly PosteTravaux[]): Promise<void>;
+  /** Supprime le devis et ses fichiers ; met à jour le poste concerné dans la même transaction. */
+  abstract supprimer(id: string, postes: readonly PosteTravaux[]): Promise<void>;
+  abstract listerFichiers(devisId: string): Promise<FichierDevis[]>;
+  /** Nombre de fichiers par devis, sans charger les fichiers. */
+  abstract compterFichiers(bienId: string): Promise<Map<string, number>>;
+  abstract obtenirFichier(id: string): Promise<FichierDevis | undefined>;
+  abstract enregistrerFichier(fichier: FichierDevis): Promise<void>;
+  abstract supprimerFichier(id: string): Promise<void>;
 }

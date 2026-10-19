@@ -20,6 +20,11 @@ export class PhotosService {
     return photo;
   }
 
+  /** Toutes les photos d'un bien (couverture, pièces, visites). */
+  listerParBien(bienId: string): Promise<Photo[]> {
+    return this.port.listerParBien(bienId);
+  }
+
   async blob(id: string): Promise<Blob | undefined> {
     return (await this.port.obtenir(id))?.blob;
   }

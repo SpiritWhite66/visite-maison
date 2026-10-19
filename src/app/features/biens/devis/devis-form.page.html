@@ -1,0 +1,109 @@
+@if (devis(); as d) {
+  <header class="entete-page">
+    <div>
+      <a class="fil" [routerLink]="retour().chemin" [queryParams]="retour().params"><app-icone nom="gauche" [taille]="18" /> {{ depuis() === 'poste' && d.posteId ? 'Poste de travaux' : 'Devis' }}</a>
+      <h1>{{ devisId() ? 'Modifier le devis' : 'Nouveau devis' }}</h1>
+    </div>
+  </header>
+
+  <form (ngSubmit)="enregistrer()">
+    <section class="bloc-form">
+      <h2>Devis <small>Le montant TTC d’un devis accepté remplace l’estimation du poste dans le budget.</small></h2>
+      <div class="champs">
+        <label class="champ">Entreprise
+          <input name="entreprise" [(ngModel)]="d.entreprise" required autocomplete="organization" placeholder="ex. Toitures du Savès" />
+        </label>
+        <label class="champ">Montant TTC (€)
+          <input name="montant" type="number" inputmode="decimal" min="0" step="0.01" [ngModel]="d.montantTtc || null" (ngModelChange)="d.montantTtc = $event" required />
+        </label>
+        <label class="champ large">Poste de travaux
+          <select name="poste" [(ngModel)]="d.posteId">
+            <option [ngValue]="null">— pas encore rattaché —</option>
+            @for (g of groupesPostes(); track g.categorie) {
+              <optgroup [label]="g.categorie">
+                @for (p of g.postes; track p.id) { <option [ngValue]="p.id">{{ p.libelle }}</option> }
+              </optgroup>
+            }
+          </select>
+          @if (posteChoisi(d); as p) {
+            <small class="discret">Estimation du poste : {{ estimation(p) }}</small>
+          }
+        </label>
+        <label class="champ large">Objet <span class="facultatif">(facultatif)</span>
+          <input name="objet" [(ngModel)]="d.objet" placeholder="ex. réfection versant nord, dépose comprise" />
+        </label>
+        <label class="champ">Date du devis
+          <input name="date" type="date" [(ngModel)]="d.date" />
+        </label>
+        <label class="champ">Valable jusqu’au <span class="facultatif">(facultatif)</span>
+          <input name="validite" type="date" [(ngModel)]="d.valableJusquau" />
+        </label>
+        <div class="champ large statut-champ">
+          <span class="libelle-champ">Statut</span>
+          <div class="segments" role="radiogroup" aria-label="Statut du devis">
+            @for (s of statuts; track s) {
+              <button type="button" role="radio" [attr.aria-checked]="d.statut === s" [attr.data-statut]="s" (click)="choisirStatut(d, s)">{{ libelleStatut[s] }}</button>
+            }
+          </div>
+          @if (d.statut === 'ACCEPTE') {
+            <small class="discret">{{ d.posteId ? 'Ce montant devient le prix du poste. Un autre devis accepté pour ce poste repassera « en attente ».' : 'Rattachez le devis à un poste pour qu’il compte dans le budget.' }}</small>
+          }
+        </div>
+        <label class="champ large">Notes
+          <textarea name="notes" rows="3" [(ngModel)]="d.notes" placeholder="Délai, conditions, ce qui est inclus ou non…"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <section class="bloc-form">
+      <h2>Document <small>Photos des pages, ou le PDF reçu par mail.</small></h2>
+      <div>
+        @if (fichiers().length > 0) {
+          <ul class="fichiers">
+            @for (f of fichiers(); track f.cle) {
+              <li>
+                @if (f.estImage) {
+                  <button type="button" class="miniature" (click)="ouvert.set(f)" [attr.aria-label]="'Voir ' + f.nom"><img [src]="f.url" alt="" /></button>
+                } @else {
+                  <a class="miniature document" [href]="f.url" target="_blank" rel="noopener" [attr.download]="f.nom"><app-icone nom="fichier" [taille]="32" /><span>PDF</span></a>
+                }
+                <span class="nom-fichier">{{ f.nom }}@if (!f.id) { <em> · à enregistrer</em> }</span>
+                <button type="button" class="bouton-texte danger bouton-icone" [attr.aria-label]="'Retirer ' + f.nom" (click)="retirerFichier(f)"><app-icone nom="corbeille" [taille]="20" /></button>
+              </li>
+            }
+          </ul>
+        }
+        <div class="actions ajout-fichiers">
+          <label class="bouton bouton-secondaire">
+            <app-icone nom="appareil" [taille]="20" /> Photographier
+            <input type="file" accept="image/*" capture="environment" hidden (change)="ajouterFichiers($event)" />
+          </label>
+          <label class="bouton bouton-secondaire">
+            <app-icone nom="fichier" [taille]="20" /> Image ou PDF
+            <input type="file" accept="image/*,application/pdf" multiple hidden (change)="ajouterFichiers($event)" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    @if (erreur()) { <p class="erreur" role="alert">{{ erreur() }}</p> }
+    <div class="barre-actions">
+      @if (devisId()) {
+        <button type="button" class="bouton-texte danger" (click)="supprimer()"><app-icone nom="corbeille" [taille]="18" /> Supprimer</button>
+        <span class="espaceur"></span>
+      }
+      <a class="bouton bouton-secondaire" [routerLink]="retour().chemin" [queryParams]="retour().params">Annuler</a>
+      <button type="submit" [disabled]="enCours()">{{ enCours() ? 'Enregistrement…' : 'Enregistrer' }}</button>
+    </div>
+  </form>
+
+  @if (ouvert(); as f) {
+    <div class="voile" role="dialog" aria-modal="true" [attr.aria-label]="f.nom" (click)="ouvert.set(null)">
+      <img class="pleine" [src]="f.url" [alt]="f.nom" />
+      <div class="barre-voile" (click)="$event.stopPropagation()">
+        <span>{{ f.nom }}</span>
+        <button type="button" class="bouton-secondaire" (click)="ouvert.set(null)">Fermer</button>
+      </div>
+    </div>
+  }
+}

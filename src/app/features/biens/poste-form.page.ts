@@ -6,9 +6,10 @@ import { BaremeService } from '../../application/bareme.service';
 import { BudgetService } from '../../application/budget.service';
 import { VisitesService } from '../../application/visites.service';
 import { TravauxService } from '../../application/travaux.service';
-import { Categorie, CATEGORIES, Gamme, LigneBareme, PosteTravaux, UniteBareme } from '../../domain/modeles';
-import { formaterFourchette } from '../../shared/format';
-import { LIBELLE_GAMME } from '../../shared/libelles';
+import { DevisService } from '../../application/devis.service';
+import { Categorie, CATEGORIES, Devis, Gamme, LigneBareme, PosteTravaux, UniteBareme } from '../../domain/modeles';
+import { formaterEuro, formaterFourchette } from '../../shared/format';
+import { LIBELLE_GAMME, LIBELLE_STATUT_DEVIS } from '../../shared/libelles';
 import { gammesDisponibles, prixLigne } from '../../domain/budget';
 
 const LIBELLE_UNITE: Record<UniteBareme, string> = { M2: 'm²', ML: 'ml', UNITE: 'unité(s)', FORFAIT: 'forfait(s)' };
@@ -38,6 +39,15 @@ export class PosteFormPage implements OnInit {
   protected readonly categories = CATEGORIES;
   protected readonly erreur = signal('');
   protected readonly libelleGamme = LIBELLE_GAMME;
+  protected readonly libelleStatut = LIBELLE_STATUT_DEVIS;
+  protected readonly euro = formaterEuro;
+  private readonly devisService = inject(DevisService);
+  /** Devis du poste (en édition), du moins cher au plus cher. */
+  protected readonly devis = signal<Devis[]>([]);
+
+  protected devisRetenu(): Devis | undefined {
+    return this.devis().find((d) => d.statut === 'ACCEPTE');
+  }
 
   /** Gammes de la ligne choisie ; vide si la ligne n'en propose qu'une (le choix n'a alors pas de sens). */
   protected gammes(p: PosteTravaux): { gamme: Gamme; prix: string }[] {
@@ -72,6 +82,8 @@ export class PosteFormPage implements OnInit {
       return;
     }
     this.poste.set(structuredClone(existant));
+    const devis = await this.devisService.listerParBien(this.id());
+    this.devis.set(devis.filter((d) => d.posteId === posteId).sort((a, b) => a.montantTtc - b.montantTtc));
   }
 
   /** Lignes du barème de la catégorie du poste, proposées en premier. */
@@ -115,7 +127,8 @@ export class PosteFormPage implements OnInit {
   }
 
   protected apercu(p: PosteTravaux): string {
-    const m = this.budgets.montantPoste(p);
+    // Estimation propre au poste : le devis retenu est affiché à part.
+    const m = this.budgets.montantPoste({ ...p, devisRetenu: undefined });
     return formaterFourchette(m.bas, m.haut);
   }
 

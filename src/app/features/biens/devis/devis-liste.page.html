@@ -1,0 +1,96 @@
+@if (bien(); as b) {
+  @let r = resume();
+  <header class="entete-page">
+    <div>
+      <a class="fil" [routerLink]="['/biens', b.id]" [queryParams]="{ onglet: 'travaux' }"><app-icone nom="gauche" [taille]="18" /> {{ b.titre }}</a>
+      <h1>Devis</h1>
+      <div class="meta">
+        {{ r.nombre }} devis@if (r.enAttente > 0) { · {{ r.enAttente }} en attente }
+      </div>
+    </div>
+    <a class="bouton" [routerLink]="['nouveau']"><app-icone nom="plus" [taille]="20" /> Ajouter un devis</a>
+  </header>
+
+  @if (r.nombre === 0) {
+    <div class="vide">
+      <p>Aucun devis pour ce bien.</p>
+      <p>Ajoutez-en un ici ou depuis un poste de travaux : photographiez les pages ou joignez le PDF.</p>
+    </div>
+  } @else {
+    <section class="panneau synthese-devis">
+      <div>
+        <span class="surtitre">Postes couverts</span>
+        <strong class="chiffre">{{ r.postesCouverts }} / {{ r.postesTotal }}</strong>
+        <span class="discret">par un devis accepté</span>
+      </div>
+      <div>
+        <span class="surtitre">Devis acceptés</span>
+        <strong class="chiffre">{{ euro(r.totalRetenu) }}</strong>
+        @if (r.postesCouverts > 0) { <span class="discret">estimation de ces postes : {{ fourchette(r.estimationCouverte) }}</span> }
+      </div>
+    </section>
+
+    @for (g of r.groupes; track g.poste.id) {
+      <section class="panneau groupe-devis">
+        <header class="tete-groupe">
+          <div>
+            <a class="titre-poste" [routerLink]="['/biens', b.id, 'travaux', g.poste.id]">{{ g.poste.libelle }}</a>
+            <span class="discret">{{ g.poste.categorie }} · estimation {{ fourchette(g.estimation) }}</span>
+          </div>
+          <a class="bouton bouton-texte" [routerLink]="['nouveau']" [queryParams]="{ poste: g.poste.id }"><app-icone nom="plus" [taille]="18" /> Devis</a>
+        </header>
+        <ul class="liste-devis">
+          @for (d of g.devis; track d.id) {
+            @let pos = position(d, g.estimation);
+            <li [attr.data-statut]="d.statut">
+              <a class="devis-info" [routerLink]="[d.id]">
+                <span class="entreprise">{{ d.entreprise }}</span>
+                <span class="details">
+                  <span class="etiquette statut-devis" [attr.data-statut]="d.statut">{{ libelleStatut[d.statut] }}</span>
+                  @if (g.devis.length > 1 && d.id === g.moinsCher?.id) { <span class="etiquette moins-cher">Le moins cher</span> }
+                  @if (expire(d)) { <span class="etiquette urgent">Expiré le {{ date(d.valableJusquau) }}</span> }
+                  <span>{{ date(d.date) }}</span>
+                  @if (nbFichiers().get(d.id); as n) { <span class="fichiers-compte"><app-icone nom="fichier" [taille]="14" /> {{ n }}</span> }
+                  @if (d.objet) { <span class="objet">{{ d.objet }}</span> }
+                </span>
+              </a>
+              <span class="montant-devis">
+                <strong class="chiffre">{{ euro(d.montantTtc) }}</strong>
+                <span class="position" [attr.data-position]="pos.cle">{{ pos.libelle }}</span>
+              </span>
+              @if (d.statut === 'EN_ATTENTE') {
+                <button type="button" class="bouton-secondaire accepter" (click)="accepter(d)"><app-icone nom="coche" [taille]="18" /> Accepter</button>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (r.sansPoste.length > 0) {
+      <section class="panneau groupe-devis">
+        <header class="tete-groupe">
+          <div>
+            <span class="titre-poste">Pas encore rattachés à un poste</span>
+            <span class="discret">Ils ne comptent pas dans le budget : ouvrez-les pour choisir le poste.</span>
+          </div>
+        </header>
+        <ul class="liste-devis">
+          @for (d of r.sansPoste; track d.id) {
+            <li [attr.data-statut]="d.statut">
+              <a class="devis-info" [routerLink]="[d.id]">
+                <span class="entreprise">{{ d.entreprise }}</span>
+                <span class="details">
+                  <span class="etiquette statut-devis" [attr.data-statut]="d.statut">{{ libelleStatut[d.statut] }}</span>
+                  <span>{{ date(d.date) }}</span>
+                  @if (d.objet) { <span class="objet">{{ d.objet }}</span> }
+                </span>
+              </a>
+              <span class="montant-devis"><strong class="chiffre">{{ euro(d.montantTtc) }}</strong></span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+}

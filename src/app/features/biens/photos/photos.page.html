@@ -1,0 +1,76 @@
+@if (bien(); as b) {
+  <header class="entete-page">
+    <div>
+      <a class="fil" [routerLink]="['/biens', b.id]"><app-icone nom="gauche" [taille]="18" /> {{ b.titre }}</a>
+      <h1>Photos</h1>
+      <div class="meta">{{ total() }} photo{{ total() > 1 ? 's' : '' }}</div>
+    </div>
+  </header>
+
+  @if (charge() && total() === 0) {
+    <div class="vide">
+      <p>Aucune photo pour ce bien.</p>
+      <p>Les photos prises pendant les visites, dans les pièces ou comme couverture apparaissent ici.</p>
+    </div>
+  } @else {
+    @if (filtres().length > 2) {
+      <div class="filtres" role="radiogroup" aria-label="Filtrer les photos">
+        @for (f of filtres(); track f.cle) {
+          <button type="button" role="radio" [attr.aria-checked]="filtre() === f.cle" (click)="filtre.set(f.cle)">{{ f.libelle }} <span class="compte">{{ f.nombre }}</span></button>
+        }
+      </div>
+    }
+
+    @for (g of visibles(); track g.cle) {
+      <section class="groupe">
+        <header class="tete-groupe">
+          <h2>{{ g.titre }} <span class="discret">{{ g.photos.length }}</span></h2>
+          @if (origine(g); as lien) {
+            <a class="bouton bouton-texte" [routerLink]="lien">{{ g.type === 'PIECE' ? 'Voir la pièce' : 'Voir la visite' }} <app-icone nom="droite" [taille]="16" /></a>
+          }
+        </header>
+        <div class="grille">
+          @for (p of g.photos; track p.id) {
+            <button type="button" class="vignette" (click)="ouvrir(p, g)" [attr.aria-label]="p.libelle">
+              @if (urls().get(p.id); as u) { <img [src]="u" alt="" loading="lazy" /> }
+              @if (g.type === 'VISITE') { <span class="legende">{{ p.libelle }}</span> }
+              @if (p.id === b.photoCouvertureId && g.type !== 'COUVERTURE') { <span class="badge-couverture" title="Photo de couverture"><app-icone nom="maison" [taille]="14" /></span> }
+            </button>
+          }
+        </div>
+      </section>
+    }
+  }
+
+  @if (vue(); as v) {
+    <div class="visionneuse" role="dialog" aria-modal="true" [attr.aria-label]="v.photo.libelle">
+      <div class="haut">
+        <span class="position chiffre">{{ ouverte()! + 1 }} / {{ sequence().length }}</span>
+        <button type="button" class="bouton-icone fermer" aria-label="Fermer" (click)="fermer()"><app-icone nom="fermer" /></button>
+      </div>
+      <div class="scene" (pointerdown)="appui($event)" (pointerup)="relache($event)" (pointercancel)="relache($event)">
+        @if (urls().get(v.photo.id); as u) { <img [src]="u" [alt]="v.photo.libelle" draggable="false" /> }
+        @if (sequence().length > 1) {
+          <button type="button" class="nav precedente" aria-label="Photo précédente" (click)="deplacer(-1)"><app-icone nom="gauche" [taille]="28" /></button>
+          <button type="button" class="nav suivante" aria-label="Photo suivante" (click)="deplacer(1)"><app-icone nom="droite" [taille]="28" /></button>
+        }
+      </div>
+      <div class="bas">
+        <div class="texte">
+          <strong>{{ v.photo.libelle }}</strong>
+          <span>{{ v.groupe.titre }} · {{ prise(v.photo) }}</span>
+        </div>
+        <div class="actions-visionneuse">
+          @if (origine(v.groupe); as lien) {
+            <a class="bouton bouton-secondaire" [routerLink]="lien">{{ v.groupe.type === 'PIECE' ? 'Pièce' : 'Visite' }}</a>
+          }
+          @if (v.photo.id === b.photoCouvertureId) {
+            <span class="est-couverture"><app-icone nom="maison" [taille]="16" /> Couverture</span>
+          } @else {
+            <button type="button" class="bouton-secondaire" (click)="definirCouverture(v.photo)">Photo de couverture</button>
+          }
+        </div>
+      </div>
+    </div>
+  }
+}

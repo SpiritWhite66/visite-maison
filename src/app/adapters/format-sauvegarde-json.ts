@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { FichierPlan, Photo } from '../domain/modeles';
+import { FichierDevis, FichierPlan, Photo } from '../domain/modeles';
 import {
   DonneesBase,
+  FichierDevisExporte,
   FichierPlanExporte,
   FORMAT_SAUVEGARDE,
   PhotoExportee,
@@ -55,6 +56,7 @@ export class FormatSauvegardeJson extends FormatSauvegardePort {
     ligne('personnes', d.personnes);
     ligne('avis', d.avis);
     ligne('plansFinancement', d.plansFinancement);
+    ligne('devis', d.devis);
     if (d.parametres) ligne('parametres', d.parametres);
 
     parties.push('  "photos": [');
@@ -67,6 +69,12 @@ export class FormatSauvegardeJson extends FormatSauvegardePort {
     for (const [i, fichier] of d.fichiersPlan.entries()) {
       const { blob, ...reste } = fichier;
       const ex: FichierPlanExporte = { ...reste, donnees: await versBase64(blob) };
+      parties.push((i ? ',\n    ' : '\n    ') + JSON.stringify(ex));
+    }
+    parties.push('\n  ],\n  "fichiersDevis": [');
+    for (const [i, fichier] of d.fichiersDevis.entries()) {
+      const { blob, ...reste } = fichier;
+      const ex: FichierDevisExporte = { ...reste, donnees: await versBase64(blob) };
       parties.push((i ? ',\n    ' : '\n    ') + JSON.stringify(ex));
     }
     parties.push('\n  ]\n}\n');
@@ -97,6 +105,8 @@ export class FormatSauvegardeJson extends FormatSauvegardePort {
         personnes: s.personnes,
         avis: s.avis,
         plansFinancement: s.plansFinancement,
+        devis: s.devis,
+        fichiersDevis: s.fichiersDevis.map(({ donnees: d, ...reste }): FichierDevis => ({ ...reste, blob: depuisBase64(d, reste.typeMime) })),
         photos: s.photos.map(({ donnees: d, type, ...reste }): Photo => ({ ...reste, blob: depuisBase64(d, type) })),
         fichiersPlan: s.fichiersPlan.map(({ donnees: d, ...reste }): FichierPlan => ({ ...reste, blob: depuisBase64(d, reste.typeMime) })),
       };

@@ -9,7 +9,7 @@ export class SauvegardeDexie extends SauvegardePort {
 
   private get tables() {
     const d = this.db;
-    return [d.biens, d.postesTravaux, d.visites, d.pieces, d.etages, d.bareme, d.parametres, d.photos, d.fichiersPlan, d.personnes, d.avis, d.plansFinancement];
+    return [d.biens, d.postesTravaux, d.visites, d.pieces, d.etages, d.bareme, d.parametres, d.photos, d.fichiersPlan, d.personnes, d.avis, d.plansFinancement, d.devis, d.fichiersDevis];
   }
 
   async lireTout(): Promise<DonneesBase> {
@@ -27,6 +27,8 @@ export class SauvegardeDexie extends SauvegardePort {
       personnes: await d.personnes.toArray(),
       avis: await d.avis.toArray(),
       plansFinancement: await d.plansFinancement.toArray(),
+      devis: await d.devis.toArray(),
+      fichiersDevis: await d.fichiersDevis.toArray(),
     }));
   }
 
@@ -47,6 +49,8 @@ export class SauvegardeDexie extends SauvegardePort {
       await d.personnes.bulkPut(s.personnes);
       await d.avis.bulkPut(s.avis);
       await d.plansFinancement.bulkPut(s.plansFinancement);
+      await d.devis.bulkPut(s.devis);
+      await d.fichiersDevis.bulkPut(s.fichiersDevis);
     });
   }
 
@@ -63,6 +67,8 @@ export class SauvegardeDexie extends SauvegardePort {
       await d.personnes.bulkPut(s.personnes);
       await d.avis.bulkPut(s.avis);
       await d.plansFinancement.bulkPut(s.plansFinancement);
+      await d.devis.bulkPut(s.devis);
+      await d.fichiersDevis.bulkPut(s.fichiersDevis);
     });
   }
 }

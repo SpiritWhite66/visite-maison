@@ -1,4 +1,4 @@
-import { Etape, Gamme, Priorite, TypeBien } from '../domain/modeles';
+import { Etape, Gamme, Priorite, StatutDevis, TypeBien } from '../domain/modeles';
 
 export const LIBELLE_ETAPE: Record<Etape, string> = {
   REPERE: 'Repéré',
@@ -24,4 +24,10 @@ export const LIBELLE_GAMME: Record<Gamme, string> = {
   ECO: 'Bas de gamme',
   STANDARD: 'Moyen de gamme',
   HAUT: 'Haut de gamme',
+};
+
+export const LIBELLE_STATUT_DEVIS: Record<StatutDevis, string> = {
+  EN_ATTENTE: 'En attente',
+  ACCEPTE: 'Accepté',
+  REFUSE: 'Refusé',
 };

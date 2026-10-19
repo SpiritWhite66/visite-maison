@@ -1,0 +1,74 @@
+/* Formulaire */
+.facultatif { font-weight: 400; }
+label.champ small { display: block; margin-top: 0.3rem; font-weight: 400; }
+.libelle-champ { display: block; margin-bottom: 0.35rem; }
+.statut-champ { margin-bottom: 1rem; font-size: 0.82rem; font-weight: 650; color: var(--texte-discret); }
+.statut-champ small { display: block; margin-top: 0.4rem; font-weight: 400; }
+.segments { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--filet-fort); border-radius: var(--rayon); overflow: hidden; }
+.segments button { min-width: 7rem; border: 0; border-radius: 0; background: var(--surface); color: var(--encre); }
+.segments button + button { border-left: 1px solid var(--filet-fort); }
+.segments button[aria-checked='true'] { background: var(--encre); color: var(--fond); }
+.segments button[aria-checked='true'][data-statut='ACCEPTE'] { background: var(--etat-ok); }
+.segments button[aria-checked='true'][data-statut='REFUSE'] { background: var(--etat-travaux); }
+
+.fichiers { list-style: none; margin: 0 0 0.75rem; padding: 0; display: grid; gap: 0.5rem; }
+.fichiers li { display: flex; align-items: center; gap: 0.75rem; }
+.miniature {
+  flex-shrink: 0; width: 72px; height: 72px; padding: 0; overflow: hidden; border-radius: 6px;
+  border: 1px solid var(--filet); background: var(--surface-2);
+}
+.miniature img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.miniature.document {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.1rem;
+  color: var(--etat-travaux); text-decoration: none; font-size: 0.72rem; font-weight: 700;
+}
+.nom-fichier { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nom-fichier em { color: var(--etat-surveiller); font-style: normal; font-size: 0.85rem; }
+.ajout-fichiers { margin: 0 0 1rem; }
+.ajout-fichiers label { cursor: pointer; }
+.espaceur { flex: 1; }
+.barre-actions .bouton-texte.danger { margin-right: auto; }
+
+.voile {
+  position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; gap: 0.75rem; padding: 0.75rem;
+  background: rgba(20, 18, 15, 0.94);
+}
+.pleine { flex: 1; min-height: 0; width: 100%; object-fit: contain; }
+.barre-voile { display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: var(--fond); }
+
+/* Liste des devis */
+.synthese-devis { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; }
+.synthese-devis > div { display: flex; flex-direction: column; gap: 0.1rem; }
+.synthese-devis .surtitre { margin: 0; }
+.synthese-devis strong { font-size: 1.5rem; color: var(--encre); }
+.synthese-devis .discret { font-size: 0.85rem; }
+
+.groupe-devis { padding-bottom: 0.5rem; }
+.tete-groupe { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.25rem; }
+.tete-groupe > div { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.titre-poste { font-weight: 650; font-size: 1.05rem; color: var(--encre); text-decoration: none; }
+a.titre-poste:active { color: var(--primaire); }
+.tete-groupe .discret { font-size: 0.88rem; }
+
+.liste-devis { list-style: none; margin: 0; padding: 0; }
+.liste-devis li {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; padding: 0.6rem 0;
+  border-top: 1px solid var(--filet);
+}
+.liste-devis li[data-statut='REFUSE'] .entreprise, .liste-devis li[data-statut='REFUSE'] .montant-devis strong { color: var(--texte-discret); text-decoration: line-through; }
+.liste-devis li[data-statut='ACCEPTE'] { box-shadow: inset 4px 0 0 var(--etat-ok); padding-left: 0.75rem; }
+.devis-info { flex: 1 1 14rem; min-width: 0; min-height: 44px; display: flex; flex-direction: column; justify-content: center; gap: 0.2rem; color: var(--texte); text-decoration: none; }
+.entreprise { font-weight: 650; color: var(--encre); }
+.details { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.6rem; font-size: 0.85rem; color: var(--texte-discret); }
+.objet { flex-basis: 100%; }
+.fichiers-compte { display: inline-flex; align-items: center; gap: 0.15rem; }
+.montant-devis { display: flex; flex-direction: column; align-items: flex-end; text-align: right; min-width: 8rem; }
+.montant-devis strong { font-size: 1.1rem; color: var(--encre); }
+.position { font-size: 0.78rem; color: var(--texte-discret); }
+.position[data-position='dessus'] { color: var(--etat-travaux); }
+.position[data-position='dessous'] { color: var(--etat-ok); }
+.etiquette.statut-devis[data-statut='ACCEPTE'] { color: var(--etat-ok); border-color: color-mix(in srgb, var(--etat-ok) 35%, transparent); background: color-mix(in srgb, var(--etat-ok) 8%, var(--surface)); }
+.etiquette.statut-devis[data-statut='REFUSE'] { color: var(--etat-travaux); }
+.etiquette.moins-cher { color: var(--primaire); border-color: color-mix(in srgb, var(--primaire) 35%, transparent); background: var(--primaire-pale); }
+.accepter { min-height: 44px; }
+.vide p { margin: 0.25rem 0; }
