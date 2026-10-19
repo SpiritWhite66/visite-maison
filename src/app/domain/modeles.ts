@@ -129,6 +129,8 @@ export interface Parametres {
   coefDiyDefaut: number;
   /** Date de la dernière sauvegarde (export JSON) ; sert à rappeler d'en refaire une. */
   derniereSauvegarde?: string;
+  /** Foyer emprunteur (financement), commun à tous les biens. */
+  foyer?: Foyer;
 }
 
 export type TypeVisite = 'PREMIERE' | 'CONTRE_VISITE';
@@ -263,5 +265,100 @@ export interface Avis {
   /** 1 à 5, ou `null` si la personne n'a pas mis d'étoiles. */
   etoiles: number | null;
   commentaire: string;
+  modifieLe: string;
+}
+
+// ---------- Financement (SPEC §12) ----------
+
+/** Foyer emprunteur : rempli une fois, sert pour tous les biens. */
+export interface Foyer {
+  /** Personnes qui occuperont le logement. */
+  occupants: number;
+  /** Somme des revenus fiscaux de référence de l'année N-2 (PTZ). */
+  revenuFiscalN2: number;
+  /** Revenu fiscal du dernier avis d'imposition (Anah : MaPrimeRénov', CEE) ; à défaut celui de N-2. */
+  revenuFiscalAnah: number | null;
+  /** Revenus nets mensuels du foyer, avant impôt sur le revenu. */
+  revenusNetsMensuels: number;
+  /** Mensualités de crédits déjà en cours (auto, consommation…). */
+  chargesCreditsMensuelles: number;
+  /** Pas propriétaire de sa résidence principale au cours des 2 dernières années (ou cas d'exception). */
+  primoAccedant: boolean;
+  ileDeFrance: boolean;
+  /** Au moins un emprunteur salarié d'une entreprise privée non agricole d'au moins 10 salariés. */
+  salariePrive: boolean;
+}
+
+export type TypeOperation = 'ANCIEN' | 'NEUF_INDIVIDUEL';
+export type HypotheseTravaux = 'BAS' | 'MILIEU' | 'HAUT';
+
+export const TYPES_GESTE = [
+  'ISOLATION_TOITURE',
+  'ISOLATION_MURS',
+  'ISOLATION_PLANCHER',
+  'FENETRES',
+  'PAC_AIR_EAU',
+  'PAC_GEOTHERMIE',
+  'CHAUFFAGE_BOIS',
+  'CHAUFFE_EAU_THERMO',
+  'VMC_DOUBLE_FLUX',
+  'ASSAINISSEMENT',
+] as const;
+export type TypeGeste = (typeof TYPES_GESTE)[number];
+
+/** Travaux de rénovation énergétique retenus pour les aides. `montant` à `null` : repris des postes de travaux. */
+export interface GestePlan {
+  type: TypeGeste;
+  montant: number | null;
+}
+
+/** Prêt aidé : `montant` à `null` = le maximum possible. */
+export interface ReglagePret {
+  inclus: boolean;
+  montant: number | null;
+  /** Durée choisie (sinon la durée maximale). */
+  dureeMois: number | null;
+}
+
+export interface AideLocale {
+  id: string;
+  libelle: string;
+  nature: 'SUBVENTION' | 'PRET';
+  montant: number;
+  tauxPct: number;
+  dureeMois: number;
+}
+
+export interface PlanFinancement {
+  /** Un plan par bien : identifiant = celui du bien. */
+  id: string;
+  bienId: string;
+  typeOperation: TypeOperation;
+  zone: 'A' | 'B1' | 'B2' | 'C' | null;
+  hypotheseTravaux: HypotheseTravaux;
+  /** Valeurs reprises du bien quand elles sont à `null`. */
+  prixAchat: number | null;
+  fraisNotaire: number | null;
+  travaux: number | null;
+  apport: number;
+  fraisDossier: number;
+  tauxGarantiePct: number;
+  fraisCourtage: number;
+  gestes: GestePlan[];
+  /** Classes DPE gagnées après travaux (rénovation d'ampleur, éco-PTZ performance globale). */
+  gainClasses: number;
+  ptz: ReglagePret;
+  ecoPtz: ReglagePret & { performanceGlobale: boolean };
+  actionLogementAccession: ReglagePret;
+  actionLogementTravaux: ReglagePret;
+  cee: { inclus: boolean; montant: number };
+  maPrimeRenov: { inclus: boolean; parcours: 'AMPLEUR' | 'GESTE'; montant: number | null };
+  aidesLocales: AideLocale[];
+  /** Les primes (CEE, MaPrimeRénov', subventions) réduisent le prêt bancaire ; elles sont versées après travaux. */
+  primesDeduites: boolean;
+  banque: { tauxPct: number; dureeMois: number; tauxAssurancePct: number };
+  lisser: boolean;
+  /** Mois de la première échéance, « AAAA-MM ». */
+  premiereEcheance: string;
   modifieLe: string;
 }

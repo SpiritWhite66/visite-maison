@@ -1,0 +1,588 @@
+@if (bien(); as b) {
+  @if (plan(); as p) {
+    @if (resultat(); as r) {
+      <header class="entete-page ecran">
+        <div>
+          <a class="fil" routerLink="/financement"><app-icone nom="gauche" [taille]="18" /> Financement</a>
+          <h1>{{ b.titre }}</h1>
+          <div class="meta">
+            <label class="choix-bien">
+              <span class="visuellement-cache">Changer de bien</span>
+              <select [ngModel]="b.id" (ngModelChange)="changerBien($event)" name="bien">
+                @for (x of tousBiens(); track x.id) { <option [value]="x.id">{{ x.titre }}</option> }
+              </select>
+            </label>
+            <a [routerLink]="['/biens', b.id]">Fiche du bien</a>
+            <span class="etat-auto" [class.ok]="enregistre()" role="status">
+              @if (enregistre()) { <app-icone nom="coche" [taille]="16" /> Enregistré } @else { Enregistrement automatique }
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <nav class="etapes ecran" aria-label="Étapes du plan de financement">
+        @for (e of etapes; track e.cle; let i = $index) {
+          <button type="button" [attr.aria-current]="etape() === e.cle ? 'step' : null" (click)="etape.set(e.cle)">
+            <span class="numero">{{ i + 1 }}</span> {{ e.libelle }}
+          </button>
+        }
+      </nav>
+
+      <div class="mise-en-page" [class.impression]="impression()" [attr.data-etape]="etape()">
+        <div class="contenu">
+          <!-- ========== 1. Foyer ========== -->
+          @if (etape() === 'foyer' && !impression()) {
+            @let f = foyer();
+            <section class="bloc-form">
+              <h2>Ton foyer <small>Rempli une fois, il sert pour tous les biens.</small></h2>
+              <div>
+                <div class="question">
+                  <span class="libelle-question">Combien de personnes vivront dans le logement ?</span>
+                  <div class="pas-a-pas">
+                    <button type="button" class="bouton-secondaire bouton-icone" aria-label="Une personne de moins" [disabled]="f.occupants <= 1" (click)="majFoyer({ occupants: f.occupants - 1 })"><app-icone nom="moins" /></button>
+                    <strong class="chiffre">{{ f.occupants }}</strong>
+                    <button type="button" class="bouton-secondaire bouton-icone" aria-label="Une personne de plus" (click)="majFoyer({ occupants: f.occupants + 1 })"><app-icone nom="plus" /></button>
+                  </div>
+                </div>
+
+                <div class="question">
+                  <span class="libelle-question">Avez-vous été propriétaires de votre résidence principale ces 2 dernières années ?</span>
+                  <div class="segments" role="radiogroup">
+                    <button type="button" role="radio" [attr.aria-checked]="f.primoAccedant" (click)="majFoyer({ primoAccedant: true })">Non</button>
+                    <button type="button" role="radio" [attr.aria-checked]="!f.primoAccedant" (click)="majFoyer({ primoAccedant: false })">Oui</button>
+                  </div>
+                  <small class="discret">« Non » = primo-accédant, condition du PTZ. Exceptions : carte d’invalidité, AAH ou AEEH, logement rendu inhabitable par une catastrophe.</small>
+                </div>
+
+                <div class="champs">
+                  <label class="champ">Revenu fiscal de référence {{ anneeN2 }} (€)
+                    <input type="number" inputmode="numeric" min="0" step="100" name="rfr" [ngModel]="f.revenuFiscalN2 || null" (ngModelChange)="majFoyer({ revenuFiscalN2: n($event) })" />
+                    <small class="discret">Avis d’imposition {{ anneeN2 + 1 }}, total de toutes les personnes du logement (PTZ).</small>
+                  </label>
+                  <label class="champ">Revenu fiscal du dernier avis (€, facultatif)
+                    <input type="number" inputmode="numeric" min="0" step="100" name="rfrAnah" [ngModel]="f.revenuFiscalAnah" (ngModelChange)="majFoyer({ revenuFiscalAnah: nOuNull($event) })" [placeholder]="f.revenuFiscalN2 ? 'comme ' + anneeN2 : ''" />
+                    <small class="discret">Pour MaPrimeRénov’ et les CEE ; vide = le même.</small>
+                  </label>
+                  <label class="champ">Revenus nets mensuels du foyer (€)
+                    <input type="number" inputmode="numeric" min="0" step="50" name="revenus" [ngModel]="f.revenusNetsMensuels || null" (ngModelChange)="majFoyer({ revenusNetsMensuels: n($event) })" />
+                    <small class="discret">Salaires nets avant impôt, et autres revenus réguliers.</small>
+                  </label>
+                  <label class="champ">Crédits en cours (€ / mois)
+                    <input type="number" inputmode="numeric" min="0" step="10" name="charges" [ngModel]="f.chargesCreditsMensuelles || null" (ngModelChange)="majFoyer({ chargesCreditsMensuelles: n($event) })" placeholder="0" />
+                    <small class="discret">Auto, consommation… (pas le loyer actuel).</small>
+                  </label>
+                </div>
+
+                <div class="question">
+                  <span class="libelle-question">Un emprunteur est-il salarié d’une entreprise privée d’au moins 10 salariés ?</span>
+                  <div class="segments" role="radiogroup">
+                    <button type="button" role="radio" [attr.aria-checked]="f.salariePrive" (click)="majFoyer({ salariePrive: true })">Oui</button>
+                    <button type="button" role="radio" [attr.aria-checked]="!f.salariePrive" (click)="majFoyer({ salariePrive: false })">Non</button>
+                  </div>
+                  <small class="discret">Ouvre droit aux prêts Action Logement.</small>
+                </div>
+
+                <div class="question">
+                  <span class="libelle-question">Le logement est-il en Île-de-France ?</span>
+                  <div class="segments" role="radiogroup">
+                    <button type="button" role="radio" [attr.aria-checked]="!f.ileDeFrance" (click)="majFoyer({ ileDeFrance: false })">Non</button>
+                    <button type="button" role="radio" [attr.aria-checked]="f.ileDeFrance" (click)="majFoyer({ ileDeFrance: true })">Oui</button>
+                  </div>
+                </div>
+
+                @if (f.revenuFiscalN2 > 0 || (f.revenuFiscalAnah ?? 0) > 0) {
+                  <p class="resume-foyer">Catégorie de revenus Anah (MaPrimeRénov’, CEE) : <strong>{{ libelleAnah[r.categorieAnah] }}</strong></p>
+                }
+              </div>
+            </section>
+            <div class="suite"><button type="button" (click)="etape.set('projet')">Continuer : le projet <app-icone nom="droite" [taille]="18" /></button></div>
+          }
+
+          <!-- ========== 2. Projet ========== -->
+          @if (etape() === 'projet' && !impression()) {
+            <section class="bloc-form">
+              <h2>Le bien <small>Valeurs reprises de la fiche du bien quand le champ est vide.</small></h2>
+              <div>
+                <div class="question">
+                  <span class="libelle-question">Type d’achat</span>
+                  <div class="segments" role="radiogroup">
+                    <button type="button" role="radio" [attr.aria-checked]="p.typeOperation === 'ANCIEN'" (click)="majPlan({ typeOperation: 'ANCIEN' })">Ancien</button>
+                    <button type="button" role="radio" [attr.aria-checked]="p.typeOperation === 'NEUF_INDIVIDUEL'" (click)="majPlan({ typeOperation: 'NEUF_INDIVIDUEL' })">Maison neuve</button>
+                  </div>
+                </div>
+
+                <div class="question">
+                  <span class="libelle-question">Zone de la commune{{ b.commune ? ' (' + b.commune + ')' : '' }}</span>
+                  <div class="segments" role="radiogroup">
+                    @for (z of zones; track z) {
+                      <button type="button" role="radio" [attr.aria-checked]="p.zone === z" (click)="majPlan({ zone: z })">{{ z === 'A' ? 'A bis / A' : z }}</button>
+                    }
+                  </div>
+                  <small class="discret">Zonage « ABC » du PTZ : <a [href]="liens.zonePtz" target="_blank" rel="noopener">trouver la zone d’une commune</a>. La plupart des villages sont en zone C.</small>
+                </div>
+
+                <div class="champs">
+                  <label class="champ">Prix d’achat (€)
+                    <input type="number" inputmode="numeric" min="0" step="1000" name="prix" [ngModel]="p.prixAchat" (ngModelChange)="majPlan({ prixAchat: nOuNull($event) })" [placeholder]="euro(entree()!.prixNegocie) + ' (négocié)'" />
+                  </label>
+                  <label class="champ">Frais de notaire (€)
+                    <input type="number" inputmode="numeric" min="0" step="100" name="notaire" [ngModel]="p.fraisNotaire" (ngModelChange)="majPlan({ fraisNotaire: nOuNull($event) })" [placeholder]="euro(r.emplois.notaire)" />
+                    <small class="discret">{{ p.typeOperation === 'ANCIEN' ? 'Ancien : environ 7 à 8 %, un peu moins pour un primo-accédant dans la plupart des départements.' : 'Neuf : environ 2 à 3 %.' }}</small>
+                  </label>
+                </div>
+
+                <div class="question">
+                  <span class="libelle-question">Travaux retenus</span>
+                  <div class="segments" role="radiogroup">
+                    <button type="button" role="radio" [attr.aria-checked]="p.travaux === null && p.hypotheseTravaux === 'BAS'" (click)="majPlan({ travaux: null, hypotheseTravaux: 'BAS' })">Bas<span>{{ euro(entree()!.travaux.bas) }}</span></button>
+                    <button type="button" role="radio" [attr.aria-checked]="p.travaux === null && p.hypotheseTravaux === 'MILIEU'" (click)="majPlan({ travaux: null, hypotheseTravaux: 'MILIEU' })">Milieu<span>{{ euro((entree()!.travaux.bas + entree()!.travaux.haut) / 2) }}</span></button>
+                    <button type="button" role="radio" [attr.aria-checked]="p.travaux === null && p.hypotheseTravaux === 'HAUT'" (click)="majPlan({ travaux: null, hypotheseTravaux: 'HAUT' })">Haut<span>{{ euro(entree()!.travaux.haut) }}</span></button>
+                    <button type="button" role="radio" [attr.aria-checked]="p.travaux !== null" (click)="majPlan({ travaux: r.emplois.travaux })">Autre<span>saisi</span></button>
+                  </div>
+                  @if (p.travaux !== null) {
+                    <label class="champ">Montant des travaux (€)
+                      <input type="number" inputmode="numeric" min="0" step="500" name="travaux" [ngModel]="p.travaux" (ngModelChange)="majPlan({ travaux: n($event) })" />
+                    </label>
+                  }
+                </div>
+
+                <div class="champs">
+                  <label class="champ">Apport personnel (€)
+                    <input type="number" inputmode="numeric" min="0" step="1000" name="apport" [ngModel]="p.apport || null" (ngModelChange)="majPlan({ apport: n($event) })" placeholder="0" />
+                    <small class="discret">Épargne mise dans l’achat ; idéalement au moins les frais de notaire.</small>
+                  </label>
+                </div>
+              </div>
+            </section>
+            <div class="suite"><button type="button" (click)="etape.set('aides')">Continuer : les aides <app-icone nom="droite" [taille]="18" /></button></div>
+          }
+
+          <!-- ========== 3. Aides ========== -->
+          @if (etape() === 'aides' && !impression()) {
+            <section class="bloc-form">
+              <h2>Rénovation énergétique <small>Ces travaux ouvrent droit à l’éco-PTZ, aux primes CEE et à MaPrimeRénov’. Montants repris des postes du bien, modifiables.</small></h2>
+              <div>
+                <ul class="gestes">
+                  @for (g of gestes; track g.type) {
+                    <li [class.coche]="gesteCoche(g.type)">
+                      <label class="case">
+                        <input type="checkbox" [checked]="gesteCoche(g.type)" (change)="basculerGeste(g.type)" />
+                        <span>{{ g.libelle }}</span>
+                      </label>
+                      @if (gesteCoche(g.type)) {
+                        <label class="montant-geste">
+                          <span class="visuellement-cache">Montant {{ g.libelle }}</span>
+                          <input type="number" inputmode="numeric" min="0" step="100" [name]="'geste-' + g.type"
+                            [ngModel]="gesteDepuisPostes(g.type) ? null : montantGeste(g.type)" (ngModelChange)="majGeste(g.type, nOuNull($event))"
+                            [placeholder]="euro(montantGeste(g.type)) + (gesteDepuisPostes(g.type) ? ' (postes)' : '')" />
+                        </label>
+                      }
+                    </li>
+                  }
+                </ul>
+                <div class="question">
+                  <span class="libelle-question">Classes DPE gagnées après travaux (DPE actuel : {{ b.dpe ?? 'non renseigné' }})</span>
+                  <div class="segments" role="radiogroup">
+                    @for (c of [0, 1, 2, 3]; track c) {
+                      <button type="button" role="radio" [attr.aria-checked]="p.gainClasses === c" (click)="majPlan({ gainClasses: c })">{{ c === 0 ? 'Inconnu' : c === 3 ? '3 et +' : c }}</button>
+                    }
+                  </div>
+                  <small class="discret">Donné par l’audit énergétique ; sert pour la rénovation d’ampleur.</small>
+                </div>
+              </div>
+            </section>
+
+            <p class="avertissement">Règles du {{ dateRegles }} : elles changent souvent. Les montants sont des estimations à confirmer avec la banque, France Rénov’ (<a [href]="liens.franceRenov" target="_blank" rel="noopener">france-renov.gouv.fr</a>) ou l’ADIL.</p>
+
+            <!-- PTZ -->
+            @let ptz = r.ptz;
+            <article class="aide" [attr.data-statut]="classeStatut(ptz)">
+              <header>
+                <h3>Prêt à taux zéro (PTZ)</h3>
+                <span class="statut">{{ libelleStatut[ptz.statut] }}</span>
+              </header>
+              <ul class="raisons">@for (x of ptz.raisons; track $index) { <li>{{ x }}</li> }</ul>
+              @if (ptz.statut === 'ELIGIBLE') {
+                <div class="reglage">
+                  <label class="case"><input type="checkbox" [checked]="p.ptz.inclus" (change)="majPret('ptz', { inclus: !p.ptz.inclus })" /> Inclure</label>
+                  <label class="champ">Montant (max {{ euro(ptz.maximum) }})
+                    <input type="number" inputmode="numeric" min="0" step="1000" name="ptzMontant" [ngModel]="p.ptz.montant" (ngModelChange)="majPret('ptz', { montant: nOuNull($event) })" [placeholder]="euro(ptz.maximum)" />
+                  </label>
+                  <p class="retenu">Retenu : <strong>{{ euro(ptz.retenu) }}</strong></p>
+                </div>
+              }
+            </article>
+
+            <!-- Éco-PTZ -->
+            @let eco = r.ecoPtz;
+            <article class="aide" [attr.data-statut]="classeStatut(eco)">
+              <header>
+                <h3>Éco-prêt à taux zéro</h3>
+                <span class="statut">{{ libelleStatut[eco.statut] }}</span>
+              </header>
+              <ul class="raisons">@for (x of eco.raisons; track $index) { <li>{{ x }}</li> }</ul>
+              @if (p.typeOperation === 'ANCIEN') {
+                <label class="case"><input type="checkbox" [checked]="p.ecoPtz.performanceGlobale" (change)="majPlan({ ecoPtz: { ...p.ecoPtz, performanceGlobale: !p.ecoPtz.performanceGlobale } })" /> Rénovation globale (audit, 2 classes gagnées, chauffage décarboné)</label>
+              }
+              @if (eco.statut === 'ELIGIBLE') {
+                <div class="reglage">
+                  <label class="case"><input type="checkbox" [checked]="p.ecoPtz.inclus" (change)="majPret('ecoPtz', { inclus: !p.ecoPtz.inclus })" /> Inclure</label>
+                  <label class="champ">Montant (max {{ euro(eco.maximum) }})
+                    <input type="number" inputmode="numeric" min="0" step="500" name="ecoMontant" [ngModel]="p.ecoPtz.montant" (ngModelChange)="majPret('ecoPtz', { montant: nOuNull($event) })" [placeholder]="euro(eco.maximum)" />
+                  </label>
+                  <label class="champ">Durée (ans)
+                    <input type="number" inputmode="numeric" min="3" [max]="p.ecoPtz.performanceGlobale ? 20 : 15" name="ecoDuree" [ngModel]="p.ecoPtz.dureeMois ? p.ecoPtz.dureeMois / 12 : null" (ngModelChange)="majPret('ecoPtz', { dureeMois: nOuNull($event) === null ? null : n($event) * 12 })" [placeholder]="eco.dureeMois / 12 + ' (max)'" />
+                  </label>
+                  <p class="retenu">Retenu : <strong>{{ euro(eco.retenu) }}</strong> sur {{ duree(eco.dureeMois) }}</p>
+                </div>
+              }
+            </article>
+
+            <!-- CEE -->
+            @let cee = r.cee;
+            <article class="aide" [attr.data-statut]="classeStatut(cee)">
+              <header>
+                <h3>Primes CEE (« Coup de pouce »)</h3>
+                <span class="statut">{{ libelleStatut[cee.statut] }}</span>
+              </header>
+              <ul class="raisons">@for (x of cee.raisons; track $index) { <li>{{ x }}</li> }</ul>
+              @if (indicationsCee().length > 0) {
+                <dl class="indications">
+                  @for (i of indicationsCee(); track i.libelle) { <dt>{{ i.libelle }}</dt><dd>{{ i.indication }}</dd> }
+                </dl>
+                <div class="reglage">
+                  <label class="case"><input type="checkbox" [checked]="p.cee.inclus" (change)="majPlan({ cee: { ...p.cee, inclus: !p.cee.inclus } })" /> Inclure</label>
+                  <label class="champ">Montant total des primes (€)
+                    <input type="number" inputmode="numeric" min="0" step="100" name="cee" [ngModel]="p.cee.montant || null" (ngModelChange)="majPlan({ cee: { ...p.cee, montant: n($event) } })" placeholder="0" />
+                  </label>
+                </div>
+              }
+            </article>
+
+            <!-- MaPrimeRénov' -->
+            @let mpr = r.maPrimeRenov;
+            <article class="aide" [attr.data-statut]="classeStatut(mpr)">
+              <header>
+                <h3>MaPrimeRénov’</h3>
+                <span class="statut">{{ libelleStatut[mpr.statut] }}</span>
+              </header>
+              <div class="segments petit" role="radiogroup">
+                <button type="button" role="radio" [attr.aria-checked]="p.maPrimeRenov.parcours === 'AMPLEUR'" (click)="majPlan({ maPrimeRenov: { ...p.maPrimeRenov, parcours: 'AMPLEUR' } })">Rénovation d’ampleur</button>
+                <button type="button" role="radio" [attr.aria-checked]="p.maPrimeRenov.parcours === 'GESTE'" (click)="majPlan({ maPrimeRenov: { ...p.maPrimeRenov, parcours: 'GESTE' } })">Par geste</button>
+              </div>
+              <ul class="raisons">@for (x of mpr.raisons; track $index) { <li>{{ x }}</li> }</ul>
+              @if (mpr.statut !== 'NON_ELIGIBLE' && (p.maPrimeRenov.parcours === 'GESTE' || mpr.maximum > 0)) {
+                <div class="reglage">
+                  <label class="case"><input type="checkbox" [checked]="p.maPrimeRenov.inclus" (change)="majPlan({ maPrimeRenov: { ...p.maPrimeRenov, inclus: !p.maPrimeRenov.inclus } })" /> Inclure</label>
+                  @if (p.maPrimeRenov.parcours === 'GESTE') {
+                    <label class="champ">Montant (€)
+                      <input type="number" inputmode="numeric" min="0" step="100" name="mpr" [ngModel]="p.maPrimeRenov.montant" (ngModelChange)="majPlan({ maPrimeRenov: { ...p.maPrimeRenov, montant: nOuNull($event) } })" placeholder="0" />
+                    </label>
+                  }
+                  <p class="retenu">Estimation : <strong>{{ euro(mpr.maximum) }}</strong> · revenus {{ libelleAnah[r.categorieAnah] }}</p>
+                </div>
+              }
+              <small class="discret"><a [href]="liens.mesAidesReno" target="_blank" rel="noopener">Simuler sur Mes Aides Réno</a></small>
+            </article>
+
+            <!-- Action Logement -->
+            @for (al of [{ cle: 'actionLogementAccession', titre: 'Prêt accession Action Logement', res: r.actionLogementAccession }, { cle: 'actionLogementTravaux', titre: 'Prêt travaux Action Logement', res: r.actionLogementTravaux }]; track al.cle) {
+              @let cle = $any(al.cle);
+              <article class="aide" [attr.data-statut]="classeStatut(al.res)">
+                <header>
+                  <h3>{{ al.titre }}</h3>
+                  <span class="statut">{{ libelleStatut[al.res.statut] }}</span>
+                </header>
+                <ul class="raisons">@for (x of al.res.raisons; track $index) { <li>{{ x }}</li> }</ul>
+                @if (al.res.statut === 'A_VERIFIER') {
+                  <div class="reglage">
+                    <label class="case"><input type="checkbox" [checked]="$any(p)[cle].inclus" (change)="majPret(cle, { inclus: !$any(p)[cle].inclus })" /> Inclure</label>
+                    <label class="champ">Montant (max {{ euro(al.res.maximum) }})
+                      <input type="number" inputmode="numeric" min="0" step="500" [name]="cle + 'Montant'" [ngModel]="$any(p)[cle].montant" (ngModelChange)="majPret(cle, { montant: nOuNull($event) })" [placeholder]="euro(al.res.maximum)" />
+                    </label>
+                    <label class="champ">Durée (ans)
+                      <input type="number" inputmode="numeric" min="1" [name]="cle + 'Duree'" [ngModel]="$any(p)[cle].dureeMois ? $any(p)[cle].dureeMois / 12 : null" (ngModelChange)="majPret(cle, { dureeMois: nOuNull($event) === null ? null : n($event) * 12 })" [placeholder]="al.res.dureeMois / 12 + ' (max)'" />
+                    </label>
+                  </div>
+                }
+                <small class="discret"><a [href]="liens.actionLogement" target="_blank" rel="noopener">actionlogement.fr</a></small>
+              </article>
+            }
+
+            <!-- Aides locales -->
+            <article class="aide locales">
+              <header><h3>Aides de la région, du département ou de la commune</h3></header>
+              <p class="discret">Elles changent d’un territoire à l’autre : cherche celles du bien sur <a [href]="liens.aidesLocales" target="_blank" rel="noopener">l’ANIL (aides locales par département)</a> ou auprès de l’ADIL et de France Rénov’, puis ajoute-les ici.</p>
+              @for (a of p.aidesLocales; track a.id) {
+                <div class="aide-locale">
+                  <label class="champ large">{{ a.nature === 'PRET' ? 'Prêt' : 'Subvention' }}
+                    <input type="text" [name]="'libelle-' + a.id" [ngModel]="a.libelle" (ngModelChange)="majAideLocale(a.id, { libelle: $event })" placeholder="ex. aide de la communauté de communes" />
+                  </label>
+                  <label class="champ">Montant (€)
+                    <input type="number" inputmode="numeric" min="0" step="100" [name]="'montant-' + a.id" [ngModel]="a.montant || null" (ngModelChange)="majAideLocale(a.id, { montant: n($event) })" />
+                  </label>
+                  @if (a.nature === 'PRET') {
+                    <label class="champ">Taux (%)
+                      <input type="number" inputmode="decimal" min="0" step="0.05" [name]="'taux-' + a.id" [ngModel]="a.tauxPct" (ngModelChange)="majAideLocale(a.id, { tauxPct: n($event) })" />
+                    </label>
+                    <label class="champ">Durée (ans)
+                      <input type="number" inputmode="numeric" min="1" [name]="'duree-' + a.id" [ngModel]="a.dureeMois / 12" (ngModelChange)="majAideLocale(a.id, { dureeMois: n($event) * 12 })" />
+                    </label>
+                  }
+                  <button type="button" class="bouton-texte danger bouton-icone" aria-label="Retirer cette aide" (click)="retirerAideLocale(a.id)"><app-icone nom="corbeille" /></button>
+                </div>
+              }
+              <div class="actions">
+                <button type="button" class="bouton-secondaire" (click)="ajouterAideLocale('SUBVENTION')"><app-icone nom="plus" [taille]="18" /> Subvention</button>
+                <button type="button" class="bouton-secondaire" (click)="ajouterAideLocale('PRET')"><app-icone nom="plus" [taille]="18" /> Prêt</button>
+              </div>
+            </article>
+            <div class="suite"><button type="button" (click)="etape.set('prets')">Continuer : le prêt bancaire <app-icone nom="droite" [taille]="18" /></button></div>
+          }
+
+          <!-- ========== 4. Prêts ========== -->
+          @if (etape() === 'prets' && !impression()) {
+            <section class="bloc-form">
+              <h2>Prêt bancaire <small>Il couvre ce que l’apport et les aides ne financent pas : {{ euro(r.pretBanque) }}.</small></h2>
+              <div>
+                <div class="champs">
+                  <label class="champ">Durée
+                    <select name="duree" [ngModel]="p.banque.dureeMois" (ngModelChange)="majBanque({ dureeMois: n($event) })">
+                      @for (a of dureesBanque; track a) { <option [ngValue]="a * 12">{{ a }} ans</option> }
+                    </select>
+                  </label>
+                  <label class="champ">Taux nominal (%)
+                    <input type="number" inputmode="decimal" min="0" step="0.05" name="taux" [ngModel]="p.banque.tauxPct" (ngModelChange)="majBanque({ tauxPct: n($event) })" />
+                    <small class="discret">Moyenne d’octobre 2026 sur cette durée : {{ tauxMoyenAffiche() }} % <button type="button" class="bouton-texte petit-bouton" (click)="appliquerTauxMoyen()">Appliquer</button></small>
+                  </label>
+                  <label class="champ">Assurance emprunteur (% par an)
+                    <input type="number" inputmode="decimal" min="0" step="0.01" name="assurance" [ngModel]="p.banque.tauxAssurancePct" (ngModelChange)="majBanque({ tauxAssurancePct: n($event) })" />
+                    <small class="discret">Sur le capital emprunté, pour tous les prêts. Environ 0,10 à 0,40 % selon l’âge.</small>
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <section class="bloc-form">
+              <h2>Frais <small>Ajoutés au besoin de financement.</small></h2>
+              <div class="champs">
+                <label class="champ">Frais de dossier (€)
+                  <input type="number" inputmode="numeric" min="0" step="50" name="dossier" [ngModel]="p.fraisDossier" (ngModelChange)="majPlan({ fraisDossier: n($event) })" />
+                </label>
+                <label class="champ">Garantie (% du prêt bancaire)
+                  <input type="number" inputmode="decimal" min="0" step="0.1" name="garantie" [ngModel]="p.tauxGarantiePct" (ngModelChange)="majPlan({ tauxGarantiePct: n($event) })" />
+                  <small class="discret">Caution : environ 1 %, en partie rendue à la fin. Hypothèque : 1,5 à 2 %.</small>
+                </label>
+                <label class="champ">Courtage (€)
+                  <input type="number" inputmode="numeric" min="0" step="100" name="courtage" [ngModel]="p.fraisCourtage || null" (ngModelChange)="majPlan({ fraisCourtage: n($event) })" placeholder="0" />
+                </label>
+              </div>
+            </section>
+
+            <section class="bloc-form">
+              <h2>Montage</h2>
+              <div>
+                <div class="question">
+                  <span class="libelle-question">Mensualités</span>
+                  <div class="segments" role="radiogroup">
+                    <button type="button" role="radio" [attr.aria-checked]="p.lisser" (click)="majPlan({ lisser: true })">Lissées<span>total constant</span></button>
+                    <button type="button" role="radio" [attr.aria-checked]="!p.lisser" (click)="majPlan({ lisser: false })">Empilées<span>chaque prêt à part</span></button>
+                  </div>
+                  <small class="discret">Lissées : le prêt bancaire rembourse moins tant que les autres prêts courent, comme le proposent les banques.</small>
+                </div>
+                <div class="question">
+                  <span class="libelle-question">Primes et subventions ({{ euro(r.primes) }})</span>
+                  <div class="segments" role="radiogroup">
+                    <button type="button" role="radio" [attr.aria-checked]="!p.primesDeduites" (click)="majPlan({ primesDeduites: false })">À part<span>prêt complet</span></button>
+                    <button type="button" role="radio" [attr.aria-checked]="p.primesDeduites" (click)="majPlan({ primesDeduites: true })">Déduites<span>prêt réduit</span></button>
+                  </div>
+                  <small class="discret">Versées après les travaux : « À part » est le plus prudent, elles servent alors de trésorerie.</small>
+                </div>
+                <div class="champs">
+                  <label class="champ">Première échéance
+                    <input type="month" name="debut" [ngModel]="p.premiereEcheance" (ngModelChange)="majPlan({ premiereEcheance: $event || p.premiereEcheance })" />
+                  </label>
+                </div>
+              </div>
+            </section>
+            <div class="suite"><button type="button" (click)="etape.set('synthese')">Voir le plan <app-icone nom="droite" [taille]="18" /></button></div>
+          }
+
+          <!-- ========== 5. Plan de financement ========== -->
+          @if (etape() === 'synthese' || impression()) {
+            @if (impression()) {
+              <header class="entete-impression">
+                <h1>Plan de financement · {{ b.titre }}</h1>
+                <p>{{ b.commune }} · estimation du {{ aujourdhui }}, à confirmer avec la banque et les organismes d’aide</p>
+              </header>
+            }
+            @if (r.alertes.length > 0) {
+              <ul class="alertes">@for (a of r.alertes; track $index) { <li>{{ a }}</li> }</ul>
+            }
+            <div class="deux-colonnes">
+              <section class="panneau">
+                <h2>Besoin</h2>
+                <table class="registre">
+                  <tr><th>Prix d’achat</th><td>{{ euro(r.emplois.prix) }}</td></tr>
+                  <tr><th>Frais de notaire</th><td>{{ euro(r.emplois.notaire) }}</td></tr>
+                  <tr><th>Travaux</th><td>{{ euro(r.emplois.travaux) }}</td></tr>
+                  <tr><th>Frais de dossier</th><td>{{ euro(r.emplois.fraisDossier) }}</td></tr>
+                  <tr><th>Garantie</th><td>{{ euro(r.emplois.garantie) }}</td></tr>
+                  @if (r.emplois.courtage > 0) { <tr><th>Courtage</th><td>{{ euro(r.emplois.courtage) }}</td></tr> }
+                  <tr class="total"><th>Total</th><td>{{ euro(r.emplois.total) }}</td></tr>
+                </table>
+              </section>
+              <section class="panneau">
+                <h2>Financement</h2>
+                <table class="registre">
+                  <tr><th>Apport</th><td>{{ euro(p.apport) }}</td></tr>
+                  @if (p.primesDeduites && r.primes > 0) { <tr><th>Primes et subventions</th><td>{{ euro(r.primes) }}</td></tr> }
+                  @for (x of r.prets; track x.id) {
+                    <tr><th>{{ x.libelle }} <span class="discret">{{ nombre(x.tauxPct) }} %</span></th><td>{{ euro(x.montant) }}</td></tr>
+                  }
+                  <tr class="total"><th>Total</th><td>{{ euro(totalRessources()) }}</td></tr>
+                </table>
+                @if (!p.primesDeduites && r.primes > 0) {
+                  <p class="discret">En plus, après travaux : {{ euro(r.primes) }} de primes et subventions.</p>
+                }
+              </section>
+            </div>
+
+            <section class="panneau indicateurs">
+              <div>
+                <span class="surtitre">Mensualité</span>
+                <strong class="grand chiffre">{{ euro(r.mensualiteMax) }}</strong>
+                <span class="discret">assurances comprises</span>
+              </div>
+              <div [class.alerte]="r.tauxEffortPct !== null && r.tauxEffortPct > 35">
+                <span class="surtitre">Endettement</span>
+                <strong class="grand chiffre">{{ pct(r.tauxEffortPct) }}</strong>
+                <span class="discret">maximum 35 %@if (r.capaciteMensuelle !== null) { · capacité {{ euro(r.capaciteMensuelle) }}/mois }</span>
+              </div>
+              <div>
+                <span class="surtitre">Coût du crédit</span>
+                <strong class="grand chiffre">{{ euro(r.coutInterets + r.coutAssurance + r.coutFrais) }}</strong>
+                <span class="discret">intérêts {{ euro(r.coutInterets) }} · assurance {{ euro(r.coutAssurance) }} · frais {{ euro(r.coutFrais) }}</span>
+              </div>
+              <div>
+                <span class="surtitre">TAEG du prêt bancaire</span>
+                <strong class="grand chiffre">{{ pct(r.taegBanquePct) }}</strong>
+                <span class="discret">frais et assurance compris</span>
+              </div>
+            </section>
+
+            @if (paliers().length > 1) {
+              <section class="panneau">
+                <h2>Évolution des mensualités</h2>
+                <table class="registre">
+                  @for (x of paliers(); track x.du) {
+                    <tr><th>{{ dateEcheance(x.du) }} → {{ dateEcheance(x.au) }} <span class="discret">({{ duree(x.au - x.du + 1) }})</span></th><td>{{ euro(x.total) }} / mois</td></tr>
+                  }
+                </table>
+              </section>
+            }
+
+            <section class="panneau">
+              <h2>Les prêts</h2>
+              <div class="defilement">
+                <table class="tableau">
+                  <thead><tr><th>Prêt</th><th>Montant</th><th>Taux</th><th>Durée</th><th>Différé</th><th>Mensualité</th><th>Intérêts + assurance</th></tr></thead>
+                  <tbody>
+                    @for (x of r.prets; track x.id) {
+                      <tr>
+                        <th>{{ x.libelle }}</th>
+                        <td>{{ euro(x.montant) }}</td>
+                        <td>{{ nombre(x.tauxPct) }} %</td>
+                        <td>{{ duree(x.dureeMois) }}</td>
+                        <td>{{ x.differeMois ? duree(x.differeMois) : '—' }}</td>
+                        <td>{{ x.id === 'banque' && p.lisser && r.prets.length > 1 ? 'variable' : euro(echeanceType(x.id)) }}</td>
+                        <td>{{ euro(totalPret(x.id) - x.montant) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            @if (!impression()) {
+              <div class="suite"><button type="button" (click)="etape.set('tableau')">Tableau d’amortissement <app-icone nom="droite" [taille]="18" /></button></div>
+            }
+          }
+
+          <!-- ========== 6. Tableau d'amortissement ========== -->
+          @if (etape() === 'tableau' || impression()) {
+            <section class="panneau tableau-amortissement">
+              <div class="barre-tableau ecran">
+                <div class="segments petit" role="radiogroup" aria-label="Période">
+                  <button type="button" role="radio" [attr.aria-checked]="vueTableau() === 'annuel'" (click)="vueTableau.set('annuel')">Par année</button>
+                  <button type="button" role="radio" [attr.aria-checked]="vueTableau() === 'mensuel'" (click)="vueTableau.set('mensuel')">Par mois</button>
+                </div>
+                <label class="champ choix-pret">
+                  <span class="visuellement-cache">Prêt affiché</span>
+                  <select name="pretAffiche" [ngModel]="pretAffiche()" (ngModelChange)="pretAffiche.set($event)">
+                    <option [ngValue]="null">Tous les prêts</option>
+                    @for (x of r.prets; track x.id) { <option [ngValue]="x.id">{{ x.libelle }}</option> }
+                  </select>
+                </label>
+                <button type="button" class="bouton-secondaire" (click)="imprimer()"><app-icone nom="imprimante" [taille]="18" /> Imprimer / PDF</button>
+              </div>
+
+              <h2>Tableau d’amortissement{{ pretAffiche() ? ' · ' + r.prets[indexPretAffiche()]?.libelle : '' }}</h2>
+              @if (r.tableau.length === 0) {
+                <p class="vide">Aucun prêt : apport et aides couvrent tout le besoin.</p>
+              } @else if (vueTableau() === 'annuel' && pretAffiche() === null && !impression()) {
+                <div class="defilement">
+                  <table class="tableau">
+                    <thead><tr><th>Année</th><th>Période</th><th>Payé</th><th>Capital</th><th>Intérêts</th><th>Assurance</th><th>Restant dû</th></tr></thead>
+                    <tbody>
+                      @for (a of annuel(); track a.annee) {
+                        <tr><th>{{ a.annee }}</th><td class="periode">{{ anneeCalendaire(a.annee) }}</td><td>{{ euro(a.total) }}</td><td>{{ euro(a.capitalAmorti) }}</td><td>{{ euro(a.interets) }}</td><td>{{ euro(a.assurance) }}</td><td>{{ euro(a.capitalRestant) }}</td></tr>
+                      }
+                    </tbody>
+                    <tfoot><tr><th colspan="2">Total</th><td>{{ euro(r.prets.reduce(sommeMontant, 0) + r.coutInterets + r.coutAssurance) }}</td><td>{{ euro(r.prets.reduce(sommeMontant, 0)) }}</td><td>{{ euro(r.coutInterets) }}</td><td>{{ euro(r.coutAssurance) }}</td><td></td></tr></tfoot>
+                  </table>
+                </div>
+              } @else {
+                <div class="defilement">
+                  <table class="tableau">
+                    <thead><tr><th>N°</th><th>Échéance</th><th>Mensualité</th><th>Capital</th><th>Intérêts</th><th>Assurance</th><th>Restant dû</th></tr></thead>
+                    <tbody>
+                      @for (l of r.tableau; track l.mois) {
+                        @if (ligneAffichee(l); as x) {
+                          <tr [class.debut-annee]="l.mois % 12 === 1 && l.mois > 1"><th>{{ l.mois }}</th><td class="periode">{{ dateEcheance(l.mois) }}</td><td>{{ euro(x.echeance) }}</td><td>{{ euro(x.capital) }}</td><td>{{ euro(x.interets) }}</td><td>{{ euro(x.assurance) }}</td><td>{{ euro(x.restant) }}</td></tr>
+                        }
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+              <p class="discret note">Montants arrondis à l’euro à l’affichage ; calculs sans arrondi. Assurance calculée sur le capital emprunté.</p>
+            </section>
+          }
+        </div>
+
+        <!-- Résumé toujours visible sur tablette -->
+        @if (!impression()) {
+          <aside class="recap panneau ecran">
+            <span class="surtitre">Plan de financement</span>
+            <table class="registre">
+              <tr><th>Besoin total</th><td>{{ euro(r.emplois.total) }}</td></tr>
+              <tr><th>Apport</th><td>{{ euro(p.apport) }}</td></tr>
+              @if (r.ptz.retenu > 0) { <tr><th>PTZ</th><td>{{ euro(r.ptz.retenu) }}</td></tr> }
+              @if (r.ecoPtz.retenu > 0) { <tr><th>Éco-PTZ</th><td>{{ euro(r.ecoPtz.retenu) }}</td></tr> }
+              @if (r.actionLogementAccession.retenu + r.actionLogementTravaux.retenu > 0) { <tr><th>Action Logement</th><td>{{ euro(r.actionLogementAccession.retenu + r.actionLogementTravaux.retenu) }}</td></tr> }
+              @if (r.primes > 0) { <tr><th>Primes{{ p.primesDeduites ? '' : ' (à part)' }}</th><td>{{ euro(r.primes) }}</td></tr> }
+              <tr class="total"><th>Prêt bancaire</th><td>{{ euro(r.pretBanque) }}</td></tr>
+            </table>
+            <div class="recap-chiffres">
+              <div><span class="surtitre">Mensualité</span><strong class="chiffre">{{ euro(r.mensualiteMax) }}</strong></div>
+              <div [class.alerte]="r.tauxEffortPct !== null && r.tauxEffortPct > 35"><span class="surtitre">Endettement</span><strong class="chiffre">{{ pct(r.tauxEffortPct) }}</strong></div>
+            </div>
+            @if (r.alertes.length > 0 && etape() !== 'synthese') {
+              <p class="nb-alertes">{{ r.alertes.length }} point{{ r.alertes.length > 1 ? 's' : '' }} d’attention · <button type="button" class="bouton-texte petit-bouton" (click)="etape.set('synthese')">voir</button></p>
+            }
+          </aside>
+        }
+      </div>
+    }
+  }
+}

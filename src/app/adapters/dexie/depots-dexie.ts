@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PosteTravaux, Visite } from '../../domain/modeles';
-import { AvisPort, BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PersonnesPort, PhotosPort, PiecesPort, PostesTravauxPort, VisitesPort } from '../../ports/depots.port';
+import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PlanFinancement, PosteTravaux, Visite } from '../../domain/modeles';
+import { AvisPort, BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PersonnesPort, PhotosPort, PiecesPort, PlansFinancementPort, PostesTravauxPort, VisitesPort } from '../../ports/depots.port';
 import { BaseDonneesDexie, CLE_PARAMETRES } from './base-donnees-dexie';
 
 @Injectable()
@@ -17,9 +17,10 @@ export class BiensDexie extends BiensPort {
     await this.db.biens.put(bien);
   }
   async supprimer(id: string): Promise<void> {
-    const { biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan, avis } = this.db;
-    await this.db.transaction('rw', [biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan, avis], async () => {
+    const { biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan, avis, plansFinancement } = this.db;
+    await this.db.transaction('rw', [biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan, avis, plansFinancement], async () => {
       await Promise.all([
+        plansFinancement.where('bienId').equals(id).delete(),
         avis.where('bienId').equals(id).delete(),
         etages.where('bienId').equals(id).delete(),
         fichiersPlan.where('bienId').equals(id).delete(),
@@ -209,5 +210,23 @@ export class AvisDexie extends AvisPort {
   }
   async supprimer(id: string): Promise<void> {
     await this.db.avis.delete(id);
+  }
+}
+
+@Injectable()
+export class PlansFinancementDexie extends PlansFinancementPort {
+  private readonly db = inject(BaseDonneesDexie).db;
+
+  obtenir(bienId: string): Promise<PlanFinancement | undefined> {
+    return this.db.plansFinancement.get(bienId);
+  }
+  lister(): Promise<PlanFinancement[]> {
+    return this.db.plansFinancement.toArray();
+  }
+  async enregistrer(plan: PlanFinancement): Promise<void> {
+    await this.db.plansFinancement.put(plan);
+  }
+  async supprimer(bienId: string): Promise<void> {
+    await this.db.plansFinancement.delete(bienId);
   }
 }

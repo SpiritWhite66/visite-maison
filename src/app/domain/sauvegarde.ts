@@ -1,4 +1,4 @@
-import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PosteTravaux, Visite } from './modeles';
+import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PlanFinancement, PosteTravaux, Visite } from './modeles';
 
 /** Toutes les données de l'appli, telles qu'elles sont en base (les images restent des `Blob`). */
 export interface DonneesBase {
@@ -13,6 +13,7 @@ export interface DonneesBase {
   fichiersPlan: FichierPlan[];
   personnes: Personne[];
   avis: Avis[];
+  plansFinancement: PlanFinancement[];
 }
 
 export const FORMAT_SAUVEGARDE = 'visite-immo';
@@ -43,11 +44,12 @@ export interface ResumeSauvegarde {
   fichiersPlan: number;
   personnes: number;
   avis: number;
+  plansFinancement: number;
 }
 
 export type ResultatValidation = { ok: true; sauvegarde: Sauvegarde } | { ok: false; erreur: string };
 
-const TABLES_LISTES = ['biens', 'postesTravaux', 'visites', 'pieces', 'etages', 'bareme', 'photos', 'fichiersPlan', 'personnes', 'avis'] as const;
+const TABLES_LISTES = ['biens', 'postesTravaux', 'visites', 'pieces', 'etages', 'bareme', 'photos', 'fichiersPlan', 'personnes', 'avis', 'plansFinancement'] as const;
 
 function estObjet(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -106,6 +108,7 @@ export function resumerDonnees(d: Pick<DonneesBase, keyof ResumeSauvegarde>): Re
     fichiersPlan: d.fichiersPlan.length,
     personnes: d.personnes.length,
     avis: d.avis.length,
+    plansFinancement: d.plansFinancement.length,
   };
 }
 

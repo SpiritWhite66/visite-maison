@@ -10,6 +10,7 @@ Application personnelle, utilisée par **un seul utilisateur sur un seul apparei
 2. **Saisir une visite** sur place (checklist par thème, pièces et mesures, photos) et produire un **compte rendu PDF** (synthèse brute, usage personnel). → **Priorité 2**
 3. **Suivre les étapes** de chaque bien (visite, contre-visite, offre…). → **Priorité 3**
 4. **Comparer les biens** avec une note pondérée. → **Priorité 4 (v2, hors MVP)**
+5. **Monter le plan de financement** d'un bien : aides éligibles, prêts, tableau d'amortissement (§12).
 
 Types de biens couverts : **maison en ville / lotissement** et **maison rurale avec terrain**.
 
@@ -19,7 +20,7 @@ Types de biens couverts : **maison en ville / lotissement** et **maison rurale a
 - Pas de dictée vocale.
 - Pas d'import automatique d'annonces (saisie manuelle + URL de l'annonce).
 - Pas d'appartement ni de terrain nu.
-- Pas de simulation de prêt ni d'aides à la rénovation.
+- Pas de simulation de prêt ni d'aides à la rénovation dans le MVP : ajoutées ensuite (§12), à titre d'estimation, sans dépôt de dossier.
 
 ## 3. Contraintes non fonctionnelles
 
@@ -105,7 +106,7 @@ Types de biens couverts : **maison en ville / lotissement** et **maison rurale a
 Prix = **prix artisan TTC fourni-posé**. Pour un poste `DIY`, montant = prix × `coefDiy` (ou coefficient global si absent).
 
 ### Parametres
-`{ tauxNotairePct (défaut 8), margeNegociationDefautPct (défaut 5), coefDiyDefaut (défaut 0.4) }`
+`{ tauxNotairePct (défaut 8), margeNegociationDefautPct (défaut 5), coefDiyDefaut (défaut 0.4), foyer? }` — `foyer` : foyer emprunteur du financement (§12), commun à tous les biens.
 
 ### Personne et Avis
 - `Personne` : `{ id, prenom }`, déclarée dans Paramètres (prénoms uniques, casse ignorée). Supprimer une personne supprime ses avis.
@@ -123,7 +124,7 @@ Prix = **prix artisan TTC fourni-posé**. Pour un poste `DIY`, montant = prix ×
 `{ id, bienId, etageId, nom, typeMime, blob, ajouteLe }` — plan importé (photo réduite à 2400 px, ou fichier tel quel, PDF compris).
 
 ### Sauvegarde (export / import JSON)
-Un seul fichier `visite-immo-AAAA-MM-JJ.json` contenant toutes les tables (biens, postes, visites, pièces, étages, barème, réglages, personnes, avis) et les images en base 64 (`photos`, `fichiersPlan`, avec leur type MIME). Champs d'en-tête : `format` (« visite-immo »), `version` (du format, 1), `exporteLe`, `versionApp`.
+Un seul fichier `visite-immo-AAAA-MM-JJ.json` contenant toutes les tables (biens, postes, visites, pièces, étages, barème, réglages, personnes, avis, plans de financement) et les images en base 64 (`photos`, `fichiersPlan`, avec leur type MIME). Champs d'en-tête : `format` (« visite-immo »), `version` (du format, 1), `exporteLe`, `versionApp`.
 - **Importer** : le fichier est lu et contrôlé avant toute écriture (format, version, identifiants, fichiers non tronqués) ; un résumé est affiché. Deux modes : *Remplacer* (la base devient identique à la sauvegarde, en une seule transaction : tout ou rien) ou *Fusionner* (ajout ou mise à jour des biens et de ce qui s'y rattache par identifiant ; réglages et barème locaux conservés).
 - Une sauvegarde d'une version plus récente du format est refusée avec un message ; les tables absentes d'une ancienne version sont lues comme vides.
 - Les réglages portent `derniereSauvegarde`. Rappel (bandeau dans la liste des biens, bloc dans Paramètres) s'il y a des biens et qu'aucune sauvegarde n'a été faite depuis 14 jours.
@@ -259,9 +260,11 @@ Catalogue **statique versionné dans le code** (`checklist-catalogue.ts`), chaqu
    - **Pièces** : pièces avec mesures et photos, surface totale calculée.
    - **Suivi** : étape courante (depuis combien de jours, dernière offre), changement d'étape en un tap avec commentaire facultatif, historique daté (chronologie).
    - **Avis** : une carte par personne (étoiles de 1 à 5 — retoucher l'étoile active la retire —, commentaire, bouton N/A · absent·e), moyenne en tête, enregistrement automatique ; l'onglet affiche « répondu/total ».
+   - Bouton **Financement** dans l'en-tête : ouvre le plan de financement du bien (§12).
    - **Plan** : un bloc par niveau, avec l'aperçu du dessin et les plans importés (photo ou fichier). Éditeur plein écran : outils mur, pièce rectangulaire, porte, fenêtre, nom de pièce, équipement ; sélection pour déplacer, étirer, modifier la longueur ou supprimer ; aimant désactivable (grille de 10 cm, extrémités des murs, angles à 0/45/90°) ; cotes affichables ; annuler / rétablir ; pincer pour zoomer ; sauvegarde automatique. Stylet : mode activé automatiquement (le stylet dessine, les doigts déplacent et zooment, la paume est ignorée), réticule aimanté au survol, gomme du stylet, bouton latéral pour sélectionner.
 3. **Mode visite** : thèmes en accordéon, pour chaque point des boutons d'état en un tap (OK / À surveiller / Travaux / N/A), commentaire et photo accessibles en un tap, sauvegarde automatique à chaque modification.
-4. **Paramètres** : personnes (prénoms), taux notaire, marge par défaut, coefficient DIY, édition du barème, export/import JSON (bloc « Sauvegarde »), état du stockage persistant avec bouton pour le demander.
+4. **Financement** (entrée du menu) : choix du bien, puis le parcours du §12.
+5. **Paramètres** : personnes (prénoms), taux notaire, marge par défaut, coefficient DIY, édition du barème, export/import JSON (bloc « Sauvegarde »), état du stockage persistant avec bouton pour le demander.
 
 ## 10. Compte rendu PDF
 
@@ -281,4 +284,34 @@ Catalogue **statique versionné dans le code** (`checklist-catalogue.ts`), chaqu
 | 3 | Export/import JSON, `storage.persist()` | Export → réinstallation → import restaure tout, photos comprises |
 | 4 | Compte rendu PDF | PDF lisible généré depuis Chrome Android |
 | 5 | Suivi des étapes et filtres | Historique horodaté visible |
+| 6 | Financement : foyer, aides (PTZ, éco-PTZ, CEE, MaPrimeRénov', Action Logement, aides locales), prêts, tableau d'amortissement (§12) | Plan complet et tableau imprimable pour un bien |
 | v2 | Comparatif noté pondéré entre biens | — |
+
+## 12. Financement
+
+Aide à monter le plan de financement d'un bien. **Estimation** : les règles des aides changent souvent (lois de finances, arrêtés) ; elles sont codées dans `domain/regles-aides.ts`, datées (état au 19 octobre 2026), et l'écran rappelle de les confirmer auprès de la banque, de France Rénov' ou de l'ADIL.
+
+### Données
+- **Foyer** (dans les réglages, commun à tous les biens) : `occupants`, `revenuFiscalN2` (somme des RFR de l'année N-2, pour le PTZ), `revenuFiscalAnah?` (dernier avis, pour MaPrimeRénov' et les CEE ; à défaut celui de N-2), `revenusNetsMensuels`, `chargesCreditsMensuelles`, `primoAccedant`, `ileDeFrance`, `salariePrive` (entreprise privée d'au moins 10 salariés : Action Logement).
+- **PlanFinancement** (table `plansFinancement`, un par bien, `id` = `bienId`, supprimé avec le bien) : type d'achat (`ANCIEN` | `NEUF_INDIVIDUEL`), zone PTZ (`A` = A bis et A, `B1`, `B2`, `C`, choisie à la main avec un lien vers le simulateur de zonage), prix / notaire / travaux (vides = repris du bien ; travaux en hypothèse basse, milieu ou haute de la fourchette, ou saisis), apport, frais (dossier, garantie en % du prêt bancaire, courtage), travaux de rénovation énergétique retenus (« gestes », montants repris des postes du barème correspondants ou saisis), gain de classes DPE, réglage de chaque aide (incluse ou non, montant, durée), aides locales saisies (subvention ou prêt), prêt bancaire (taux, durée, assurance), lissage, primes déduites ou à part, mois de la première échéance. Enregistrement automatique.
+
+### Parcours (6 étapes, résumé toujours visible à droite sur tablette)
+1. **Foyer** : questionnaire (personnes, déjà propriétaire ?, revenus, crédits en cours, salarié du privé, Île-de-France), catégorie de revenus Anah affichée.
+2. **Projet** : type d'achat, zone, prix, notaire, travaux, apport.
+3. **Aides** : gestes de rénovation énergétique, puis une carte par aide avec son statut (*Éligible*, *À vérifier*, *Non éligible*, *À compléter*) et les raisons.
+4. **Prêts** : prêt bancaire (taux moyen d'octobre 2026 proposé selon la durée), frais, montage lissé ou empilé, primes déduites ou à part.
+5. **Plan** : besoin / financement (équilibrés), mensualité, taux d'endettement et capacité, coût du crédit, TAEG du prêt bancaire, évolution des mensualités, tableau des prêts, points d'attention.
+6. **Tableau d'amortissement** : par année ou par mois, tous les prêts ensemble ou un seul ; impression / PDF (plan + tableau mensuel complet).
+
+### Règles (domaine pur, testé unitairement)
+- **Besoin** = prix + notaire + travaux + frais de dossier + garantie + courtage. Notaire par défaut : taux des réglages (ancien) ou 2,5 % (neuf).
+- **PTZ** : primo-accédant ; neuf toutes zones ; ancien seulement en B2 et C avec des travaux ≥ 25 % du coût total (prix + travaux). Coût retenu = prix + travaux − part financée par l'éco-PTZ, plafonné selon la zone et le nombre d'occupants. Revenu retenu = max(RFR N-2, coût / 9) ; plafond de ressources et tranche (1 à 4) selon le revenu ÷ coefficient familial (1 ; 1,5 ; 1,8 ; 2,1 ; 2,4 ; 2,7 ; 3 ; 3,3). Quotité : 50/40/40/20 % (ancien) ou 30/20/20/10 % (maison neuve). Durée : tranche 1 = 10 ans de différé + 15 ans, 2 = 8 + 12, 3 = 2 + 13, 4 = 0 + 10. Le PTZ ne dépasse pas le total des autres prêts.
+- **Éco-PTZ** : logement de plus de 2 ans, sans condition de ressources. Plafond : 7 000 € (fenêtres seules), 15 000 € (une action), 25 000 € (deux), 30 000 € (trois et plus), 10 000 € (assainissement seul), 50 000 € sur 20 ans (performance globale) ; sinon 15 ans au plus. Limité au montant des travaux éligibles.
+- **Catégorie Anah** (plafonds 2026, Île-de-France ou autres régions) : très modestes, modestes, intermédiaires, supérieurs.
+- **CEE** : pas de barème officiel (prime du fournisseur) : montant saisi, avec un ordre de grandeur par geste.
+- **MaPrimeRénov'** : rénovation d'ampleur (DPE E, F ou G, au moins 2 classes gagnées) = taux selon la catégorie (80 / 60 / 45 / 10 %) × travaux HT (TVA 5,5 %) plafonnés à 30 000 € (2 classes) ou 40 000 € (3 et plus), écrêté à 100 / 90 / 80 / 50 % du TTC, CEE déduites. Par geste (depuis le 1er septembre 2026 : pompes à chaleur) : montant saisi, hors revenus supérieurs.
+- **Action Logement** (salarié du privé) : prêt accession 30 000 € à 1 % (primo-accédant ; à vérifier dans l'ancien) ; prêt travaux 10 000 € à 1,5 % sur 10 ans au plus. Statut « À vérifier », non inclus par défaut.
+- **Prêt bancaire** = besoin − apport − prêts aidés − primes (si déduites) ; la garantie (en % du prêt bancaire) est incluse dans le besoin.
+- **Échéancier** : échéance constante, différé total (rien n'est payé) ou partiel (intérêts seuls), assurance = taux annuel × capital initial / 12, payée toute la durée. Dernière échéance ajustée pour solder le prêt. **Lissage** : le prêt bancaire paie la différence pour que le total mensuel (assurances comprises) reste constant pendant sa durée (recherche par dichotomie). Aucun arrondi intermédiaire.
+- **Règles bancaires (HCSF)** : alerte au-delà de 35 % d'endettement ((mensualité maximale + crédits en cours) / revenus nets) et au-delà de 25 ans (27 ans pour le neuf ou avec des travaux ≥ 10 % du coût). Autres alertes : apport inférieur aux frais, primes versées après travaux.
+- **TAEG** du prêt bancaire : taux actuariel annuel égalisant le montant reçu (capital − frais de dossier, garantie, courtage) et les mensualités assurance comprise.
