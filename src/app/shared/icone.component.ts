@@ -36,6 +36,7 @@ const TRACES = {
   telecharger: 'M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14',
   importer: 'M12 15V4M7.5 8.5 12 4l4.5 4.5M5 19.5h14',
   stylet: 'M15.5 4.5l4 4L9 19l-5 1 1-5zM13.5 6.5l4 4',
+  euro: 'M17.5 6.5a6.5 6.5 0 1 0 0 11M4.5 10.5h9M4.5 13.5h9',
   fichier: 'M6 3.5h8l4 4v13H6zM14 3.5v4h4M9 13h6M9 16.5h6',
 } as const;
 

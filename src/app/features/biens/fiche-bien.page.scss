@@ -116,3 +116,4 @@
 
 .etape-lien { min-height: 44px; min-width: 0; padding: 0 0.25rem; background: none; color: var(--primaire); border: 0; font-size: 0.9rem; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
 .actions-entete { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.etiquette.haut-gamme { color: var(--primaire); border-color: color-mix(in srgb, var(--primaire) 35%, transparent); background: var(--primaire-pale); }
