@@ -23,6 +23,7 @@ const RURAL: readonly TypeBien[] = ['RURAL'];
 /** Thèmes, dans l'ordre d'affichage. */
 export const THEMES_CHECKLIST: readonly ThemeChecklist[] = [
   { id: 'structure', libelle: 'Structure et extérieur', typesBien: TOUS },
+  { id: 'jardin', libelle: 'Jardin et extérieur', typesBien: TOUS },
   { id: 'toiture', libelle: 'Toiture et charpente', typesBien: TOUS },
   { id: 'humidite', libelle: 'Humidité', typesBien: TOUS },
   { id: 'menuiseries', libelle: 'Menuiseries', typesBien: TOUS },
@@ -60,6 +61,23 @@ export const CHECKLIST_CATALOGUE: readonly PointChecklist[] = [
   p('structure', 'gouttieres', 'Gouttières et descentes', 'Fuites, pentes, descentes branchées sur un réseau.', 'Toiture'),
   p('structure', 'fondations', 'Fondations visibles', 'Soubassement, fissures horizontales, tassements.', 'Gros œuvre'),
   p('structure', 'mitoyennete', 'Mitoyenneté', 'Murs mitoyens, droits de passage, nuisances.'),
+
+  // Jardin et extérieur
+  p('jardin', 'surface', 'Surface et forme du jardin', 'Surface vraiment utilisable, forme, recoins perdus, talus.'),
+  p('jardin', 'exposition', 'Exposition et ensoleillement', 'Orientation, heures de soleil, ombre des voisins et des arbres.'),
+  p('jardin', 'vis-a-vis', 'Vis-à-vis et intimité', 'Vues depuis les voisins ou la rue, haies, murs.'),
+  p('jardin', 'terrasse', 'Terrasse', 'Surface, état, exposition, accès de plain-pied depuis le séjour ou la cuisine.', 'Extérieur'),
+  p('jardin', 'sol', 'Nature du sol', 'Terre, cailloux, argile ; flaques ou zones détrempées après la pluie.', 'Extérieur'),
+  p('jardin', 'plantations', 'Arbres, haies et plantations', 'Essences, état, fruitiers, arbres à abattre, haies à tailler.', 'Extérieur'),
+  p('jardin', 'potager', 'Place pour un potager', 'Coin ensoleillé, accès à l’eau, terre cultivable.'),
+  p('jardin', 'point-eau', 'Point d’eau extérieur', 'Robinet, arrosage, récupérateur d’eau de pluie.', 'Plomberie'),
+  p('jardin', 'electricite', 'Prises et éclairage extérieurs', 'Prises étanches, éclairage, gaine vers le fond du jardin.', 'Électricité'),
+  p('jardin', 'cloture', 'Jardin clos et portail', 'Clôture continue pour enfants et animaux, portail, portillon.', 'Extérieur'),
+  p('jardin', 'stationnement', 'Stationnement', 'Garage, places dans la cour, recharge de voiture électrique.', 'Extérieur'),
+  p('jardin', 'abri', 'Abri de jardin et rangement', 'Où ranger tondeuse, vélos, outils, bois ?', 'Extérieur'),
+  p('jardin', 'piscine', 'Piscine', 'Type, état, local technique, sécurité (alarme, barrière, abri). N/A s’il n’y en a pas.', 'Extérieur'),
+  p('jardin', 'entretien', 'Temps d’entretien', 'Pelouse, haies, feuilles : combien d’heures par mois ?'),
+  p('jardin', 'amenagements', 'Aménagements possibles', 'Extension, véranda, piscine, abri : vérifier le PLU (emprise au sol, reculs).'),
 
   // Toiture et charpente
   p('toiture', 'tuiles', 'État des tuiles vu du sol', 'Tuiles cassées ou déplacées, mousse, affaissement.', 'Toiture'),
