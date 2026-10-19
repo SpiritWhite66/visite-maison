@@ -30,8 +30,16 @@ describe('catalogue de checklist', () => {
       expect(ville).not.toContain(id);
       expect(rural).toContain(id);
     }
-    expect(ville.length).toBe(10);
-    expect(rural.length).toBe(14);
+    expect(ville.length).toBe(11);
+    expect(rural.length).toBe(15);
+  });
+
+  it('propose le thème jardin aux deux types de bien, juste après la structure', () => {
+    for (const type of ['VILLE', 'RURAL'] as const) {
+      const ids = themesPourBien(type).map((t) => t.id);
+      expect(ids.indexOf('jardin')).toBe(ids.indexOf('structure') + 1);
+    }
+    expect(CHECKLIST_CATALOGUE.filter((pt) => pt.theme === 'jardin').length).toBeGreaterThanOrEqual(10);
   });
 
   it('n’a aucun thème vide', () => {

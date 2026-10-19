@@ -236,6 +236,7 @@ Catalogue **statique versionné dans le code** (`checklist-catalogue.ts`), chaqu
 
 ### Thèmes communs (ville + rural)
 - **Structure et extérieur** : fissures façade, état enduit, gouttières et descentes, fondations visibles, mitoyenneté.
+- **Jardin et extérieur** (l'extérieur est un critère majeur pour nous) : surface et forme du jardin, exposition et ensoleillement, vis-à-vis et intimité, terrasse, nature du sol, arbres / haies / plantations, place pour un potager, point d'eau extérieur, prises et éclairage extérieurs, jardin clos et portail, stationnement, abri de jardin, piscine, temps d'entretien, aménagements possibles (PLU).
 - **Toiture et charpente** : état des tuiles vu du sol, faîtage, combles (traces d'eau, insectes, isolation présente), âge de la couverture.
 - **Humidité** : traces au bas des murs, salpêtre, odeur de moisi, ventilation, cave / vide sanitaire.
 - **Menuiseries** : simple / double vitrage, état des bois, volets.
