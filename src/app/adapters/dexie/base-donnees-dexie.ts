@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import Dexie, { Table } from 'dexie';
-import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PlanFinancement, PosteTravaux, Visite } from '../../domain/modeles';
+import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PlanFinancement, PosteTravaux, Visite, Devis, FichierDevis } from '../../domain/modeles';
 import { BAREME_DEFAUT } from '../../domain/bareme-defaut';
 import { enrichirBareme } from '../../domain/bareme-migration';
 import { BaseDonneesPort, EtatBaseDonnees } from '../../ports/base-donnees.port';
@@ -25,6 +25,8 @@ export class VisiteImmoDb extends Dexie {
   personnes!: Table<Personne, string>;
   avis!: Table<Avis, string>;
   plansFinancement!: Table<PlanFinancement, string>;
+  devis!: Table<Devis, string>;
+  fichiersDevis!: Table<FichierDevis, string>;
 
   constructor() {
     super('visite-immo');
@@ -65,6 +67,11 @@ export class VisiteImmoDb extends Dexie {
     // v5 : plans de financement (un par bien). Le foyer emprunteur est rangé dans les réglages.
     this.version(5).stores({
       plansFinancement: 'id, bienId',
+    });
+    // v6 : devis des postes de travaux et leurs fichiers (photos des pages, PDF).
+    this.version(6).stores({
+      devis: 'id, bienId, posteId',
+      fichiersDevis: 'id, bienId, devisId',
     });
   }
 }

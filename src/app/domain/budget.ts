@@ -32,6 +32,7 @@ export function prixLigne(ligne: LigneBareme, gamme: Gamme = GAMME_DEFAUT): Four
 
 /**
  * Fourchette d'un poste.
+ * - Devis retenu : son montant, quel que soit le mode de chiffrage.
  * - BAREME : quantité × prix de la gamme choisie × (coefficient DIY si réalisé soi-même), recalculé depuis la ligne de barème.
  *   Si la ligne a disparu du barème, on garde les montants enregistrés.
  * - MANUEL : montants saisis, tels quels.
@@ -41,6 +42,7 @@ export function montantsPoste(
   bareme: readonly LigneBareme[],
   coefDiyDefaut: number,
 ): Fourchette {
+  if (poste.devisRetenu) return { bas: poste.devisRetenu.montant, haut: poste.devisRetenu.montant };
   if (poste.modeChiffrage === 'MANUEL') return { bas: poste.montantBas, haut: poste.montantHaut };
   const ligne = bareme.find((l) => l.id === poste.baremeId);
   if (!ligne) return { bas: poste.montantBas, haut: poste.montantHaut };

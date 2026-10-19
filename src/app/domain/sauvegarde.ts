@@ -1,4 +1,4 @@
-import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PlanFinancement, PosteTravaux, Visite } from './modeles';
+import { Avis, Bien, Devis, Etage, FichierDevis, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PlanFinancement, PosteTravaux, Visite } from './modeles';
 
 /** Toutes les données de l'appli, telles qu'elles sont en base (les images restent des `Blob`). */
 export interface DonneesBase {
@@ -14,6 +14,8 @@ export interface DonneesBase {
   personnes: Personne[];
   avis: Avis[];
   plansFinancement: PlanFinancement[];
+  devis: Devis[];
+  fichiersDevis: FichierDevis[];
 }
 
 export const FORMAT_SAUVEGARDE = 'visite-immo';
@@ -23,15 +25,17 @@ export const VERSION_FORMAT = 1;
 /** Images et fichiers sont écrits en base 64 dans le JSON (`donnees`), avec leur type MIME. */
 export type PhotoExportee = Omit<Photo, 'blob'> & { type: string; donnees: string };
 export type FichierPlanExporte = Omit<FichierPlan, 'blob'> & { donnees: string };
+export type FichierDevisExporte = Omit<FichierDevis, 'blob'> & { donnees: string };
 
 /** Contenu du fichier de sauvegarde. */
-export interface Sauvegarde extends Omit<DonneesBase, 'photos' | 'fichiersPlan'> {
+export interface Sauvegarde extends Omit<DonneesBase, 'photos' | 'fichiersPlan' | 'fichiersDevis'> {
   format: typeof FORMAT_SAUVEGARDE;
   version: number;
   exporteLe: string;
   versionApp: string;
   photos: PhotoExportee[];
   fichiersPlan: FichierPlanExporte[];
+  fichiersDevis: FichierDevisExporte[];
 }
 
 export interface ResumeSauvegarde {
@@ -45,11 +49,13 @@ export interface ResumeSauvegarde {
   personnes: number;
   avis: number;
   plansFinancement: number;
+  devis: number;
+  fichiersDevis: number;
 }
 
 export type ResultatValidation = { ok: true; sauvegarde: Sauvegarde } | { ok: false; erreur: string };
 
-const TABLES_LISTES = ['biens', 'postesTravaux', 'visites', 'pieces', 'etages', 'bareme', 'photos', 'fichiersPlan', 'personnes', 'avis', 'plansFinancement'] as const;
+const TABLES_LISTES = ['biens', 'postesTravaux', 'visites', 'pieces', 'etages', 'bareme', 'photos', 'fichiersPlan', 'personnes', 'avis', 'plansFinancement', 'devis', 'fichiersDevis'] as const;
 
 function estObjet(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -78,7 +84,7 @@ export function validerSauvegarde(brut: unknown): ResultatValidation {
       if (!estObjet(element) || typeof element['id'] !== 'string' || !element['id']) {
         return { ok: false, erreur: `Section « ${table} » : un élément n’a pas d’identifiant.` };
       }
-      if ((table === 'photos' || table === 'fichiersPlan') && typeof element['donnees'] !== 'string') {
+      if ((table === 'photos' || table === 'fichiersPlan' || table === 'fichiersDevis') && typeof element['donnees'] !== 'string') {
         return { ok: false, erreur: `Section « ${table} » : un fichier est vide ou tronqué.` };
       }
     }
@@ -109,6 +115,8 @@ export function resumerDonnees(d: Pick<DonneesBase, keyof ResumeSauvegarde>): Re
     personnes: d.personnes.length,
     avis: d.avis.length,
     plansFinancement: d.plansFinancement.length,
+    devis: d.devis.length,
+    fichiersDevis: d.fichiersDevis.length,
   };
 }
 

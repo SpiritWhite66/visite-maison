@@ -10,6 +10,10 @@ export const BIENS_ROUTES: Routes = [
   { path: ':id/plan/:etageId', loadComponent: () => import('./plan/plan-editeur.page').then((m) => m.PlanEditeurPage) },
   { path: ':id/pieces/nouveau', loadComponent: () => import('./piece-form.page').then((m) => m.PieceFormPage) },
   { path: ':id/pieces/:pieceId', loadComponent: () => import('./piece-form.page').then((m) => m.PieceFormPage) },
+  { path: ':id/devis', loadComponent: () => import('./devis/devis-liste.page').then((m) => m.DevisListePage) },
+  { path: ':id/devis/nouveau', loadComponent: () => import('./devis/devis-form.page').then((m) => m.DevisFormPage) },
+  { path: ':id/devis/:devisId', loadComponent: () => import('./devis/devis-form.page').then((m) => m.DevisFormPage) },
+  { path: ':id/photos', loadComponent: () => import('./photos/photos.page').then((m) => m.PhotosPage) },
   { path: ':id/travaux/nouveau', loadComponent: () => import('./poste-form.page').then((m) => m.PosteFormPage) },
   { path: ':id/travaux/:posteId', loadComponent: () => import('./poste-form.page').then((m) => m.PosteFormPage) },
 ];

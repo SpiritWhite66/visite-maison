@@ -15,6 +15,7 @@ import {
   PhotosDexie,
   PiecesDexie,
   PlansFinancementDexie,
+  DevisDexie,
   PostesTravauxDexie,
   VisitesDexie,
 } from './adapters/dexie/depots-dexie';
@@ -28,7 +29,7 @@ import { BaremeService } from './application/bareme.service';
 import { DiagnosticService } from './application/diagnostic.service';
 import { ParametresService } from './application/parametres.service';
 import { BaseDonneesPort } from './ports/base-donnees.port';
-import { AvisPort, BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PersonnesPort, PhotosPort, PiecesPort, PlansFinancementPort, PostesTravauxPort, VisitesPort } from './ports/depots.port';
+import { AvisPort, BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PersonnesPort, PhotosPort, PiecesPort, PlansFinancementPort, DevisPort, PostesTravauxPort, VisitesPort } from './ports/depots.port';
 import { JournalErreursPort } from './ports/journal-erreurs.port';
 import { CompressionPhotoPort } from './ports/photo.port';
 import { FormatSauvegardePort, SauvegardePort } from './ports/sauvegarde.port';
@@ -52,6 +53,7 @@ export const appConfig: ApplicationConfig = {
     { provide: PersonnesPort, useClass: PersonnesDexie },
     { provide: AvisPort, useClass: AvisDexie },
     { provide: PlansFinancementPort, useClass: PlansFinancementDexie },
+    { provide: DevisPort, useClass: DevisDexie },
     { provide: EtagesPort, useClass: EtagesDexie },
     { provide: FichiersPlanPort, useClass: FichiersPlanDexie },
     { provide: CompressionPhotoPort, useClass: CompressionPhotoCanvas },

@@ -121,6 +121,8 @@ export interface PosteTravaux {
   montantHaut: number;
   priorite: Priorite;
   notes?: string;
+  /** Devis accepté pour ce poste : son montant remplace l'estimation (bas = haut). */
+  devisRetenu?: { devisId: string; montant: number };
 }
 
 export interface Parametres {
@@ -361,4 +363,39 @@ export interface PlanFinancement {
   /** Mois de la première échéance, « AAAA-MM ». */
   premiereEcheance: string;
   modifieLe: string;
+}
+
+// ---------- Devis ----------
+
+export type StatutDevis = 'EN_ATTENTE' | 'ACCEPTE' | 'REFUSE';
+
+/** Devis d'une entreprise, rattaché à un poste de travaux (ou pas encore). */
+export interface Devis {
+  id: string;
+  bienId: string;
+  /** `null` : devis pas encore rattaché à un poste. */
+  posteId: string | null;
+  entreprise: string;
+  /** Objet du devis, s'il diffère du poste. */
+  objet: string;
+  montantTtc: number;
+  /** Date du devis, AAAA-MM-JJ. */
+  date: string;
+  /** Fin de validité, AAAA-MM-JJ. */
+  valableJusquau: string | null;
+  statut: StatutDevis;
+  notes: string;
+  ajouteLe: string;
+  modifieLe: string;
+}
+
+/** Page ou pièce jointe d'un devis : photo réduite à 2400 px ou fichier tel quel (PDF). */
+export interface FichierDevis {
+  id: string;
+  bienId: string;
+  devisId: string;
+  nom: string;
+  typeMime: string;
+  blob: Blob;
+  ajouteLe: string;
 }

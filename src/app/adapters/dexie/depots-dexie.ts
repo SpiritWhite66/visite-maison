@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PlanFinancement, PosteTravaux, Visite } from '../../domain/modeles';
-import { AvisPort, BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PersonnesPort, PhotosPort, PiecesPort, PlansFinancementPort, PostesTravauxPort, VisitesPort } from '../../ports/depots.port';
+import { Avis, Bien, Etage, FichierPlan, LigneBareme, Parametres, Personne, Photo, Piece, PlanFinancement, PosteTravaux, Visite, Devis, FichierDevis } from '../../domain/modeles';
+import { AvisPort, BaremePort, BiensPort, EtagesPort, FichiersPlanPort, ParametresPort, PersonnesPort, PhotosPort, PiecesPort, PlansFinancementPort, DevisPort, PostesTravauxPort, VisitesPort } from '../../ports/depots.port';
 import { BaseDonneesDexie, CLE_PARAMETRES } from './base-donnees-dexie';
 
 @Injectable()
@@ -17,9 +17,11 @@ export class BiensDexie extends BiensPort {
     await this.db.biens.put(bien);
   }
   async supprimer(id: string): Promise<void> {
-    const { biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan, avis, plansFinancement } = this.db;
-    await this.db.transaction('rw', [biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan, avis, plansFinancement], async () => {
+    const { biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan, avis, plansFinancement, devis, fichiersDevis } = this.db;
+    await this.db.transaction('rw', [biens, visites, pieces, photos, postesTravaux, etages, fichiersPlan, avis, plansFinancement, devis, fichiersDevis], async () => {
       await Promise.all([
+        devis.where('bienId').equals(id).delete(),
+        fichiersDevis.where('bienId').equals(id).delete(),
         plansFinancement.where('bienId').equals(id).delete(),
         avis.where('bienId').equals(id).delete(),
         etages.where('bienId').equals(id).delete(),
@@ -48,7 +50,14 @@ export class PostesTravauxDexie extends PostesTravauxPort {
     await this.db.postesTravaux.put(poste);
   }
   async supprimer(id: string): Promise<void> {
-    await this.db.postesTravaux.delete(id);
+    const { postesTravaux, devis } = this.db;
+    await this.db.transaction('rw', [postesTravaux, devis], async () => {
+      await devis.where('posteId').equals(id).modify((d) => {
+        d.posteId = null;
+        if (d.statut === 'ACCEPTE') d.statut = 'EN_ATTENTE';
+      });
+      await postesTravaux.delete(id);
+    });
   }
 }
 
@@ -127,6 +136,9 @@ export class PhotosDexie extends PhotosPort {
 
   obtenir(id: string): Promise<Photo | undefined> {
     return this.db.photos.get(id);
+  }
+  listerParBien(bienId: string): Promise<Photo[]> {
+    return this.db.photos.where('bienId').equals(bienId).toArray();
   }
   async enregistrer(photo: Photo): Promise<void> {
     await this.db.photos.put(photo);
@@ -228,5 +240,49 @@ export class PlansFinancementDexie extends PlansFinancementPort {
   }
   async supprimer(bienId: string): Promise<void> {
     await this.db.plansFinancement.delete(bienId);
+  }
+}
+
+@Injectable()
+export class DevisDexie extends DevisPort {
+  private readonly db = inject(BaseDonneesDexie).db;
+
+  listerParBien(bienId: string): Promise<Devis[]> {
+    return this.db.devis.where('bienId').equals(bienId).toArray();
+  }
+  obtenir(id: string): Promise<Devis | undefined> {
+    return this.db.devis.get(id);
+  }
+  async enregistrer(liste: readonly Devis[], postes: readonly PosteTravaux[]): Promise<void> {
+    const { devis, postesTravaux } = this.db;
+    await this.db.transaction('rw', [devis, postesTravaux], async () => {
+      await devis.bulkPut([...liste]);
+      await postesTravaux.bulkPut([...postes]);
+    });
+  }
+  async supprimer(id: string, postes: readonly PosteTravaux[]): Promise<void> {
+    const { devis, fichiersDevis, postesTravaux } = this.db;
+    await this.db.transaction('rw', [devis, fichiersDevis, postesTravaux], async () => {
+      await fichiersDevis.where('devisId').equals(id).delete();
+      await devis.delete(id);
+      await postesTravaux.bulkPut([...postes]);
+    });
+  }
+  listerFichiers(devisId: string): Promise<FichierDevis[]> {
+    return this.db.fichiersDevis.where('devisId').equals(devisId).sortBy('ajouteLe');
+  }
+  async compterFichiers(bienId: string): Promise<Map<string, number>> {
+    const compte = new Map<string, number>();
+    await this.db.fichiersDevis.where('bienId').equals(bienId).each((f) => compte.set(f.devisId, (compte.get(f.devisId) ?? 0) + 1));
+    return compte;
+  }
+  obtenirFichier(id: string): Promise<FichierDevis | undefined> {
+    return this.db.fichiersDevis.get(id);
+  }
+  async enregistrerFichier(fichier: FichierDevis): Promise<void> {
+    await this.db.fichiersDevis.put(fichier);
+  }
+  async supprimerFichier(id: string): Promise<void> {
+    await this.db.fichiersDevis.delete(id);
   }
 }

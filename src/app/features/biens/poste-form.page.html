@@ -61,6 +61,9 @@
         </div>
       }
       <p class="estimation large"><span class="surtitre">Estimation</span><strong class="chiffre">{{ apercu(p) }}</strong></p>
+      @if (devisRetenu(); as d) {
+        <p class="estimation devis-retenu large"><span class="surtitre">Devis retenu · {{ d.entreprise }}</span><strong class="chiffre">{{ euro(d.montantTtc) }}</strong><span class="discret"> C’est ce montant qui compte dans le budget.</span></p>
+      }
       </div>
     </section>
 
@@ -97,6 +100,32 @@
       </label>
       </div>
     </section>
+
+    @if (posteId()) {
+      <section class="bloc-form devis-poste">
+        <h2>Devis <small>Comparez les entreprises ; le devis accepté remplace l’estimation.</small></h2>
+        <div>
+          @if (devis().length === 0) {
+            <p class="discret">Aucun devis pour ce poste.</p>
+          } @else {
+            <ul class="liste-devis-poste">
+              @for (d of devis(); track d.id) {
+                <li>
+                  <a [routerLink]="['/biens', id(), 'devis', d.id]" [queryParams]="{ depuis: 'poste' }">
+                    <span><strong>{{ d.entreprise }}</strong> <span class="etiquette" [class.accepte]="d.statut === 'ACCEPTE'">{{ libelleStatut[d.statut] }}</span></span>
+                    <strong class="chiffre">{{ euro(d.montantTtc) }}</strong>
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+          <div class="actions">
+            <a class="bouton bouton-secondaire" [routerLink]="['/biens', id(), 'devis', 'nouveau']" [queryParams]="{ poste: posteId(), depuis: 'poste' }"><app-icone nom="plus" [taille]="18" /> Ajouter un devis</a>
+            <a class="bouton bouton-texte" [routerLink]="['/biens', id(), 'devis']">Tous les devis du bien</a>
+          </div>
+        </div>
+      </section>
+    }
 
     @if (erreur()) {
       <p class="erreur" role="alert">{{ erreur() }}</p>

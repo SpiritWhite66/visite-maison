@@ -116,4 +116,6 @@
 
 .etape-lien { min-height: 44px; min-width: 0; padding: 0 0.25rem; background: none; color: var(--primaire); border: 0; font-size: 0.9rem; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
 .actions-entete { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.actions-onglet { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.etiquette.devis-retenu { color: var(--etat-ok); border-color: color-mix(in srgb, var(--etat-ok) 35%, transparent); background: color-mix(in srgb, var(--etat-ok) 8%, var(--surface)); }
 .etiquette.haut-gamme { color: var(--primaire); border-color: color-mix(in srgb, var(--primaire) 35%, transparent); background: var(--primaire-pale); }

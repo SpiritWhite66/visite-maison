@@ -100,6 +100,7 @@ Types de biens couverts : **maison en ville / lotissement** et **maison rurale a
 | montantBas, montantHaut | number | € — calculés si `BAREME`, saisis si `MANUEL` |
 | priorite | `URGENT` \| `COURT_TERME` \| `CONFORT` | |
 | notes | string? | |
+| devisRetenu | { devisId, montant }? | copie du devis accepté (§13) : son montant remplace l'estimation (bas = haut) |
 
 ### LigneBareme
 `{ id, categorie, libelle, unite: 'M2' | 'ML' | 'UNITE' | 'FORFAIT', prixBas, prixHaut, coefDiy? }`
@@ -123,8 +124,12 @@ Prix = **prix artisan TTC fourni-posé**. Pour un poste `DIY`, montant = prix ×
 ### FichierPlan
 `{ id, bienId, etageId, nom, typeMime, blob, ajouteLe }` — plan importé (photo réduite à 2400 px, ou fichier tel quel, PDF compris).
 
+### Devis et FichierDevis
+- `Devis` : `{ id, bienId, posteId (null = pas encore rattaché), entreprise, objet, montantTtc, date, valableJusquau?, statut: EN_ATTENTE | ACCEPTE | REFUSE, notes, ajouteLe, modifieLe }` (§13).
+- `FichierDevis` : `{ id, bienId, devisId, nom, typeMime, blob, ajouteLe }` — photo d'une page (réduite à 2400 px) ou fichier tel quel (PDF).
+
 ### Sauvegarde (export / import JSON)
-Un seul fichier `visite-immo-AAAA-MM-JJ.json` contenant toutes les tables (biens, postes, visites, pièces, étages, barème, réglages, personnes, avis, plans de financement) et les images en base 64 (`photos`, `fichiersPlan`, avec leur type MIME). Champs d'en-tête : `format` (« visite-immo »), `version` (du format, 1), `exporteLe`, `versionApp`.
+Un seul fichier `visite-immo-AAAA-MM-JJ.json` contenant toutes les tables (biens, postes, visites, pièces, étages, barème, réglages, personnes, avis, plans de financement, devis) et les images et fichiers en base 64 (`photos`, `fichiersPlan`, `fichiersDevis`, avec leur type MIME). Champs d'en-tête : `format` (« visite-immo »), `version` (du format, 1), `exporteLe`, `versionApp`.
 - **Importer** : le fichier est lu et contrôlé avant toute écriture (format, version, identifiants, fichiers non tronqués) ; un résumé est affiché. Deux modes : *Remplacer* (la base devient identique à la sauvegarde, en une seule transaction : tout ou rien) ou *Fusionner* (ajout ou mise à jour des biens et de ce qui s'y rattache par identifiant ; réglages et barème locaux conservés).
 - Une sauvegarde d'une version plus récente du format est refusée avec un message ; les tables absentes d'une ancienne version sont lues comme vides.
 - Les réglages portent `derniereSauvegarde`. Rappel (bandeau dans la liste des biens, bloc dans Paramètres) s'il y a des biens et qu'aucune sauvegarde n'a été faite depuis 14 jours.
@@ -134,6 +139,7 @@ Un seul fichier `visite-immo-AAAA-MM-JJ.json` contenant toutes les tables (biens
 - `prixNegocie = prixAffiche × (1 − margeNegociationPct / 100)`
 - `fraisNotaire = prixNegocie × tauxNotairePct / 100` (approximation « ancien », paramétrable)
 - Poste au barème : `montant{Bas,Haut} = quantite × prix{Bas,Haut} × (realisation === 'DIY' ? coefDiy : 1)`
+- Poste avec un devis accepté : `montantBas = montantHaut = montant TTC du devis`, quel que soit le mode de chiffrage (§13).
 - `travaux{Bas,Haut} = Σ postes`
 - `budgetTotal{Bas,Haut} = prixNegocie + fraisNotaire + travaux{Bas,Haut}`
 - Afficher aussi : sous-totaux par catégorie, par priorité, et la part DIY vs artisan.
@@ -255,11 +261,12 @@ Catalogue **statique versionné dans le code** (`checklist-catalogue.ts`), chaqu
 1. **Liste des biens** : carte par bien (titre, commune, étape, budget total bas–haut, photo de couverture), filtre par étape, bouton « + Bien ».
 2. **Fiche bien** (onglets) :
    - **Synthèse** : infos clés, étape, budget total avec décomposition (prix négocié, notaire, travaux bas/haut).
-   - **Travaux** : liste des postes groupés par catégorie, ajout manuel ou depuis barème, bascule artisan/DIY, totaux.
+   - **Travaux** : liste des postes groupés par catégorie, ajout manuel ou depuis barème, bascule artisan/DIY, totaux ; étiquette « Devis retenu » ou « N devis » par poste, bouton « Devis » vers la liste des devis (§13).
    - **Visites** : liste des visites, bouton « Démarrer une visite ».
    - **Pièces** : pièces avec mesures et photos, surface totale calculée.
    - **Suivi** : étape courante (depuis combien de jours, dernière offre), changement d'étape en un tap avec commentaire facultatif, historique daté (chronologie).
    - **Avis** : une carte par personne (étoiles de 1 à 5 — retoucher l'étoile active la retire —, commentaire, bouton N/A · absent·e), moyenne en tête, enregistrement automatique ; l'onglet affiche « répondu/total ».
+   - Bouton **Photos** dans l'en-tête : toutes les photos du bien (§14).
    - Bouton **Financement** dans l'en-tête : ouvre le plan de financement du bien (§12).
    - **Plan** : un bloc par niveau, avec l'aperçu du dessin et les plans importés (photo ou fichier). Éditeur plein écran : outils mur, pièce rectangulaire, porte, fenêtre, nom de pièce, équipement ; sélection pour déplacer, étirer, modifier la longueur ou supprimer ; aimant désactivable (grille de 10 cm, extrémités des murs, angles à 0/45/90°) ; cotes affichables ; annuler / rétablir ; pincer pour zoomer ; sauvegarde automatique. Stylet : mode activé automatiquement (le stylet dessine, les doigts déplacent et zooment, la paume est ignorée), réticule aimanté au survol, gomme du stylet, bouton latéral pour sélectionner.
 3. **Mode visite** : thèmes en accordéon, pour chaque point des boutons d'état en un tap (OK / À surveiller / Travaux / N/A), commentaire et photo accessibles en un tap, sauvegarde automatique à chaque modification.
@@ -285,6 +292,7 @@ Catalogue **statique versionné dans le code** (`checklist-catalogue.ts`), chaqu
 | 4 | Compte rendu PDF | PDF lisible généré depuis Chrome Android |
 | 5 | Suivi des étapes et filtres | Historique horodaté visible |
 | 6 | Financement : foyer, aides (PTZ, éco-PTZ, CEE, MaPrimeRénov', Action Logement, aides locales), prêts, tableau d'amortissement (§12) | Plan complet et tableau imprimable pour un bien |
+| 7 | Devis des postes de travaux, liste des devis, galerie des photos du bien (§13, §14) | Un devis accepté change le budget ; toutes les photos visibles depuis la fiche |
 | v2 | Comparatif noté pondéré entre biens | — |
 
 ## 12. Financement
@@ -315,3 +323,16 @@ Aide à monter le plan de financement d'un bien. **Estimation** : les règles de
 - **Échéancier** : échéance constante, différé total (rien n'est payé) ou partiel (intérêts seuls), assurance = taux annuel × capital initial / 12, payée toute la durée. Dernière échéance ajustée pour solder le prêt. **Lissage** : le prêt bancaire paie la différence pour que le total mensuel (assurances comprises) reste constant pendant sa durée (recherche par dichotomie). Aucun arrondi intermédiaire.
 - **Règles bancaires (HCSF)** : alerte au-delà de 35 % d'endettement ((mensualité maximale + crédits en cours) / revenus nets) et au-delà de 25 ans (27 ans pour le neuf ou avec des travaux ≥ 10 % du coût). Autres alertes : apport inférieur aux frais, primes versées après travaux.
 - **TAEG** du prêt bancaire : taux actuariel annuel égalisant le montant reçu (capital − frais de dossier, garantie, courtage) et les mensualités assurance comprise.
+
+## 13. Devis
+
+- Un poste de travaux peut avoir **plusieurs devis** à comparer. Un devis peut aussi être saisi sans poste (« pas encore rattaché ») : il ne compte alors pas dans le budget.
+- Formulaire : entreprise, montant TTC, poste (avec son estimation), objet, date, fin de validité, statut (*En attente*, *Accepté*, *Refusé*), notes, et le document : photos des pages (appareil photo) ou image / PDF choisis sur l'appareil. Les fichiers choisis ne sont enregistrés qu'avec le devis (Annuler ne laisse rien).
+- **Un seul devis accepté par poste** : en accepter un autre fait repasser l'ancien « en attente ». Le devis accepté est recopié sur le poste (`devisRetenu`), dans la même transaction : son montant remplace l'estimation partout (budget, financement, compte rendu). Le formulaire du poste affiche les deux : estimation et devis retenu.
+- Supprimer un poste garde ses devis, détachés (et « en attente » s'ils étaient acceptés). Supprimer un devis supprime ses fichiers et retire le devis retenu du poste. Supprimer le bien supprime ses devis.
+- **Liste des devis du bien** (bouton « Devis » de l'onglet Travaux) : postes couverts par un devis accepté, total des devis acceptés face à l'estimation de ces postes ; puis un bloc par poste avec ses devis du moins cher au plus cher, position par rapport à l'estimation (sous, dans, au-dessus), étiquettes « Le moins cher » (hors refusés) et « Expiré le … » (en attente et validité dépassée), nombre de fichiers, bouton « Accepter » en un tap ; enfin les devis non rattachés.
+
+## 14. Photos du bien
+
+- Page **Photos** (bouton de l'en-tête de la fiche) : toutes les photos du bien, rangées par provenance — couverture, chaque pièce, chaque visite (libellé du point de checklist sur la vignette), puis les autres. Une photo peut apparaître dans deux groupes (couverture et pièce) ; le total la compte une fois. Filtres Toutes / Pièces / Visites / Autres.
+- **Visionneuse** plein écran : photo précédente / suivante (boutons, glisser du doigt, flèches du clavier), position « 3 / 12 », libellé, provenance et date de prise ; lien vers la pièce ou la visite ; « Photo de couverture ». Les photos se suppriment depuis leur pièce ou leur visite.

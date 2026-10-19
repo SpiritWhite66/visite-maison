@@ -155,7 +155,8 @@ export class SauvegardeComponent implements OnInit {
       pluriel(r.visites, 'visite'),
       pluriel(r.pieces, 'pièce'),
       pluriel(r.etages, 'niveau').replace('niveaus', 'niveaux'),
-      r.photos + r.fichiersPlan === 1 ? '1 image ou fichier' : `${r.photos + r.fichiersPlan} images et fichiers`,
+      ...(r.devis > 0 ? [`${r.devis} devis`] : []),
+      r.photos + r.fichiersPlan + r.fichiersDevis === 1 ? '1 image ou fichier' : `${r.photos + r.fichiersPlan + r.fichiersDevis} images et fichiers`,
       ...(r.personnes > 0 ? [pluriel(r.personnes, 'personne')] : []),
     ].join(', ');
   }
